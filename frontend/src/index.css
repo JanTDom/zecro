@@ -119,20 +119,18 @@
   backdrop-filter: blur(22px);
 }
 
-.access-gate__brand { display: flex; align-items: center; gap: 10px; margin-bottom: 48px; }
-.access-gate__mark {
-  width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  border-radius: 9px;
-  background: linear-gradient(135deg, #2e63ff, #1c3fd1);
-  color: #fff;
-  font-weight: 800;
-  font-size: 17px;
-  box-shadow: 0 8px 20px rgba(36, 81, 245, 0.42);
+.access-gate__logo-lockup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 -8px 42px;
+  padding: 16px 18px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #ffffff 0%, #f2f5fb 100%);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18), inset 0 1px rgba(255, 255, 255, 0.92);
 }
-.access-gate__wordmark { font-size: 18px; letter-spacing: -0.04em; font-weight: 700; }
+.access-gate__logo { display: block; width: 100%; max-width: 390px; height: auto; }
 .access-gate__eyebrow { color: #85a3ff; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
 .access-gate h1 { margin: 14px 0 16px; font-size: clamp(30px, 6vw, 44px); line-height: 1.05; letter-spacing: -0.05em; font-weight: 600; }
 .access-gate__intro { max-width: 34ch; margin: 0 0 34px; color: #aeb8c9; font-size: 14px; line-height: 1.7; }
@@ -180,6 +178,6 @@
 
 @media (max-width: 560px) {
   .access-gate__panel { padding: 34px 24px 26px; border-radius: 18px; }
-  .access-gate__brand { margin-bottom: 36px; }
+  .access-gate__logo-lockup { margin-bottom: 34px; padding: 13px 14px 12px; }
   .access-gate__footer { align-items: flex-start; flex-direction: column; gap: 7px; }
 }

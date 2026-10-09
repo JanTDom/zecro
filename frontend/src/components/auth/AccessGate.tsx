@@ -72,9 +72,12 @@ export function AccessGate({ children }: AccessGateProps) {
       <div className="access-gate__glow access-gate__glow--top" />
       <div className="access-gate__glow access-gate__glow--bottom" />
       <section className="access-gate__panel">
-        <div className="access-gate__brand" aria-label="Zecro Generative Layout Engine">
-          <span className="access-gate__mark">Z</span>
-          <span className="access-gate__wordmark">Zecro</span>
+        <div className="access-gate__logo-lockup">
+          <img
+            className="access-gate__logo"
+            src="/zecro-logo.png"
+            alt="Zecro Generative Layout Engine"
+          />
         </div>
         <div className="access-gate__eyebrow">Private preview · zecro.pl</div>
         <h1 id="access-gate-title">Generative Layout Engine</h1>
