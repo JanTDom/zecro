@@ -62,6 +62,11 @@ def _saved_global_index(*, include_pages: bool = False) -> Optional[Dict[str, An
         return None
     try:
         index = json.loads(cached.read_text(encoding="utf-8"))
+        if isinstance(index, dict):
+            # Never expose the developer machine's absolute corpus path from
+            # the checked-in snapshot in a production API response.
+            index = dict(index)
+            index["root"] = _default_corpus_root().as_posix()
         db.save_global_corpus_index(index)
         return db.get_global_corpus_index(include_pages=include_pages)
     except (OSError, ValueError, TypeError):
