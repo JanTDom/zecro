@@ -148,6 +148,13 @@ def corpus_index_summary(
     if saved and not rebuild:
         return saved
     if not rebuild:
+        # The compact FEATURE_INDEX snapshot is bundled with the API deployment.
+        # Seed SQLite from it so the production generator can use all measured
+        # corpus vectors without shipping the multi-gigabyte raw media archive.
+        if not root:
+            cached_index = _saved_global_index(include_pages=False)
+            if cached_index:
+                return cached_index
         root_path = _resolve_root(root)
         catalog_path = root_path / "INDEX.json"
         catalog: Dict[str, Any] = {}
