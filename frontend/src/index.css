@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #f4f4f1;
+    color: #151821;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  /* Custom scrollbar for editorial studio */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f4f4f1;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cfd3da;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #aeb4bf;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.workspace-board {
+  position: relative;
+  background-color: #f2f2ef;
+  background-image: linear-gradient(rgba(36, 81, 245, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(36, 81, 245, 0.045) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.proof-frame {
+  aspect-ratio: 0.72;
+  min-height: 270px;
+  background: #fff;
+  border: 1px solid #e4e6e9;
+  box-shadow: 0 14px 28px rgba(28, 34, 49, 0.11);
+  padding: 12px;
+  position: relative;
+}
+
+.proof-frame.selected-proof {
+  border-color: #2451f5;
+  box-shadow: 0 0 0 2px rgba(36, 81, 245, 0.15), 0 16px 34px rgba(28, 34, 49, 0.13);
+}
+
+.proof-page { height: 100%; min-height: 270px; overflow: hidden; background: #fff; }
+.proof-page.proof-spread { min-height: 320px; }
+.proof-page.proof-back { background: #fbfbf9; }
+.proof-photo { height: 42%; min-height: 95px; display: flex; align-items: flex-end; padding: 9px; background-size: cover; }
+.proof-lines { display: flex; flex-direction: column; gap: 5px; }
+.proof-lines i, .proof-page > .grid i { display: block; height: 4px; border-radius: 999px; background: #dfe2e5; }
+.proof-page > .grid i:nth-child(2) { background: #c9ced5; }

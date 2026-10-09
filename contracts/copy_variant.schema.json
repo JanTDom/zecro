@@ -1,0 +1,176 @@
+{
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "version": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "parent_revision_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Revision Id"
+    },
+    "status": {
+      "default": "draft",
+      "title": "Status",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "title": "Updated At",
+      "type": "string"
+    },
+    "author_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Author Id"
+    },
+    "content_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Content Hash"
+    },
+    "story_ref": {
+      "title": "Story Ref",
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "kicker",
+        "headline",
+        "deck",
+        "lead",
+        "body",
+        "caption",
+        "byline",
+        "dateline",
+        "pullquote",
+        "factbox",
+        "teaser"
+      ],
+      "title": "Role",
+      "type": "string"
+    },
+    "variant_kind": {
+      "default": "medium",
+      "enum": [
+        "micro",
+        "short",
+        "medium",
+        "long",
+        "exact_fit"
+      ],
+      "title": "Variant Kind",
+      "type": "string"
+    },
+    "text": {
+      "title": "Text",
+      "type": "string"
+    },
+    "target_words": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Target Words"
+    },
+    "target_chars": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Target Chars"
+    },
+    "target_lines": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Target Lines"
+    },
+    "claim_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Claim Refs",
+      "type": "array"
+    },
+    "source_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "locked_passages": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Locked Passages",
+      "type": "array"
+    },
+    "provenance": {
+      "additionalProperties": true,
+      "title": "Provenance",
+      "type": "object"
+    },
+    "approval": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Approval",
+      "type": "object"
+    }
+  },
+  "required": [
+    "story_ref",
+    "role",
+    "text"
+  ],
+  "title": "CopyVariant",
+  "type": "object"
+}

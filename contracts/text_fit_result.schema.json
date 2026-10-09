@@ -1,0 +1,140 @@
+{
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "version": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "parent_revision_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Revision Id"
+    },
+    "status": {
+      "default": "FAIL",
+      "enum": [
+        "PASS",
+        "FAIL"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "title": "Updated At",
+      "type": "string"
+    },
+    "author_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Author Id"
+    },
+    "content_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Content Hash"
+    },
+    "text_plan_ref": {
+      "title": "Text Plan Ref",
+      "type": "string"
+    },
+    "copy_variant_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Copy Variant Ref"
+    },
+    "words": {
+      "default": 0,
+      "title": "Words",
+      "type": "integer"
+    },
+    "lines": {
+      "default": 0,
+      "title": "Lines",
+      "type": "integer"
+    },
+    "capacity_lines": {
+      "default": 0,
+      "title": "Capacity Lines",
+      "type": "integer"
+    },
+    "overflow_mm": {
+      "default": 0.0,
+      "title": "Overflow Mm",
+      "type": "number"
+    },
+    "free_space_mm": {
+      "default": 0.0,
+      "title": "Free Space Mm",
+      "type": "number"
+    },
+    "widows": {
+      "default": 0,
+      "title": "Widows",
+      "type": "integer"
+    },
+    "orphans": {
+      "default": 0,
+      "title": "Orphans",
+      "type": "integer"
+    },
+    "too_narrow": {
+      "default": false,
+      "title": "Too Narrow",
+      "type": "boolean"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "measured_by": {
+      "default": "zecro-copyfit-estimator",
+      "title": "Measured By",
+      "type": "string"
+    }
+  },
+  "required": [
+    "text_plan_ref"
+  ],
+  "title": "TextFitResult",
+  "type": "object"
+}

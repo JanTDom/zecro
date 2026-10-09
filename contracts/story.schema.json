@@ -1,0 +1,296 @@
+{
+  "$defs": {
+    "Claim": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "claim_type": {
+          "default": "fact",
+          "enum": [
+            "fact",
+            "date",
+            "number",
+            "person",
+            "place",
+            "quote",
+            "thesis"
+          ],
+          "title": "Claim Type",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "evidence_excerpt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Excerpt"
+        },
+        "confidence": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "status": {
+          "default": "unverified",
+          "enum": [
+            "unverified",
+            "partially_verified",
+            "verified",
+            "contradicted",
+            "needs_editor"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "Claim",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "version": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "parent_revision_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Revision Id"
+    },
+    "status": {
+      "default": "draft",
+      "title": "Status",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "title": "Updated At",
+      "type": "string"
+    },
+    "author_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Author Id"
+    },
+    "content_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Content Hash"
+    },
+    "issue_ref": {
+      "title": "Issue Ref",
+      "type": "string"
+    },
+    "brief_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Brief Ref"
+    },
+    "slug": {
+      "title": "Slug",
+      "type": "string"
+    },
+    "language": {
+      "default": "pl",
+      "title": "Language",
+      "type": "string"
+    },
+    "importance": {
+      "default": 0.5,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Importance",
+      "type": "number"
+    },
+    "headline": {
+      "default": "",
+      "title": "Headline",
+      "type": "string"
+    },
+    "deck": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Deck"
+    },
+    "lead": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Lead"
+    },
+    "body": {
+      "default": "",
+      "title": "Body",
+      "type": "string"
+    },
+    "byline": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Byline"
+    },
+    "dateline": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Dateline"
+    },
+    "caption": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Caption"
+    },
+    "source_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "asset_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Asset Refs",
+      "type": "array"
+    },
+    "claims": {
+      "items": {
+        "$ref": "#/$defs/Claim"
+      },
+      "title": "Claims",
+      "type": "array"
+    },
+    "active_variants": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Active Variants",
+      "type": "object"
+    },
+    "locked_passages": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Locked Passages",
+      "type": "array"
+    },
+    "editorial_status": {
+      "default": "brief",
+      "title": "Editorial Status",
+      "type": "string"
+    },
+    "fact_checked": {
+      "default": false,
+      "title": "Fact Checked",
+      "type": "boolean"
+    },
+    "editor_approved": {
+      "default": false,
+      "title": "Editor Approved",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "issue_ref",
+    "slug"
+  ],
+  "title": "Story",
+  "type": "object"
+}

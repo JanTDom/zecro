@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gazeta Codzienna — Broadsheet Front Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <main class="newspaper-page">
+    
+    <!-- Top Skyline Teasers -->
+    <section class="skyline-bar">
+      <div class="skyline-teaser"><strong>INSIDE:</strong> Global Tech Summit in Kyoto • Page B1</div>
+      <div class="skyline-teaser"><strong>OPINION:</strong> The Architecture of the Next Decade • Page A12</div>
+      <div class="skyline-teaser"><strong>ARTS:</strong> Retrospective on 20th Century Printmaking • Page C4</div>
+    </section>
+
+    <!-- Masthead & Ear Boxes -->
+    <header class="masthead-container">
+      <aside class="ear-box">
+        <div class="ear-box-title">WEATHER • 5-DAY</div>
+        <div>THU: 22°C / 14°C ☀️ Sunny</div>
+        <div>FRI: 19°C / 11°C 🌧️ Showers</div>
+      </aside>
+
+      <div class="masthead-center">
+        <div class="motto">“Głos Niezależnego Dziennikarstwa and Truth”</div>
+        <h1 class="masthead-title">Gazeta Codzienna</h1>
+      </div>
+
+      <aside class="ear-box" style="text-align: right;">
+        <div class="ear-box-title">MARKETS AT CLOSE</div>
+        <div>DOW: 41,250 ▲ +0.4%</div>
+        <div>S&P: 5,648 ▲ +0.6%</div>
+      </aside>
+    </header>
+
+    <!-- Folio Bar -->
+    <nav class="folio-bar">
+      <span>VOL. CXXXII NO. 42</span>
+      <span>THURSDAY, OCTOBER 15, 2026</span>
+      <span>INTERNATIONAL EDITION</span>
+      <span>PRICE 4.50 PLN</span>
+    </nav>
+
+    <!-- Main Broadsheet 6-Column Grid -->
+    <div class="broadsheet-grid">
+      
+      <!-- LEAD STORY (Spans 4 Columns) -->
+      <article class="span-4 story-lead-container">
+        <div class="kicker">HISTORIC ACCORD • GENEVA DIPLOMACY</div>
+        <h2 class="headline-banner">Global Summit Reaches Binding Climate Agreement</h2>
+        <div class="deck">Envoys from 140 nations ratify landmark emission caps following intense 72-hour negotiations; industrial transition funds established.</div>
+        <div class="byline-bar">
+          <span>By ELEANOR VANCE in Geneva</span>
+          <span>Special to Gazeta Codzienna</span>
+        </div>
+
+        <figure class="editorial-figure">
+          <div class="figure-img-placeholder">
+            <span>[ EDITORIAL PHOTOGRAPH: GENEVA ACCORD RATIFICATION ]</span>
+            <span style="font-size:8pt; opacity:0.7; margin-top:4px;">Delegates from 140 nations applaud after signing ceremony</span>
+          </div>
+          <figcaption>
+            <span class="credit">CHRONICLE / MARCUS RIVERA —</span> Chief delegates applaud inside the Palace of Nations at dawn on Thursday after reaching unanimous consensus on global reduction targets.
+          </figcaption>
+        </figure>
+
+        <div class="multi-col-2">
+          <p class="drop-cap"><span class="dateline">GENEVA —</span> In a decisive diplomatic breakthrough that followed three days of round-the-clock deliberation, representatives from 140 sovereign nations ratified a binding international treaty aimed at stabilizing global industrial output and accelerating renewable infrastructure deployment.</p>
+          
+          <p>The accord, finalized under the auspices of the International Environmental Council, establishes enforceable decadal targets alongside a dedicated 450-billion-dollar multilateral transition fund designed to support emerging economies.</p>
+          
+          <p>“We have moved past declarations of intent to actionable, enforceable obligations,” declared lead negotiator Dr. Helena Lindqvist during a crowded press briefing. “This framework represents a generational consensus that economic growth and planetary stewardship can no longer be separated.”</p>
+          
+          <p>Key provisions of the agreement mandate verified carbon accounting for maritime shipping, phased decommission schedules for unabated coal infrastructure, and sovereign green bond standards.</p>
+          
+          <div class="jump-line">Continued on Page A4, Column 1</div>
+        </div>
+      </article>
+
+      <!-- SECONDARY COLUMN & SIDEBAR (Spans 2 Columns) -->
+      <aside class="span-2">
+        
+        <article class="sidebar-module">
+          <div class="kicker">ECONOMIC ANALYSIS</div>
+          <h3 class="headline-secondary">Markets Rally Across Europe on Treaty News</h3>
+          <div class="byline-bar">
+            <span>By ARTHUR PENROSE</span>
+          </div>
+          <p class="no-indent"><span class="dateline">LONDON —</span> Major indices across Frankfurt, London, and Paris surged in early trading following the announcements from Geneva, led by significant gains in clean energy manufacturers and grid component suppliers.</p>
+          
+          <div class="pull-quote">
+            “The elimination of regulatory ambiguity is precisely what capital markets required.”
+          </div>
+
+          <p>Analysts noted that long-term sovereign yield curves flattened moderately as investors priced in systematic transition capital allocations over the coming two decades.</p>
+          <div class="jump-line">Continued on Page B3</div>
+        </article>
+
+        <!-- Weather and Key Indicators Widget -->
+        <div style="margin-top: 15px; border: 1px solid var(--rule); padding: 10px; background: var(--tint-bg);">
+          <div class="sidebar-title">AT A GLANCE: KEY PROVISIONS</div>
+          <ul style="padding-left: 15px; font-size: 8.5pt; line-height: 1.4;">
+            <li><strong>$450 Billion</strong> Global Transition Facility.</li>
+            <li><strong>2035 Target:</strong> 60% reduction in stationary power emissions.</li>
+            <li><strong>Maritime Rule:</strong> Zero-emission bunker mandates by 2038.</li>
+            <li><strong>Enforcement:</strong> Bilateral arbitration panel with tariff remedies.</li>
+          </ul>
+        </div>
+
+      </aside>
+
+      <!-- BOTTOM ROW / BELOW THE FOLD (Span 6 Columns) -->
+      <section class="span-6" style="border-top: 2px solid var(--rule); padding-top: 15px;">
+        <div class="broadsheet-grid">
+          
+          <article class="span-2">
+            <div class="kicker">MUNICIPAL GOVERNANCE</div>
+            <h4 class="headline-tertiary">City Council Approves New Light Rail Transit Corridor</h4>
+            <div class="byline-bar"><span>By CLARA OSGOOD</span></div>
+            <p><span class="dateline">CITY HALL —</span> After months of public hearings, the metropolitan council voted 11 to 3 to authorize the expansion of the western light-rail corridor connecting downtown with the university district.</p>
+            <div class="jump-line">Page A6</div>
+          </article>
+
+          <article class="span-2">
+            <div class="kicker">DISCOVERY & SCIENCE</div>
+            <h4 class="headline-tertiary">Deep-Sea Mapping Expedition Uncovers Hydrothermal Field</h4>
+            <div class="byline-bar"><span>By DR. JAMES WEYLAND</span></div>
+            <p><span class="dateline">OCEANIC INST. —</span> Oceanographers aboard the research vessel *Endeavour* have documented an extensive field of hydrothermal vents in the South Pacific supporting previously unclassified fauna.</p>
+            <div class="jump-line">Page A8</div>
+          </article>
+
+          <article class="span-2">
+            <div class="kicker">ARTS & LETTERS</div>
+            <h4 class="headline-tertiary">National Gallery Announces Rare Renaissance Exhibition</h4>
+            <div class="byline-bar"><span>By JULIAN BARKER</span></div>
+            <p><span class="dateline">FLORENCE —</span> Over fifty rare works from Florentine workshops will travel together for the first time in over eighty years for an exclusive retrospective.</p>
+            <div class="jump-line">Page C1</div>
+          </article>
+
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+</body>
+</html>

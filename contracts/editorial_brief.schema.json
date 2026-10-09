@@ -1,0 +1,170 @@
+{
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "version": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "parent_revision_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Revision Id"
+    },
+    "status": {
+      "default": "draft",
+      "title": "Status",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "title": "Updated At",
+      "type": "string"
+    },
+    "author_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Author Id"
+    },
+    "content_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Content Hash"
+    },
+    "issue_ref": {
+      "title": "Issue Ref",
+      "type": "string"
+    },
+    "assignment_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Assignment Id"
+    },
+    "topic": {
+      "title": "Topic",
+      "type": "string"
+    },
+    "angle": {
+      "title": "Angle",
+      "type": "string"
+    },
+    "audience": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Audience"
+    },
+    "language": {
+      "default": "pl",
+      "title": "Language",
+      "type": "string"
+    },
+    "tone": {
+      "default": "informacyjny",
+      "title": "Tone",
+      "type": "string"
+    },
+    "deadline": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Deadline"
+    },
+    "priority": {
+      "default": 0.5,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Priority",
+      "type": "number"
+    },
+    "required_facts": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Required Facts",
+      "type": "array"
+    },
+    "legal_constraints": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Legal Constraints",
+      "type": "array"
+    },
+    "forbidden_words": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Forbidden Words",
+      "type": "array"
+    },
+    "required_materials": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Required Materials",
+      "type": "array"
+    },
+    "source_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Source Refs",
+      "type": "array"
+    }
+  },
+  "required": [
+    "issue_ref",
+    "topic",
+    "angle"
+  ],
+  "title": "EditorialBrief",
+  "type": "object"
+}

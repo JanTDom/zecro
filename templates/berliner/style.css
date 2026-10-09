@@ -1,0 +1,121 @@
+/* ==========================================================================
+   REFINED BERLINER NEWSPAPER STYLESHEET
+   Format: Berliner (315mm x 470mm) / 5-Column Grid
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400;1,600&family=Work+Sans:wght@400;600;800&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap');
+
+:root {
+  --ink: #161616;
+  --paper: #fcfbfa;
+  --accent: #1e3d59;
+  --rule: #161616;
+  --rule-light: #ccc9c0;
+  --font-serif-head: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Work Sans', sans-serif;
+  --font-body: 'Newsreader', serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #dedcd5;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 9.5pt;
+  line-height: 1.35;
+  padding: 20px;
+}
+
+.berliner-page {
+  width: 315mm;
+  min-height: 470mm;
+  margin: 0 auto;
+  background: var(--paper);
+  padding: 14mm;
+  box-shadow: 0 4px 22px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+}
+
+.berliner-header {
+  border-bottom: 2px solid var(--rule);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.berliner-masthead {
+  font-family: var(--font-serif-head);
+  font-size: 48pt;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.berliner-folio {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-sans);
+  font-size: 8pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-top: 1px solid var(--rule-light);
+  border-bottom: 1px solid var(--rule-light);
+  padding: 4px 0;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.berliner-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  flex: 1;
+}
+
+.span-5 { grid-column: span 5; }
+.span-3 { grid-column: span 3; }
+.span-2 { grid-column: span 2; }
+
+.berliner-headline {
+  font-family: var(--font-serif-head);
+  font-size: 32pt;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.berliner-deck {
+  font-family: var(--font-serif-head);
+  font-size: 13pt;
+  font-style: italic;
+  line-height: 1.25;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.berliner-cols-3 {
+  column-count: 3;
+  column-gap: 14px;
+  column-rule: 1px solid var(--rule-light);
+  text-align: justify;
+}
+
+.berliner-cols-2 {
+  column-count: 2;
+  column-gap: 14px;
+  column-rule: 1px solid var(--rule-light);
+  text-align: justify;
+}
+
+p { margin-bottom: 8px; text-indent: 1.2em; }
+p:first-of-type { text-indent: 0; }
+
+@media print {
+  body { background: none; padding: 0; }
+  .berliner-page { width: 100%; margin: 0; padding: 0; box-shadow: none; }
+  @page { size: 315mm 470mm; margin: 14mm; }
+}

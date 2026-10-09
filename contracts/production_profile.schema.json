@@ -1,0 +1,141 @@
+{
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "version": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "parent_revision_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Revision Id"
+    },
+    "status": {
+      "default": "draft",
+      "title": "Status",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "title": "Updated At",
+      "type": "string"
+    },
+    "author_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Author Id"
+    },
+    "content_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Content Hash"
+    },
+    "project_id": {
+      "title": "Project Id",
+      "type": "string"
+    },
+    "output_intent": {
+      "default": "ISOnewspaper26v4.icc",
+      "title": "Output Intent",
+      "type": "string"
+    },
+    "pdf_standard": {
+      "default": "PDF/X-4:2010",
+      "enum": [
+        "PDF/X-4:2010",
+        "PDF/X-1a:2001",
+        "PDF"
+      ],
+      "title": "Pdf Standard",
+      "type": "string"
+    },
+    "color_space": {
+      "default": "CMYK",
+      "enum": [
+        "CMYK",
+        "RGB",
+        "Gray"
+      ],
+      "title": "Color Space",
+      "type": "string"
+    },
+    "tac_limit_percent": {
+      "default": 240.0,
+      "title": "Tac Limit Percent",
+      "type": "number"
+    },
+    "bleed_mm": {
+      "default": 3.0,
+      "title": "Bleed Mm",
+      "type": "number"
+    },
+    "safe_margin_mm": {
+      "default": 8.0,
+      "title": "Safe Margin Mm",
+      "type": "number"
+    },
+    "gripper_margin_mm": {
+      "default": 12.0,
+      "title": "Gripper Margin Mm",
+      "type": "number"
+    },
+    "trim_box_mm": {
+      "items": {
+        "type": "number"
+      },
+      "title": "Trim Box Mm",
+      "type": "array"
+    },
+    "paper": {
+      "default": "newsprint_coldset",
+      "title": "Paper",
+      "type": "string"
+    },
+    "spot_colors": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Spot Colors",
+      "type": "array"
+    },
+    "imposition": {
+      "additionalProperties": true,
+      "title": "Imposition",
+      "type": "object"
+    }
+  },
+  "required": [
+    "project_id"
+  ],
+  "title": "ProductionProfile",
+  "type": "object"
+}

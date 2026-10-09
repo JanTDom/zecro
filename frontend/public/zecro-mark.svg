@@ -1,0 +1,11 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Zecro mark</title>
+  <rect x="40" y="32" width="116" height="42" rx="11" fill="#1647F5"/>
+  <rect x="166" y="25" width="48" height="48" rx="9" transform="rotate(24 166 25)" fill="#FFD11A"/>
+  <rect x="20" y="104" width="48" height="74" rx="10" transform="rotate(-29 20 104)" fill="#25D1A6"/>
+  <path d="M83.6 83.2C86.1 78.8 90.6 76.1 95.7 76.1H157.4C166.7 76.1 172.3 86.6 167 94.2L104.5 184C101.9 187.8 97.6 190.1 93 190.1H40.1C30.3 190.1 24.5 179.1 30.1 171.1L83.6 83.2Z" fill="#FF594D"/>
+  <rect x="157" y="84" width="47" height="106" rx="12" fill="#6527F5"/>
+  <rect x="39" y="197" width="85" height="35" rx="10" fill="#6727F5"/>
+  <rect x="130" y="198" width="65" height="35" rx="10" fill="#FFD11A"/>
+  <rect x="202" y="197" width="35" height="35" rx="9" fill="#1647F5"/>
+</svg>

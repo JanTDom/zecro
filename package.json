@@ -1,0 +1,24 @@
+{
+  "name": "zecro-generative-layout-engine",
+  "version": "1.0.0",
+  "description": "Zecro Generative Layout Engine — local editorial layout, copyfitting and DTP export.",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve_preview.js",
+    "build:pdf": "node scripts/render_pdf.js",
+    "copyfit": "python3 scripts/copyfit.py"
+  },
+  "keywords": [
+    "newspaper",
+    "layout",
+    "editorial-design",
+    "paged-media",
+    "typography",
+    "dtp",
+    "broadsheet",
+    "tabloid",
+    "typst"
+  ],
+  "author": "Zecro",
+  "license": "MIT"
+}
