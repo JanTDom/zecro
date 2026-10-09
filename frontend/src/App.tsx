@@ -9,6 +9,7 @@ import { CandidateGallery } from './components/gallery/CandidateGallery';
 import { SceneGraphCanvas } from './components/canvas/SceneGraphCanvas';
 import { ComparePage } from './components/compare/ComparePage';
 import { ProjectsList } from './components/projects/ProjectsList';
+import { AccessGate } from './components/auth/AccessGate';
 
 interface MainContentProps {
   onOpenNewProject: () => void;
@@ -56,20 +57,22 @@ export function App() {
   const [isExportOpen, setIsExportOpen] = React.useState(false);
 
   return (
-    <ProjectProvider>
-      <Layout
-        isNewProjectOpen={isNewProjectOpen}
-        isExportOpen={isExportOpen}
-        onOpenNewProject={() => setIsNewProjectOpen(true)}
-        onCloseNewProject={() => setIsNewProjectOpen(false)}
-        onCloseExport={() => setIsExportOpen(false)}
-      >
-        <MainContent
+    <AccessGate>
+      <ProjectProvider>
+        <Layout
+          isNewProjectOpen={isNewProjectOpen}
+          isExportOpen={isExportOpen}
           onOpenNewProject={() => setIsNewProjectOpen(true)}
-          onOpenExport={() => setIsExportOpen(true)}
-        />
-      </Layout>
-    </ProjectProvider>
+          onCloseNewProject={() => setIsNewProjectOpen(false)}
+          onCloseExport={() => setIsExportOpen(false)}
+        >
+          <MainContent
+            onOpenNewProject={() => setIsNewProjectOpen(true)}
+            onOpenExport={() => setIsExportOpen(true)}
+          />
+        </Layout>
+      </ProjectProvider>
+    </AccessGate>
   );
 }
 
