@@ -1,0 +1,745 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-10-09",
+  "categories": {
+    "1_powazne_opiniotworcze": {
+      "title": "Kategoria 1: Poważne gazety opiniotwórcze (Broadsheet / Quality Press)",
+      "titles": [
+        {
+          "id": "corriere_della_sera",
+          "name": "Corriere della Sera",
+          "country": "Włochy",
+          "format_preset": "broadsheet",
+          "profile": "Włoski dziennik ogólnokrajowy o klasycznej, eleganckiej strukturze",
+          "counts": {
+            "front": 8,
+            "spreads": 16,
+            "back": 8,
+            "total": 32
+          },
+          "path": "corpus/1_powazne_opiniotworcze/corriere_della_sera"
+        },
+        {
+          "id": "der_spiegel",
+          "name": "DER SPIEGEL",
+          "country": "Niemcy",
+          "format_preset": "magazine_newsmag",
+          "profile": "Tygodnik informacyjny o sile gazety opiniotwórczej; wyraziste okładki i śledztwa",
+          "counts": {
+            "front": 8,
+            "spreads": 16,
+            "back": 8,
+            "total": 32
+          },
+          "path": "corpus/1_powazne_opiniotworcze/der_spiegel"
+        },
+        {
+          "id": "die_zeit",
+          "name": "Die Zeit",
+          "country": "Niemcy",
+          "format_preset": "nordisch_broadsheet",
+          "profile": "Tygodnik o bardzo wysokiej kulturze redakcyjnej i rozbudowanych tekstach",
+          "counts": {
+            "front": 4,
+            "spreads": 8,
+            "back": 4,
+            "total": 16
+          },
+          "path": "corpus/1_powazne_opiniotworcze/die_zeit"
+        },
+        {
+          "id": "el_pais",
+          "name": "El País",
+          "country": "Hiszpania",
+          "format_preset": "berliner_compact",
+          "profile": "Najbardziej rozpoznawalny dziennik Hiszpanii; silne otwarcia i reportaż",
+          "counts": {
+            "front": 6,
+            "spreads": 10,
+            "back": 5,
+            "total": 21
+          },
+          "path": "corpus/1_powazne_opiniotworcze/el_pais"
+        },
+        {
+          "id": "financial_times",
+          "name": "Financial Times",
+          "country": "Wielka Brytania",
+          "format_preset": "broadsheet",
+          "profile": "Wzorzec prasy ekonomicznej: hierarchia informacji, oszczędny różowy papier i wykresy",
+          "counts": {
+            "front": 5,
+            "spreads": 10,
+            "back": 5,
+            "total": 20
+          },
+          "path": "corpus/1_powazne_opiniotworcze/financial_times"
+        },
+        {
+          "id": "le_monde",
+          "name": "Le Monde",
+          "country": "Francja",
+          "format_preset": "berliner",
+          "profile": "Elitarna francuska gazeta o zwartej, analitycznej makiecie",
+          "counts": {
+            "front": 1,
+            "spreads": 0,
+            "back": 0,
+            "total": 1
+          },
+          "path": "corpus/1_powazne_opiniotworcze/le_monde"
+        },
+        {
+          "id": "nzz",
+          "name": "NZZ Neue Zürcher Zeitung",
+          "country": "Szwajcaria",
+          "format_preset": "berliner",
+          "profile": "Precyzyjny, konserwatywny wzorzec prasy wysokiej jakości",
+          "counts": {
+            "front": 7,
+            "spreads": 14,
+            "back": 7,
+            "total": 28
+          },
+          "path": "corpus/1_powazne_opiniotworcze/nzz"
+        },
+        {
+          "id": "the_guardian",
+          "name": "The Guardian",
+          "country": "Wielka Brytania",
+          "format_preset": "tabloid_berliner",
+          "profile": "Dziennik opiniotwórczy z charakterystycznym projektem stron i mocną fotografią",
+          "counts": {
+            "front": 6,
+            "spreads": 12,
+            "back": 6,
+            "total": 24
+          },
+          "path": "corpus/1_powazne_opiniotworcze/the_guardian"
+        },
+        {
+          "id": "the_new_york_times",
+          "name": "The New York Times",
+          "country": "USA",
+          "format_preset": "broadsheet",
+          "profile": "Globalny dziennik referencyjny; mocna typografia, reportaż i sekcje tematyczne",
+          "counts": {
+            "front": 2,
+            "spreads": 4,
+            "back": 2,
+            "total": 8
+          },
+          "path": "corpus/1_powazne_opiniotworcze/the_new_york_times"
+        },
+        {
+          "id": "the_wall_street_journal",
+          "name": "The Wall Street Journal",
+          "country": "USA",
+          "format_preset": "broadsheet",
+          "profile": "Najważniejszy amerykański dziennik biznesowy, bardzo silny front page i infografika",
+          "counts": {
+            "front": 2,
+            "spreads": 4,
+            "back": 2,
+            "total": 8
+          },
+          "path": "corpus/1_powazne_opiniotworcze/the_wall_street_journal"
+        }
+      ]
+    },
+    "2_magazyny": {
+      "title": "Kategoria 2: Papierowe magazyny (Editorial / Feature Magazines)",
+      "titles": [
+        {
+          "id": "monocle",
+          "name": "Monocle",
+          "country": "Wielka Brytania",
+          "format_preset": "magazine",
+          "profile": "Międzynarodowy magazyn stylu życia, miast, biznesu i designu",
+          "counts": {
+            "front": 6,
+            "spreads": 11,
+            "back": 6,
+            "total": 23
+          },
+          "path": "corpus/2_magazyny/monocle"
+        },
+        {
+          "id": "national_geographic",
+          "name": "National Geographic",
+          "country": "USA",
+          "format_preset": "magazine",
+          "profile": "Reportaż fotograficzny i narracja wizualna na najwyższym poziomie",
+          "counts": {
+            "front": 7,
+            "spreads": 14,
+            "back": 7,
+            "total": 28
+          },
+          "path": "corpus/2_magazyny/national_geographic"
+        },
+        {
+          "id": "smithsonian",
+          "name": "Smithsonian",
+          "country": "USA",
+          "format_preset": "magazine",
+          "profile": "Popularnonaukowy magazyn o historii, nauce i kulturze",
+          "counts": {
+            "front": 4,
+            "spreads": 8,
+            "back": 4,
+            "total": 16
+          },
+          "path": "corpus/2_magazyny/smithsonian"
+        },
+        {
+          "id": "the_atlantic",
+          "name": "The Atlantic",
+          "country": "USA",
+          "format_preset": "magazine",
+          "profile": "Magazyn idei, polityki i kultury z mocnym designem okładek",
+          "counts": {
+            "front": 6,
+            "spreads": 10,
+            "back": 5,
+            "total": 21
+          },
+          "path": "corpus/2_magazyny/the_atlantic"
+        },
+        {
+          "id": "the_economist",
+          "name": "The Economist",
+          "country": "Wielka Brytania",
+          "format_preset": "magazine",
+          "profile": "Globalny tygodnik analiz; konsekwentny system okładek, ikon i wykresów",
+          "counts": {
+            "front": 5,
+            "spreads": 10,
+            "back": 5,
+            "total": 20
+          },
+          "path": "corpus/2_magazyny/the_economist"
+        },
+        {
+          "id": "the_new_yorker",
+          "name": "The New Yorker",
+          "country": "USA",
+          "format_preset": "magazine",
+          "profile": "Wzorzec eseju, reportażu, ilustracji i kultury okładki",
+          "counts": {
+            "front": 8,
+            "spreads": 16,
+            "back": 8,
+            "total": 32
+          },
+          "path": "corpus/2_magazyny/the_new_yorker"
+        },
+        {
+          "id": "the_spectator",
+          "name": "The Spectator",
+          "country": "Wielka Brytania",
+          "format_preset": "magazine",
+          "profile": "Najstarszy tygodnik polityczno-kulturalny; wyrazisty komentarz i okładki",
+          "counts": {
+            "front": 8,
+            "spreads": 16,
+            "back": 7,
+            "total": 31
+          },
+          "path": "corpus/2_magazyny/the_spectator"
+        },
+        {
+          "id": "time",
+          "name": "TIME",
+          "country": "USA",
+          "format_preset": "magazine",
+          "profile": "Klasyczny magazyn informacyjny z jedną z najsilniejszych marek okładkowych",
+          "counts": {
+            "front": 8,
+            "spreads": 15,
+            "back": 8,
+            "total": 31
+          },
+          "path": "corpus/2_magazyny/time"
+        },
+        {
+          "id": "vanity_fair",
+          "name": "Vanity Fair",
+          "country": "USA",
+          "format_preset": "magazine",
+          "profile": "Kultura, polityka i celebryci; bogata fotografia i charakterystyczne okładki",
+          "counts": {
+            "front": 3,
+            "spreads": 6,
+            "back": 3,
+            "total": 12
+          },
+          "path": "corpus/2_magazyny/vanity_fair"
+        },
+        {
+          "id": "wired",
+          "name": "WIRED",
+          "country": "USA",
+          "format_preset": "magazine",
+          "profile": "Technologie, nauka i biznes; odważny, nowoczesny język wizualny",
+          "counts": {
+            "front": 8,
+            "spreads": 16,
+            "back": 8,
+            "total": 32
+          },
+          "path": "corpus/2_magazyny/wired"
+        }
+      ]
+    },
+    "3_tv_guidy": {
+      "title": "Kategoria 3: Papierowe TV guidy (Program Guides / Modular Grids)",
+      "titles": [
+        {
+          "id": "radio_times",
+          "name": "Radio Times",
+          "country": "Wielka Brytania",
+          "format_preset": "tv_guide",
+          "profile": "Najbardziej prestiżowy brytyjski tygodnik programowy; dużo treści redakcyjnej",
+          "counts": {
+            "front": 8,
+            "spreads": 16,
+            "back": 8,
+            "total": 32
+          },
+          "path": "corpus/3_tv_guidy/radio_times"
+        },
+        {
+          "id": "tele_7_jours",
+          "name": "Télé 7 Jours",
+          "country": "Francja",
+          "format_preset": "tv_guide",
+          "profile": "Jeden z najważniejszych francuskich tygodników telewizyjnych",
+          "counts": {
+            "front": 1,
+            "spreads": 2,
+            "back": 1,
+            "total": 4
+          },
+          "path": "corpus/3_tv_guidy/tele_7_jours"
+        },
+        {
+          "id": "tele_star",
+          "name": "Télé Star",
+          "country": "Francja",
+          "format_preset": "tv_guide",
+          "profile": "Popularny francuski TV guide z dużą częścią plotkarsko-serialową",
+          "counts": {
+            "front": 3,
+            "spreads": 6,
+            "back": 3,
+            "total": 12
+          },
+          "path": "corpus/3_tv_guidy/tele_star"
+        },
+        {
+          "id": "total_tv_guide",
+          "name": "Total TV Guide",
+          "country": "Wielka Brytania",
+          "format_preset": "tv_guide",
+          "profile": "Rozbudowany przewodnik po kanałach naziemnych i płatnych",
+          "counts": {
+            "front": 3,
+            "spreads": 6,
+            "back": 3,
+            "total": 12
+          },
+          "path": "corpus/3_tv_guidy/total_tv_guide"
+        },
+        {
+          "id": "tv_choice",
+          "name": "TV Choice",
+          "country": "Wielka Brytania",
+          "format_preset": "tv_guide",
+          "profile": "Popularny, bardzo praktyczny tygodnik z programem i krótkimi opisami",
+          "counts": {
+            "front": 1,
+            "spreads": 2,
+            "back": 1,
+            "total": 4
+          },
+          "path": "corpus/3_tv_guidy/tv_choice"
+        },
+        {
+          "id": "tv_guide_magazine",
+          "name": "TV Guide Magazine",
+          "country": "USA",
+          "format_preset": "tv_guide",
+          "profile": "Klasyczny amerykański tygodnik telewizyjny z okładkami gwiazd",
+          "counts": {
+            "front": 8,
+            "spreads": 16,
+            "back": 8,
+            "total": 32
+          },
+          "path": "corpus/3_tv_guidy/tv_guide_magazine"
+        },
+        {
+          "id": "tv_hebdo",
+          "name": "TV Hebdo",
+          "country": "Kanada",
+          "format_preset": "tv_guide",
+          "profile": "Kanadyjski przewodnik telewizyjny z programem, wywiadami i rekomendacjami",
+          "counts": {
+            "front": 1,
+            "spreads": 2,
+            "back": 1,
+            "total": 4
+          },
+          "path": "corpus/3_tv_guidy/tv_hebdo"
+        },
+        {
+          "id": "tv_spielfilm",
+          "name": "TV Spielfilm",
+          "country": "Niemcy",
+          "format_preset": "tv_guide",
+          "profile": "Wysokiej jakości niemiecki przewodnik z recenzjami filmów i seriali",
+          "counts": {
+            "front": 1,
+            "spreads": 2,
+            "back": 1,
+            "total": 4
+          },
+          "path": "corpus/3_tv_guidy/tv_spielfilm"
+        },
+        {
+          "id": "tv_times",
+          "name": "TV Times",
+          "country": "Wielka Brytania",
+          "format_preset": "tv_guide",
+          "profile": "Tygodnik skupiony na programach ITV, serialach i wywiadach",
+          "counts": {
+            "front": 7,
+            "spreads": 14,
+            "back": 7,
+            "total": 28
+          },
+          "path": "corpus/3_tv_guidy/tv_times"
+        },
+        {
+          "id": "whats_on_tv",
+          "name": "What's on TV",
+          "country": "Wielka Brytania",
+          "format_preset": "tv_guide",
+          "profile": "Masowy, czytelny układ programów i treści o serialach",
+          "counts": {
+            "front": 7,
+            "spreads": 14,
+            "back": 7,
+            "total": 28
+          },
+          "path": "corpus/3_tv_guidy/whats_on_tv"
+        }
+      ]
+    },
+    "4_tabloidy_bulwarowe": {
+      "title": "Kategoria 4: Gazety bulwarowe (Tabloidy)",
+      "titles": [
+        {
+          "id": "bild",
+          "name": "Bild",
+          "country": "Niemcy",
+          "format_preset": "tabloid_broadsheet",
+          "profile": "Najważniejszy europejski tabloid; ogromne nagłówki, emocja i natychmiastowa czytelność",
+          "counts": {
+            "front": 8,
+            "spreads": 15,
+            "back": 8,
+            "total": 31
+          },
+          "path": "corpus/4_tabloidy_bulwarowe/bild"
+        },
+        {
+          "id": "blick",
+          "name": "Blick",
+          "country": "Szwajcaria",
+          "format_preset": "tabloid",
+          "profile": "Najbardziej tabloidowa z dużych szwajcarskich gazet, z mocnym serwisem sportowym",
+          "counts": {
+            "front": 4,
+            "spreads": 8,
+            "back": 4,
+            "total": 16
+          },
+          "path": "corpus/4_tabloidy_bulwarowe/blick"
+        },
+        {
+          "id": "daily_mail",
+          "name": "Daily Mail",
+          "country": "Wielka Brytania",
+          "format_preset": "tabloid",
+          "profile": "Masowy tabloid o rozbudowanym serwisie społecznym, celebryckim i politycznym",
+          "counts": {
+            "front": 6,
+            "spreads": 10,
+            "back": 7,
+            "total": 23
+          },
+          "path": "corpus/4_tabloidy_bulwarowe/daily_mail"
+        },
+        {
+          "id": "daily_mirror",
+          "name": "Daily Mirror",
+          "country": "Wielka Brytania",
+          "format_preset": "tabloid",
+          "profile": "Tabloid o profilu bardziej społeczno-politycznym, z mocnymi pierwszymi stronami",
+          "counts": {
+            "front": 2,
+            "spreads": 2,
+            "back": 2,
+            "total": 6
+          },
+          "path": "corpus/4_tabloidy_bulwarowe/daily_mirror"
+        },
+        {
+          "id": "daily_star",
+          "name": "Daily Star",
+          "country": "Wielka Brytania",
+          "format_preset": "tabloid",
+          "profile": "Tabloid nastawiony na humor, sensację, celebrytów i bardzo wyraziste okładki",
+          "counts": {
+            "front": 7,
+            "spreads": 14,
+            "back": 7,
+            "total": 28
+          },
+          "path": "corpus/4_tabloidy_bulwarowe/daily_star"
+        },
+        {
+          "id": "fakt",
+          "name": "Fakt",
+          "country": "Polska",
+          "format_preset": "tabloid",
+          "profile": "Największy polski tabloid; mocny lead, duża fotografia, proste komunikaty i emocje",
+          "counts": {
+            "front": 7,
+            "spreads": 14,
+            "back": 7,
+            "total": 28
+          },
+          "path": "corpus/4_tabloidy_bulwarowe/fakt"
+        },
+        {
+          "id": "globe",
+          "name": "Globe",
+          "country": "USA",
+          "format_preset": "tabloid_supermarket",
+          "profile": "Tabloid sensacyjny oparty na mocnych fotografiach, skandalach i dużych obietnicach okładkowych",
+          "counts": {
+            "front": 8,
+            "spreads": 16,
+            "back": 8,
+            "total": 32
+          },
+          "path": "corpus/4_tabloidy_bulwarowe/globe"
+        },
+        {
+          "id": "national_enquirer",
+          "name": "National Enquirer",
+          "country": "USA",
+          "format_preset": "tabloid_supermarket",
+          "profile": "Klasyczny supermarket tabloid: celebryci, sensacja i duża rola okładki",
+          "counts": {
+            "front": 5,
+            "spreads": 10,
+            "back": 4,
+            "total": 19
+          },
+          "path": "corpus/4_tabloidy_bulwarowe/national_enquirer"
+        },
+        {
+          "id": "new_york_post",
+          "name": "New York Post",
+          "country": "USA",
+          "format_preset": "tabloid",
+          "profile": "Amerykański tabloid miejski znany z bardzo mocnych nagłówków i okładek",
+          "counts": {
+            "front": 5,
+            "spreads": 10,
+            "back": 3,
+            "total": 18
+          },
+          "path": "corpus/4_tabloidy_bulwarowe/new_york_post"
+        },
+        {
+          "id": "the_sun",
+          "name": "The Sun",
+          "country": "Wielka Brytania",
+          "format_preset": "tabloid",
+          "profile": "Ikona brytyjskiego tabloidu; agresywny tytuł, fotografia i silny komponent sportowy",
+          "counts": {
+            "front": 1,
+            "spreads": 0,
+            "back": 1,
+            "total": 2
+          },
+          "path": "corpus/4_tabloidy_bulwarowe/the_sun"
+        },
+        {
+          "id": "wukadka",
+          "name": "Wukadka",
+          "country": "Polska",
+          "format_preset": "tabloid_local",
+          "profile": "Umiarkowany polski tabloid lokalny; wyrazista dominanta, czytelna siatka, materiały regionalne",
+          "counts": {
+            "front": 2,
+            "spreads": 29,
+            "back": 3,
+            "total": 34
+          },
+          "path": "corpus/4_tabloidy_bulwarowe/wukadka"
+        }
+      ]
+    },
+    "5_posrednie_masowe": {
+      "title": "Kategoria 5: Gazety pośrednie (Mid-market / Masowe jakościowe)",
+      "titles": [
+        {
+          "id": "de_telegraaf",
+          "name": "De Telegraaf",
+          "country": "Holandia",
+          "format_preset": "tabloid_broadsheet",
+          "profile": "Holenderski dziennik masowy łączący informację i tabloidową energię",
+          "counts": {
+            "front": 5,
+            "spreads": 4,
+            "back": 2,
+            "total": 11
+          },
+          "path": "corpus/5_posrednie_masowe/de_telegraaf"
+        },
+        {
+          "id": "die_welt",
+          "name": "Die Welt",
+          "country": "Niemcy",
+          "format_preset": "broadsheet_compact",
+          "profile": "Gazeta jakościowa w nowoczesnym, bardziej rynkowym i opiniotwórczym wydaniu",
+          "counts": {
+            "front": 5,
+            "spreads": 9,
+            "back": 5,
+            "total": 19
+          },
+          "path": "corpus/5_posrednie_masowe/die_welt"
+        },
+        {
+          "id": "el_mundo",
+          "name": "El Mundo",
+          "country": "Hiszpania",
+          "format_preset": "berliner",
+          "profile": "Dziennik ogólnokrajowy o wyrazistym newsowym i śledczym profilu",
+          "counts": {
+            "front": 5,
+            "spreads": 10,
+            "back": 5,
+            "total": 20
+          },
+          "path": "corpus/5_posrednie_masowe/el_mundo"
+        },
+        {
+          "id": "evening_standard",
+          "name": "Evening Standard",
+          "country": "Wielka Brytania",
+          "format_preset": "tabloid_free",
+          "profile": "Miejski dziennik Londynu, znany z mocnych pierwszych stron i szybkiego rytmu newsów",
+          "counts": {
+            "front": 5,
+            "spreads": 10,
+            "back": 4,
+            "total": 19
+          },
+          "path": "corpus/5_posrednie_masowe/evening_standard"
+        },
+        {
+          "id": "i_paper",
+          "name": "i paper",
+          "country": "Wielka Brytania",
+          "format_preset": "compact",
+          "profile": "Kompaktowy dziennik łączący skrótowość tabloidu z wiarygodnością prasy jakościowej",
+          "counts": {
+            "front": 6,
+            "spreads": 12,
+            "back": 6,
+            "total": 24
+          },
+          "path": "corpus/5_posrednie_masowe/i_paper"
+        },
+        {
+          "id": "la_repubblica",
+          "name": "La Repubblica",
+          "country": "Włochy",
+          "format_preset": "berliner",
+          "profile": "Dziennik liberalny o masowym zasięgu, łączący publicystykę i atrakcyjny news",
+          "counts": {
+            "front": 8,
+            "spreads": 16,
+            "back": 8,
+            "total": 32
+          },
+          "path": "corpus/5_posrednie_masowe/la_repubblica"
+        },
+        {
+          "id": "ouest_france",
+          "name": "Ouest-France",
+          "country": "Francja",
+          "format_preset": "berliner",
+          "profile": "Dziennik regionalny o ogromnej skali, łączący lokalność z profesjonalną informacją",
+          "counts": {
+            "front": 7,
+            "spreads": 14,
+            "back": 7,
+            "total": 28
+          },
+          "path": "corpus/5_posrednie_masowe/ouest_france"
+        },
+        {
+          "id": "the_daily_telegraph",
+          "name": "The Daily Telegraph",
+          "country": "Wielka Brytania",
+          "format_preset": "broadsheet",
+          "profile": "Konserwatywny dziennik jakościowy z popularnym, szerokim serwisem",
+          "counts": {
+            "front": 5,
+            "spreads": 10,
+            "back": 5,
+            "total": 20
+          },
+          "path": "corpus/5_posrednie_masowe/the_daily_telegraph"
+        },
+        {
+          "id": "the_times",
+          "name": "The Times",
+          "country": "Wielka Brytania",
+          "format_preset": "compact",
+          "profile": "Gazeta jakościowa o masowym zasięgu; łączy news, komentarz, sport i dodatki",
+          "counts": {
+            "front": 2,
+            "spreads": 4,
+            "back": 2,
+            "total": 8
+          },
+          "path": "corpus/5_posrednie_masowe/the_times"
+        },
+        {
+          "id": "usa_today",
+          "name": "USA Today",
+          "country": "USA",
+          "format_preset": "compact_broadsheet",
+          "profile": "Masowa gazeta ogólnokrajowa, ale z czytelnym serwisem informacyjnym i nowoczesną makietą",
+          "counts": {
+            "front": 7,
+            "spreads": 14,
+            "back": 6,
+            "total": 27
+          },
+          "path": "corpus/5_posrednie_masowe/usa_today"
+        }
+      ]
+    }
+  }
+}

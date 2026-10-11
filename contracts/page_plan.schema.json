@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "zecro/page-plan.schema.json",
+  "title": "Zecro Page Plan",
+  "type": "object",
+  "required": ["schema_version", "page_zone", "columns", "rows", "slots"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "page_zone": {"enum": ["front_page", "spread", "back_page"]},
+    "columns": {"type": "integer", "minimum": 1},
+    "rows": {"type": "integer", "minimum": 1},
+    "masthead_rows": {"type": "integer", "minimum": 0},
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "status": {"enum": ["valid", "invalid"]},
+    "slots": {"type": "array", "items": {"$ref": "#/$defs/slot"}}
+  },
+  "$defs": {"slot": {"type": "object", "required": ["slot_id", "story_ref", "rank", "col_start", "col_span", "row_start", "row_span", "module_type"], "properties": {
+    "slot_id": {"type": "string"}, "story_ref": {"type": "string"},
+    "rank": {"enum": ["lead", "second", "third", "short", "brief", "teaser", "box", "column"]},
+    "col_start": {"type": "integer", "minimum": 0}, "col_span": {"type": "integer", "minimum": 1},
+    "row_start": {"type": "integer", "minimum": 0}, "row_span": {"type": "integer", "minimum": 1},
+    "module_type": {"enum": ["lead", "article", "brief_column", "pullquote", "infobox", "jump_line", "teaser_band", "column", "masthead"]},
+    "page_number": {"type": "integer", "minimum": 1}, "teaser_only": {"type": "boolean"}, "continuation_page": {"type": ["integer", "null"]}
+  }}
+}

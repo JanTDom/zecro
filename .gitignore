@@ -1,0 +1,34 @@
+# Local/runtime state
+backend/data/*
+!backend/data/.gitkeep
+backend/.pytest_cache/
+.pytest_cache/
+*.py[cod]
+__pycache__/
+
+# Corpus source media is intentionally kept out of GitHub.  The compact
+# indexes and catalogue remain versioned; raw scans/PDFs belong in object
+# storage (Supabase Storage or another bucket).
+corpus/*
+!corpus/CATALOG.md
+!corpus/INDEX.json
+!corpus/FEATURE_INDEX.json
+
+# Frontend build/dependency output
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/*.tsbuildinfo
+*.tsbuildinfo
+.venv/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# OS/editor/tool caches
+.DS_Store
+.tmp-chrome/
+.tmp-chrome-user-dir/
+.codex/

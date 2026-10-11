@@ -1,0 +1,11 @@
+.env*
+.venv
+tests
+.pytest_cache
+data/*.db
+data/uploads
+data/exports
+data/thumbnails
+corpus
+__pycache__
+*.pyc

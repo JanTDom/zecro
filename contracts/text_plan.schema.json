@@ -1,0 +1,250 @@
+{
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "version": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "parent_revision_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Revision Id"
+    },
+    "status": {
+      "default": "draft",
+      "title": "Status",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "title": "Updated At",
+      "type": "string"
+    },
+    "author_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Author Id"
+    },
+    "content_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Content Hash"
+    },
+    "story_ref": {
+      "title": "Story Ref",
+      "type": "string"
+    },
+    "issue_ref": {
+      "title": "Issue Ref",
+      "type": "string"
+    },
+    "page_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Page Ref"
+    },
+    "frame_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Frame Ref"
+    },
+    "role": {
+      "default": "body",
+      "title": "Role",
+      "type": "string"
+    },
+    "flow_group": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Flow Group"
+    },
+    "target_words": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Target Words",
+      "type": "integer"
+    },
+    "min_words": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Min Words",
+      "type": "integer"
+    },
+    "max_words": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Max Words",
+      "type": "integer"
+    },
+    "target_chars": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Target Chars",
+      "type": "integer"
+    },
+    "target_lines": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Target Lines",
+      "type": "integer"
+    },
+    "columns": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Columns",
+      "type": "integer"
+    },
+    "width_mm": {
+      "default": 40.0,
+      "exclusiveMinimum": 0,
+      "title": "Width Mm",
+      "type": "number"
+    },
+    "height_mm": {
+      "default": 100.0,
+      "exclusiveMinimum": 0,
+      "title": "Height Mm",
+      "type": "number"
+    },
+    "priority": {
+      "default": 0.5,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Priority",
+      "type": "number"
+    },
+    "required": {
+      "default": true,
+      "title": "Required",
+      "type": "boolean"
+    },
+    "keep_with_next": {
+      "default": false,
+      "title": "Keep With Next",
+      "type": "boolean"
+    },
+    "widow_lines": {
+      "default": 2,
+      "minimum": 0,
+      "title": "Widow Lines",
+      "type": "integer"
+    },
+    "orphan_lines": {
+      "default": 2,
+      "minimum": 0,
+      "title": "Orphan Lines",
+      "type": "integer"
+    },
+    "no_break_tokens": {
+      "items": {
+        "type": "string"
+      },
+      "title": "No Break Tokens",
+      "type": "array"
+    },
+    "overflow_policy": {
+      "default": "alternate",
+      "enum": [
+        "shorten",
+        "alternate",
+        "continue",
+        "reflow",
+        "manual"
+      ],
+      "title": "Overflow Policy",
+      "type": "string"
+    },
+    "continuation_policy": {
+      "default": "jump_if_needed",
+      "enum": [
+        "none",
+        "jump_if_needed"
+      ],
+      "title": "Continuation Policy",
+      "type": "string"
+    },
+    "max_tracking": {
+      "default": 10.0,
+      "title": "Max Tracking",
+      "type": "number"
+    },
+    "max_leading_adjustment_pt": {
+      "default": 0.5,
+      "title": "Max Leading Adjustment Pt",
+      "type": "number"
+    },
+    "min_font_size_pt": {
+      "default": 9.0,
+      "title": "Min Font Size Pt",
+      "type": "number"
+    },
+    "locked": {
+      "default": false,
+      "title": "Locked",
+      "type": "boolean"
+    },
+    "approval": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Approval",
+      "type": "object"
+    }
+  },
+  "required": [
+    "story_ref",
+    "issue_ref"
+  ],
+  "title": "TextPlan",
+  "type": "object"
+}

@@ -1,0 +1,417 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SceneGraph",
+  "description": "Canonical Scene Graph representing an abstract layout of a newspaper/magazine page",
+  "type": "object",
+  "required": [
+    "page",
+    "elements"
+  ],
+  "properties": {
+    "page": {
+      "type": "object",
+      "required": [
+        "trim",
+        "bleed_mm",
+        "safe_margin_mm",
+        "grid"
+      ],
+      "properties": {
+        "trim": {
+          "type": "array",
+          "description": "[width_mm, height_mm]",
+          "items": {
+            "type": "number",
+            "minimum": 10
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "bleed_mm": {
+          "type": "number",
+          "minimum": 0,
+          "default": 3.0
+        },
+        "safe_margin_mm": {
+          "type": "number",
+          "minimum": 0,
+          "default": 8.0
+        },
+        "grid": {
+          "type": "object",
+          "required": [
+            "cols",
+            "gutter_mm",
+            "baseline_mm"
+          ],
+          "properties": {
+            "cols": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 24,
+              "default": 6
+            },
+            "gutter_mm": {
+              "type": "number",
+              "minimum": 1.0,
+              "default": 4.0
+            },
+            "baseline_mm": {
+              "type": "number",
+              "minimum": 1.0,
+              "default": 4.2
+            },
+            "rows": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 12
+            }
+          }
+        },
+        "title_dna_ref": {
+          "type": "string"
+        },
+        "issue_ref": {
+          "type": "string"
+        },
+        "page_number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "page_role": {
+          "type": "string"
+        },
+        "spread_ref": {
+          "type": "string"
+        },
+        "production_profile_ref": {
+          "type": "string"
+        }
+      }
+    },
+    "elements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Element"
+      }
+    },
+    "reading_order": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Ordered list of element IDs defining visual reading flow"
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "members"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "belongs_to_story",
+              "caption_for",
+              "scrim_under",
+              "subhead_under"
+            ]
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "story": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "energy_used": {
+          "type": "number"
+        },
+        "fitness_score": {
+          "type": "number"
+        },
+        "novelty_score": {
+          "type": "number"
+        },
+        "generation_id": {
+          "type": "string"
+        }
+      }
+    },
+    "schema_version": {
+      "type": "string",
+      "default": "2.0"
+    }
+  },
+  "definitions": {
+    "Frame": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "X position in mm or grid columns"
+        },
+        "y": {
+          "type": "number",
+          "description": "Y position in mm or grid rows"
+        },
+        "w": {
+          "type": "number",
+          "description": "Width in mm or grid columns"
+        },
+        "h": {
+          "type": "number",
+          "description": "Height in mm or grid rows"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "mm",
+            "grid"
+          ],
+          "default": "mm"
+        },
+        "rotation_deg": {
+          "type": "number",
+          "default": 0.0
+        }
+      }
+    },
+    "Element": {
+      "type": "object",
+      "required": [
+        "id",
+        "role",
+        "frame"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "headline",
+            "deck",
+            "lead",
+            "body",
+            "photo",
+            "caption",
+            "kicker",
+            "rule",
+            "band",
+            "logo",
+            "pullquote",
+            "infobox",
+            "byline",
+            "folio"
+          ]
+        },
+        "importance": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.5
+        },
+        "content_ref": {
+          "type": "string"
+        },
+        "text_content": {
+          "type": "string"
+        },
+        "frame": {
+          "$ref": "#/definitions/Frame"
+        },
+        "z": {
+          "type": "integer",
+          "default": 1
+        },
+        "style": {
+          "type": "object",
+          "properties": {
+            "type_scale": {
+              "type": "string"
+            },
+            "font_family": {
+              "type": "string"
+            },
+            "font_size_pt": {
+              "type": "number"
+            },
+            "line_height_pt": {
+              "type": "number"
+            },
+            "font_weight": {
+              "type": "string"
+            },
+            "case": {
+              "type": "string",
+              "enum": [
+                "normal",
+                "upper",
+                "lower",
+                "title"
+              ]
+            },
+            "align": {
+              "type": "string",
+              "enum": [
+                "left",
+                "center",
+                "right",
+                "justify"
+              ]
+            },
+            "color": {
+              "type": "string"
+            },
+            "bg_color": {
+              "type": "string"
+            },
+            "border_width_mm": {
+              "type": "number"
+            },
+            "border_color": {
+              "type": "string"
+            },
+            "padding_mm": {
+              "type": "number"
+            },
+            "columns": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        },
+        "treatment": {
+          "type": "string",
+          "enum": [
+            "crop",
+            "cutout",
+            "full-bleed",
+            "framed",
+            "tinted"
+          ],
+          "default": "crop"
+        },
+        "mask_ref": {
+          "type": "string"
+        },
+        "image_url": {
+          "type": "string"
+        },
+        "contour_points": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "text_wrap": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "none",
+                "bounding_box",
+                "contour",
+                "jump"
+              ]
+            },
+            "offset_mm": {
+              "type": "number",
+              "default": 3.0
+            }
+          }
+        },
+        "focal_point": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "transgressions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "story_ref": {
+          "type": "string"
+        },
+        "content_revision_ref": {
+          "type": "string"
+        },
+        "text_plan_ref": {
+          "type": "string"
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fit_status": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "FAIL",
+            "WARN",
+            "unknown"
+          ]
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "approval_status": {
+          "type": "string"
+        },
+        "flow_group": {
+          "type": "string"
+        },
+        "continuation_ref": {
+          "type": "string"
+        },
+        "claim_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

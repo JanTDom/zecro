@@ -1,0 +1,301 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TitleDNA",
+  "description": "Visual DNA rules, typography scale, palette, transgressions and tension budget for a publication",
+  "type": "object",
+  "required": [
+    "name",
+    "format",
+    "grid",
+    "typography",
+    "palette",
+    "photo_rules",
+    "transgressions",
+    "page_energy_budget"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "integer",
+      "default": 1
+    },
+    "format": {
+      "type": "object",
+      "required": [
+        "trim_w_mm",
+        "trim_h_mm",
+        "bleed_mm",
+        "margin_top_mm",
+        "margin_bottom_mm",
+        "margin_left_mm",
+        "margin_right_mm"
+      ],
+      "properties": {
+        "trim_w_mm": {
+          "type": "number",
+          "default": 280.0
+        },
+        "trim_h_mm": {
+          "type": "number",
+          "default": 400.0
+        },
+        "bleed_mm": {
+          "type": "number",
+          "default": 3.0
+        },
+        "margin_top_mm": {
+          "type": "number",
+          "default": 15.0
+        },
+        "margin_bottom_mm": {
+          "type": "number",
+          "default": 15.0
+        },
+        "margin_left_mm": {
+          "type": "number",
+          "default": 12.0
+        },
+        "margin_right_mm": {
+          "type": "number",
+          "default": 12.0
+        },
+        "slug_mm": {
+          "type": "number",
+          "default": 0.0
+        }
+      }
+    },
+    "grid": {
+      "type": "object",
+      "required": [
+        "columns",
+        "gutter_mm",
+        "baseline_grid_pt"
+      ],
+      "properties": {
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 24,
+          "default": 6
+        },
+        "gutter_mm": {
+          "type": "number",
+          "minimum": 1.0,
+          "default": 4.5
+        },
+        "baseline_grid_pt": {
+          "type": "number",
+          "minimum": 4.0,
+          "default": 10.5
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 12
+        },
+        "row_gutter_mm": {
+          "type": "number",
+          "default": 4.0
+        }
+      }
+    },
+    "typography": {
+      "type": "object",
+      "required": [
+        "scales",
+        "roles"
+      ],
+      "properties": {
+        "fonts": {
+          "type": "object",
+          "properties": {
+            "headline": {
+              "type": "string",
+              "default": "Playfair Display, serif"
+            },
+            "body": {
+              "type": "string",
+              "default": "PT Serif, serif"
+            },
+            "sans": {
+              "type": "string",
+              "default": "Inter, sans-serif"
+            }
+          }
+        },
+        "scales": {
+          "type": "object",
+          "description": "Font size in points for various scale levels",
+          "properties": {
+            "mega": {
+              "type": "number",
+              "default": 72.0
+            },
+            "headline_xl": {
+              "type": "number",
+              "default": 48.0
+            },
+            "headline_l": {
+              "type": "number",
+              "default": 36.0
+            },
+            "headline_m": {
+              "type": "number",
+              "default": 28.0
+            },
+            "headline_s": {
+              "type": "number",
+              "default": 22.0
+            },
+            "lead": {
+              "type": "number",
+              "default": 13.0
+            },
+            "body": {
+              "type": "number",
+              "default": 9.5
+            },
+            "caption": {
+              "type": "number",
+              "default": 7.5
+            },
+            "kicker": {
+              "type": "number",
+              "default": 9.0
+            }
+          }
+        },
+        "roles": {
+          "type": "object",
+          "description": "Role specific typographic mappings"
+        }
+      }
+    },
+    "palette": {
+      "type": "object",
+      "required": [
+        "primary",
+        "secondary",
+        "background",
+        "text"
+      ],
+      "properties": {
+        "primary": {
+          "type": "string",
+          "default": "#111111"
+        },
+        "secondary": {
+          "type": "string",
+          "default": "#c91818"
+        },
+        "accent": {
+          "type": "string",
+          "default": "#f39c12"
+        },
+        "background": {
+          "type": "string",
+          "default": "#fdfdf9"
+        },
+        "text": {
+          "type": "string",
+          "default": "#1a1a1a"
+        },
+        "tint_bg": {
+          "type": "string",
+          "default": "#f2ede4"
+        },
+        "scrim": {
+          "type": "string",
+          "default": "rgba(0,0,0,0.65)"
+        }
+      }
+    },
+    "photo_rules": {
+      "type": "object",
+      "properties": {
+        "allow_cutout": {
+          "type": "boolean",
+          "default": true
+        },
+        "allow_full_bleed": {
+          "type": "boolean",
+          "default": true
+        },
+        "default_treatment": {
+          "type": "string",
+          "default": "crop"
+        },
+        "min_dpi": {
+          "type": "integer",
+          "default": 200
+        },
+        "max_photos_per_page": {
+          "type": "integer",
+          "default": 3
+        },
+        "text_wrap_offset_mm": {
+          "type": "number",
+          "default": 3.5
+        }
+      }
+    },
+    "transgressions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "applies_to",
+          "effect",
+          "cost"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "applies_to": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "effect": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "number",
+            "minimum": 0.0
+          },
+          "max_per_page": {
+            "type": "integer",
+            "default": 1
+          },
+          "precondition": {
+            "type": "string"
+          },
+          "range": {
+            "type": "array"
+          }
+        }
+      }
+    },
+    "page_energy_budget": {
+      "type": "number",
+      "description": "Max sum of transgression costs per page (e.g. 0.4 for calm, 1.2 for tabloid)",
+      "minimum": 0.0,
+      "default": 0.8
+    },
+    "logo_profile": {
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  }
+}

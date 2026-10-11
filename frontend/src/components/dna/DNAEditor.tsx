@@ -1,0 +1,788 @@
+import React, { useState } from 'react';
+import { useProject } from '../../context/ProjectContext';
+import { TitleDNA, TypographyStyle, TransgressionRule } from '../../types/dna';
+import { api } from '../../api/client';
+import { Card } from '../common/Card';
+import { Button } from '../common/Button';
+import { Badge } from '../common/Badge';
+import { Slider } from '../common/Slider';
+import { Toggle } from '../common/Toggle';
+import {
+  Sliders,
+  Save,
+  Layers,
+  Type,
+  Palette,
+  Camera,
+  Flame,
+  RotateCcw,
+  Sparkles,
+  Eye,
+} from 'lucide-react';
+
+export const DNAEditor: React.FC = () => {
+  const { activeProject, dna, reloadDNA, addToast } = useProject();
+  const [localDna, setLocalDna] = useState<TitleDNA | null>(dna ? JSON.parse(JSON.stringify(dna)) : null);
+  const [activeSubTab, setActiveSubTab] = useState<'grid' | 'typography' | 'palette' | 'photos' | 'transgressions'>('grid');
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Sync if dna updates
+  React.useEffect(() => {
+    if (dna) setLocalDna(JSON.parse(JSON.stringify(dna)));
+  }, [dna]);
+
+  if (!activeProject || !localDna) {
+    return <div className="p-8 text-center text-ink-400">No TitleDNA loaded.</div>;
+  }
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await api.updateTitleDNA(activeProject.id, localDna);
+      await reloadDNA();
+      addToast({
+        type: 'success',
+        title: 'TitleDNA Saved & Versioned',
+        message: `Updated to DNA v${localDna.version + 1}. Generator and solver will now use these grammar rules.`,
+      });
+    } catch (e) {
+      addToast({
+        type: 'error',
+        title: 'Save Failed',
+        message: 'Could not update TitleDNA.',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleTypographyChange = (key: keyof TitleDNA['typography'], styleKey: keyof TypographyStyle, value: any) => {
+    setLocalDna((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        typography: {
+          ...prev.typography,
+          [key]: {
+            ...prev.typography[key],
+            [styleKey]: value,
+          },
+        },
+      };
+    });
+  };
+
+  const handleTransgressionToggle = (ruleId: string, allowed: boolean) => {
+    setLocalDna((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        transgressionCatalog: prev.transgressionCatalog.map((r) =>
+          r.id === ruleId ? { ...r, allowed } : r
+        ),
+      };
+    });
+  };
+
+  const handleTransgressionCostChange = (ruleId: string, cost: number) => {
+    setLocalDna((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        transgressionCatalog: prev.transgressionCatalog.map((r) =>
+          r.id === ruleId ? { ...r, cost } : r
+        ),
+      };
+    });
+  };
+
+  return (
+    <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-8 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-ink-800 pb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[11px] uppercase font-mono tracking-widest text-editorial-crimson font-bold">
+              Machine-Readable Grammar as Data
+            </span>
+            <Badge variant="accent" size="sm">
+              DNA v{localDna.version}
+            </Badge>
+          </div>
+          <h1 className="text-3xl font-headline font-black text-ink-100 tracking-tight">
+            TitleDNA & Transgression Editor
+          </h1>
+          <p className="text-sm text-ink-400 mt-1 max-w-2xl">
+            Fine-tune the modular grid, typography scales, photo wrap margins, transgression catalog, and page energy budget for <strong className="text-ink-100">{activeProject.name}</strong>.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="md"
+            leftIcon={<RotateCcw className="w-4 h-4" />}
+            onClick={() => setLocalDna(dna ? JSON.parse(JSON.stringify(dna)) : null)}
+          >
+            Reset
+          </Button>
+          <Button
+            variant="editorial"
+            size="md"
+            isLoading={isSaving}
+            leftIcon={<Save className="w-4 h-4" />}
+            onClick={handleSave}
+          >
+            Save DNA Changes
+          </Button>
+        </div>
+      </div>
+
+      {/* Subtabs for DNA Sections */}
+      <div className="flex items-center gap-2 border-b border-ink-800 pb-2 overflow-x-auto">
+        <button
+          onClick={() => setActiveSubTab('grid')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold uppercase transition-all ${
+            activeSubTab === 'grid'
+              ? 'bg-ink-800 text-ink-100 border-b-2 border-editorial-crimson'
+              : 'text-ink-400 hover:text-ink-100'
+          }`}
+        >
+          <Layers className="w-4 h-4 text-editorial-ochre" />
+          1. Modular Grid
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('typography')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold uppercase transition-all ${
+            activeSubTab === 'typography'
+              ? 'bg-ink-800 text-ink-100 border-b-2 border-editorial-crimson'
+              : 'text-ink-400 hover:text-ink-100'
+          }`}
+        >
+          <Type className="w-4 h-4 text-blue-400" />
+          2. Typography Scale
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('palette')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold uppercase transition-all ${
+            activeSubTab === 'palette'
+              ? 'bg-ink-800 text-ink-100 border-b-2 border-editorial-crimson'
+              : 'text-ink-400 hover:text-ink-100'
+          }`}
+        >
+          <Palette className="w-4 h-4 text-emerald-400" />
+          3. Color Palette
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('photos')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold uppercase transition-all ${
+            activeSubTab === 'photos'
+              ? 'bg-ink-800 text-ink-100 border-b-2 border-editorial-crimson'
+              : 'text-ink-400 hover:text-ink-100'
+          }`}
+        >
+          <Camera className="w-4 h-4 text-purple-400" />
+          4. Photo & Cutout Rules
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('transgressions')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold uppercase transition-all ${
+            activeSubTab === 'transgressions'
+              ? 'bg-ink-800 text-ink-100 border-b-2 border-editorial-crimson'
+              : 'text-ink-400 hover:text-ink-100'
+          }`}
+        >
+          <Flame className="w-4 h-4 text-editorial-crimson" />
+          5. Transgressions & Energy Budget
+        </button>
+      </div>
+
+      {/* Main Grid: Controls + Live Specimen Preview */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Editor Controls (7 cols) */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* TAB 1: MODULAR GRID */}
+          {activeSubTab === 'grid' && (
+            <Card className="space-y-6">
+              <div>
+                <h3 className="font-headline font-bold text-base text-ink-100 mb-1">
+                  Modular Grid Geometry & Margins
+                </h3>
+                <p className="text-xs text-ink-400">
+                  Defines the mathematical proportions for columns, gutters, and baseline rhythm.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <Slider
+                  label="Columns Count"
+                  value={localDna.grid.columns}
+                  min={3}
+                  max={8}
+                  step={1}
+                  unit=" cols"
+                  onChange={(v) =>
+                    setLocalDna((prev) =>
+                      prev ? { ...prev, grid: { ...prev.grid, columns: v } } : prev
+                    )
+                  }
+                  description="Primary vertical subdivisions across the page spread."
+                />
+
+                <Slider
+                  label="Gutter Width"
+                  value={localDna.grid.gutterMm}
+                  min={2}
+                  max={10}
+                  step={0.5}
+                  unit=" mm"
+                  onChange={(v) =>
+                    setLocalDna((prev) =>
+                      prev ? { ...prev, grid: { ...prev.grid, gutterMm: v } } : prev
+                    )
+                  }
+                  description="Inter-column spacing for editorial separation."
+                />
+
+                <Slider
+                  label="Baseline Grid Rhythm"
+                  value={localDna.grid.baselineGridPt}
+                  min={8}
+                  max={16}
+                  step={0.5}
+                  unit=" pt"
+                  onChange={(v) =>
+                    setLocalDna((prev) =>
+                      prev ? { ...prev, grid: { ...prev.grid, baselineGridPt: v } } : prev
+                    )
+                  }
+                  description="Vertical alignment increment for all body text leadings."
+                />
+
+                <Slider
+                  label="Top Margin"
+                  value={localDna.grid.marginTopMm}
+                  min={10}
+                  max={35}
+                  step={1}
+                  unit=" mm"
+                  onChange={(v) =>
+                    setLocalDna((prev) =>
+                      prev ? { ...prev, grid: { ...prev.grid, marginTopMm: v } } : prev
+                    )
+                  }
+                  description="Spacing between page trim and header/masthead rule."
+                />
+
+                <Slider
+                  label="Side Margin (Outer/Inner)"
+                  value={localDna.grid.marginLeftMm}
+                  min={8}
+                  max={30}
+                  step={1}
+                  unit=" mm"
+                  onChange={(v) =>
+                    setLocalDna((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            grid: {
+                              ...prev.grid,
+                              marginLeftMm: v,
+                              marginRightMm: v,
+                            },
+                          }
+                        : prev
+                    )
+                  }
+                  description="Outer margins flanking the editorial grid."
+                />
+
+                <Slider
+                  label="Bottom Margin"
+                  value={localDna.grid.marginBottomMm}
+                  min={12}
+                  max={35}
+                  step={1}
+                  unit=" mm"
+                  onChange={(v) =>
+                    setLocalDna((prev) =>
+                      prev ? { ...prev, grid: { ...prev.grid, marginBottomMm: v } } : prev
+                    )
+                  }
+                  description="Foot margin anchoring page numbers and folios."
+                />
+              </div>
+            </Card>
+          )}
+
+          {/* TAB 2: TYPOGRAPHY SCALE */}
+          {activeSubTab === 'typography' && (
+            <Card className="space-y-6">
+              <div>
+                <h3 className="font-headline font-bold text-base text-ink-100 mb-1">
+                  Editorial Typography Hierarchy & Kegel Scales
+                </h3>
+                <p className="text-xs text-ink-400">
+                  Strict ratio between headlines, decks, lead paragraph, and multi-column body text.
+                </p>
+              </div>
+
+              <div className="space-y-5">
+                {/* Headline Primary */}
+                <div className="p-3.5 bg-ink-950/70 rounded-lg border border-ink-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono uppercase font-bold text-ink-200">
+                      Primary Headline
+                    </span>
+                    <span className="text-xs font-mono text-editorial-ochre font-bold">
+                      {localDna.typography.headlinePrimary.sizePt}pt / {localDna.typography.headlinePrimary.lineHeightPt}pt
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Slider
+                      label="Kegel Size"
+                      value={localDna.typography.headlinePrimary.sizePt}
+                      min={24}
+                      max={72}
+                      step={1}
+                      unit=" pt"
+                      onChange={(v) =>
+                        handleTypographyChange('headlinePrimary', 'sizePt', v)
+                      }
+                    />
+                    <Slider
+                      label="Leading / Line Height"
+                      value={localDna.typography.headlinePrimary.lineHeightPt}
+                      min={22}
+                      max={70}
+                      step={1}
+                      unit=" pt"
+                      onChange={(v) =>
+                        handleTypographyChange('headlinePrimary', 'lineHeightPt', v)
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Kicker */}
+                <div className="p-3.5 bg-ink-950/70 rounded-lg border border-ink-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono uppercase font-bold text-editorial-crimson">
+                      Kicker Overhang Tag
+                    </span>
+                    <span className="text-xs font-mono text-ink-300">
+                      {localDna.typography.kicker.sizePt}pt • {localDna.typography.kicker.fontFamily}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Slider
+                      label="Kicker Size"
+                      value={localDna.typography.kicker.sizePt}
+                      min={8}
+                      max={18}
+                      step={0.5}
+                      unit=" pt"
+                      onChange={(v) =>
+                        handleTypographyChange('kicker', 'sizePt', v)
+                      }
+                    />
+                    <Slider
+                      label="Letter Spacing"
+                      value={localDna.typography.kicker.letterSpacingPt || 1.5}
+                      min={0}
+                      max={4}
+                      step={0.25}
+                      unit=" pt"
+                      onChange={(v) =>
+                        handleTypographyChange('kicker', 'letterSpacingPt', v)
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Deck */}
+                <div className="p-3.5 bg-ink-950/70 rounded-lg border border-ink-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono uppercase font-bold text-ink-200">
+                      Deck / Subhead Lead
+                    </span>
+                    <span className="text-xs font-mono text-ink-300">
+                      {localDna.typography.deck.sizePt}pt / {localDna.typography.deck.lineHeightPt}pt
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Slider
+                      label="Deck Kegel"
+                      value={localDna.typography.deck.sizePt}
+                      min={10}
+                      max={20}
+                      step={0.5}
+                      unit=" pt"
+                      onChange={(v) =>
+                        handleTypographyChange('deck', 'sizePt', v)
+                      }
+                    />
+                    <Slider
+                      label="Deck Leading"
+                      value={localDna.typography.deck.lineHeightPt}
+                      min={12}
+                      max={26}
+                      step={0.5}
+                      unit=" pt"
+                      onChange={(v) =>
+                        handleTypographyChange('deck', 'lineHeightPt', v)
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Body Text */}
+                <div className="p-3.5 bg-ink-950/70 rounded-lg border border-ink-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono uppercase font-bold text-ink-200">
+                      Body Columns Text
+                    </span>
+                    <span className="text-xs font-mono text-ink-300">
+                      {localDna.typography.body.sizePt}pt / {localDna.typography.body.lineHeightPt}pt
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Slider
+                      label="Body Font Size"
+                      value={localDna.typography.body.sizePt}
+                      min={7.5}
+                      max={12}
+                      step={0.1}
+                      unit=" pt"
+                      onChange={(v) =>
+                        handleTypographyChange('body', 'sizePt', v)
+                      }
+                    />
+                    <Slider
+                      label="Body Leading"
+                      value={localDna.typography.body.lineHeightPt}
+                      min={9}
+                      max={16}
+                      step={0.1}
+                      unit=" pt"
+                      onChange={(v) =>
+                        handleTypographyChange('body', 'lineHeightPt', v)
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* TAB 3: COLOR PALETTE */}
+          {activeSubTab === 'palette' && (
+            <Card className="space-y-6">
+              <div>
+                <h3 className="font-headline font-bold text-base text-ink-100 mb-1">
+                  Color Rules & Ink Palette
+                </h3>
+                <p className="text-xs text-ink-400">
+                  Editorial newsprint tones, spot colors, rule line shades, and tint boxes.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {localDna.palette.colors.map((c, i) => (
+                  <div
+                    key={i}
+                    className="p-3 bg-ink-950 rounded-lg border border-ink-800 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-8 h-8 rounded-md border border-ink-700 shadow-inner"
+                        style={{ backgroundColor: c.hex }}
+                      />
+                      <div>
+                        <p className="text-xs font-bold text-ink-100">{c.name}</p>
+                        <p className="text-[10px] font-mono text-ink-400">
+                          Role: {c.role.toUpperCase()} {c.cmyk ? `• CMYK (${c.cmyk})` : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={c.hex}
+                        onChange={(e) => {
+                          const newHex = e.target.value;
+                          setLocalDna((prev) => {
+                            if (!prev) return prev;
+                            const colors = [...prev.palette.colors];
+                            colors[i] = { ...colors[i], hex: newHex };
+                            return { ...prev, palette: { ...prev.palette, colors } };
+                          });
+                        }}
+                        className="w-7 h-7 rounded border border-ink-700 bg-transparent cursor-pointer"
+                      />
+                      <span className="text-xs font-mono text-ink-300">{c.hex}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* TAB 4: PHOTO RULES */}
+          {activeSubTab === 'photos' && (
+            <Card className="space-y-6">
+              <div>
+                <h3 className="font-headline font-bold text-base text-ink-100 mb-1">
+                  Photo Treatment & Auto-Cutout Rules
+                </h3>
+                <p className="text-xs text-ink-400">
+                  Configure silhouette background removal, contour text wrap padding, and framing.
+                </p>
+              </div>
+
+              <div className="space-y-5">
+                <Toggle
+                  label="Allow Silhouette Cutout Text Wrap"
+                  checked={localDna.photos.allowedCutouts}
+                  onChange={(v) =>
+                    setLocalDna((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            photos: { ...prev.photos, allowedCutouts: v },
+                          }
+                        : prev
+                    )
+                  }
+                  description="Enables automatic alpha mask tracing and dynamic contour text flow around subjects."
+                />
+
+                <Slider
+                  label="Text Wrap Clearance Padding"
+                  value={localDna.photos.wrapPaddingMm}
+                  min={1}
+                  max={10}
+                  step={0.5}
+                  unit=" mm"
+                  onChange={(v) =>
+                    setLocalDna((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            photos: { ...prev.photos, wrapPaddingMm: v },
+                          }
+                        : prev
+                    )
+                  }
+                  description="Margin distance between photo silhouette contour and running text."
+                />
+
+                <Slider
+                  label="Photo Border Rule Width"
+                  value={localDna.photos.borderRulePt}
+                  min={0}
+                  max={3}
+                  step={0.25}
+                  unit=" pt"
+                  onChange={(v) =>
+                    setLocalDna((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            photos: { ...prev.photos, borderRulePt: v },
+                          }
+                        : prev
+                    )
+                  }
+                  description="Hairline or medium stroke framing rectangular photographs."
+                />
+              </div>
+            </Card>
+          )}
+
+          {/* TAB 5: TRANSGRESSIONS & ENERGY BUDGET */}
+          {activeSubTab === 'transgressions' && (
+            <Card className="space-y-6">
+              <div>
+                <h3 className="font-headline font-bold text-base text-ink-100 mb-1">
+                  Transgression Catalog & Page Tension Budget
+                </h3>
+                <p className="text-xs text-ink-400">
+                  Control expressive layout violations. The generator uses these costs to stay within the art director's target energy budget.
+                </p>
+              </div>
+
+              {/* Energy Budget Slider */}
+              <div className="p-4 bg-ink-950 rounded-lg border border-ink-800 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono uppercase font-bold text-editorial-crimson">
+                    Page Energy / Tension Score Limit
+                  </span>
+                  <span className="text-xs font-mono text-editorial-ochre font-bold">
+                    Target: {localDna.pageEnergyBudget.targetTensionScore} pts • Max: {localDna.pageEnergyBudget.maxTensionScore} pts
+                  </span>
+                </div>
+                <Slider
+                  label="Target Tension per Spread"
+                  value={localDna.pageEnergyBudget.targetTensionScore}
+                  min={2}
+                  max={20}
+                  step={0.5}
+                  unit=" pts"
+                  onChange={(v) =>
+                    setLocalDna((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            pageEnergyBudget: {
+                              ...prev.pageEnergyBudget,
+                              targetTensionScore: v,
+                            },
+                          }
+                        : prev
+                    )
+                  }
+                />
+              </div>
+
+              {/* Catalog rules list */}
+              <div className="space-y-3">
+                {localDna.transgressionCatalog.map((rule) => (
+                  <div
+                    key={rule.id}
+                    className={`p-3.5 rounded-lg border transition-all space-y-2 ${
+                      rule.allowed
+                        ? 'bg-ink-950/80 border-ink-700'
+                        : 'bg-ink-950/30 border-ink-850 opacity-60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <Toggle
+                        label={rule.name}
+                        checked={rule.allowed}
+                        onChange={(v) => handleTransgressionToggle(rule.id, v)}
+                        description={rule.description}
+                      />
+                    </div>
+                    {rule.allowed && (
+                      <div className="pt-2 border-t border-ink-800 flex items-center justify-between gap-4">
+                        <span className="text-[11px] font-mono text-ink-400">
+                          Trigger: {rule.triggerCondition}
+                        </span>
+                        <div className="w-48">
+                          <Slider
+                            label="Cost Points"
+                            value={rule.cost}
+                            min={0.5}
+                            max={6.0}
+                            step={0.5}
+                            unit=" pt"
+                            onChange={(v) =>
+                              handleTransgressionCostChange(rule.id, v)
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </div>
+
+        {/* Right Column: Live Editorial Specimen & Grid Visualizer (5 cols) */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase text-ink-400 font-semibold">
+              Live DNA Render Preview
+            </span>
+            <Badge variant="outline" size="sm">
+              Real-Time Grammar Engine
+            </Badge>
+          </div>
+
+          <div
+            className="aspect-[315/470] w-full rounded-xl border border-paper-300 shadow-2xl p-5 overflow-hidden select-none flex flex-col justify-between"
+            style={{
+              backgroundColor: localDna.palette.backgroundTone || '#f9f6ef',
+              color: localDna.palette.dominantInk || '#0b0f14',
+            }}
+          >
+            {/* Top Folio */}
+            <div className="border-b border-ink-950 pb-1.5 flex justify-between items-center text-[8px] font-mono uppercase font-bold text-ink-700">
+              <span>{activeProject.newspaperTitle} • EDYCJA PRO</span>
+              <span>{localDna.grid.columns} KOLUMNY • SIATKA {localDna.grid.baselineGridPt}PT</span>
+            </div>
+
+            {/* Simulated Editorial Spread */}
+            <div className="space-y-2.5 my-auto">
+              <span
+                className="text-[10px] font-bold uppercase tracking-wider block"
+                style={{
+                  fontFamily: localDna.typography.kicker.fontFamily,
+                  color: localDna.typography.kicker.color || '#c1121f',
+                  letterSpacing: `${localDna.typography.kicker.letterSpacingPt || 1.5}px`,
+                }}
+              >
+                GŁÓWNY TEMAT WYDANIA • REPORTAŻ
+              </span>
+
+              <h2
+                className="font-headline font-black leading-tight text-ink-950"
+                style={{
+                  fontFamily: localDna.typography.headlinePrimary.fontFamily,
+                  fontSize: `${Math.min(32, localDna.typography.headlinePrimary.sizePt * 0.7)}px`,
+                }}
+              >
+                Architektura Informacji: Rytm i Napięcie Strony Prasowej
+              </h2>
+
+              <p
+                className="text-ink-700 font-sans leading-snug line-clamp-3"
+                style={{
+                  fontSize: `${localDna.typography.deck.sizePt * 0.8}px`,
+                }}
+              >
+                Każdy tytuł prasowy posiada unikalny genotyp graficzny — relację między keglami nagłówków, proporcjami zdjęć oraz odważnymi transgresjami siatki.
+              </p>
+
+              {/* Columns Simulation */}
+              <div
+                className="grid gap-2 pt-2 border-t border-ink-400"
+                style={{
+                  gridTemplateColumns: `repeat(${localDna.grid.columns}, minmax(0, 1fr))`,
+                }}
+              >
+                {Array.from({ length: localDna.grid.columns }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="text-[7.5px] leading-tight text-justify space-y-1 text-ink-900 overflow-hidden h-32 border-r border-ink-200 pr-1 last:border-none"
+                  >
+                    <p>
+                      Precyzyjny solver więzów geometrycznych optymalizuje rozłożenie szpalt przy zachowaniu pełnej czytelności prepress.
+                    </p>
+                    <p>
+                      Szparowanie obiektów pozwala na dynamiczne oblewanie tekstem i kreowanie głębi kompozycyjnej.
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bottom Folio */}
+            <div className="border-t border-ink-950 pt-1 flex justify-between items-center text-[8px] font-mono text-ink-600">
+              <span>STRONA 1 / 24</span>
+              <span>BUDŻET NAPIĘCIA: {localDna.pageEnergyBudget.targetTensionScore} PTS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

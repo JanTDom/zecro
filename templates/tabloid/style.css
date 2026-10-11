@@ -1,0 +1,156 @@
+/* ==========================================================================
+   MODERN TABLOID / COMPACT NEWSPAPER STYLESHEET
+   Format: Tabloid (280mm x 430mm) / 4-Column Grid
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Libre+Franklin:ital,wght@0,400;0,700;0,900;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap');
+
+:root {
+  --ink: #111;
+  --paper: #ffffff;
+  --accent: #d90429;
+  --rule: #111;
+  --rule-light: #ddd;
+  --font-hammer: 'Oswald', 'Impact', sans-serif;
+  --font-headline: 'Playfair Display', serif;
+  --font-sans: 'Libre Franklin', sans-serif;
+  --font-body: 'Newsreader', serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #ecebe6;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 10pt;
+  line-height: 1.35;
+  padding: 20px;
+}
+
+.tabloid-page {
+  width: 280mm;
+  min-height: 430mm;
+  margin: 0 auto;
+  background: var(--paper);
+  padding: 12mm;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Red Tabloid Masthead Banner */
+.tabloid-masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 3px solid var(--ink);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.masthead-logo {
+  font-family: var(--font-hammer);
+  font-size: 42pt;
+  font-weight: 700;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+  color: var(--ink);
+  line-height: 0.9;
+}
+
+.tabloid-badge {
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 10pt;
+  font-weight: 900;
+  padding: 4px 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.folio-line {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-sans);
+  font-size: 8pt;
+  font-weight: 700;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+/* 4-Column Grid */
+.tabloid-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  flex: 1;
+}
+
+.span-4 { grid-column: span 4; }
+.span-3 { grid-column: span 3; }
+.span-2 { grid-column: span 2; }
+.span-1 { grid-column: span 1; }
+
+.hammer-headline {
+  font-family: var(--font-hammer);
+  font-size: 54pt;
+  line-height: 0.92;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+
+.tabloid-kicker {
+  background: var(--ink);
+  color: #fff;
+  display: inline-block;
+  padding: 2px 6px;
+  font-family: var(--font-sans);
+  font-size: 9pt;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.tabloid-deck {
+  font-family: var(--font-sans);
+  font-size: 13pt;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #222;
+  margin-bottom: 10px;
+}
+
+.tabloid-hero-img {
+  width: 100%;
+  height: 240px;
+  background: #1d2d44;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.tabloid-cols {
+  column-count: 2;
+  column-gap: 12px;
+  column-rule: 1px solid var(--rule-light);
+  text-align: justify;
+}
+
+p { margin-bottom: 8px; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+
+@media print {
+  body { background: none; padding: 0; }
+  .tabloid-page { width: 100%; margin: 0; padding: 0; box-shadow: none; }
+  @page { size: 280mm 430mm; margin: 12mm; }
+}
