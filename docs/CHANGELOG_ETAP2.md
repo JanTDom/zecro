@@ -34,7 +34,7 @@
 
 ### Weryfikacja
 
-- `pytest -q`: **57 passed**, 1 ostrzeżenie deprecacyjne Starlette/httpx.
+- `pytest -q`: **60 passed**, 1 ostrzeżenie deprecacyjne Starlette/httpx.
 - `cd frontend && npm run build`: **sukces**, Vite wygenerował produkcyjny bundle.
 - `python3 -m compileall -q backend/app scripts/audit_corpus.py`: **sukces**.
 - Pomiar 7 tekstów: 8 kandydatów w każdym presecie, architektury `dominant-left`, `dominant-right`, `modular-grid`, `stacked`, wszystkie z twardą bramką PASS.

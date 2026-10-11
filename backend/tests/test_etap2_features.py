@@ -109,3 +109,30 @@ def test_admin_integration_secret_is_encrypted_and_masked(monkeypatch):
     assert raw and raw['secret_ref'] != 'secret-value-123456'
     assert 'secret-value-123456' not in raw['secret_ref']
     assert client.delete(f"/settings/integrations/{item['id']}", headers={'X-Zecro-Admin-Token':'test-admin-token'}).status_code == 200
+
+
+def test_logo_profiles_change_masthead_geometry(tmp_path):
+    from backend.app.engine.logo import analyze_logo, masthead_geometry
+    wide = tmp_path / 'wide.svg'
+    wide.write_text('<svg viewBox="0 0 400 80"><rect fill="#112233" width="400" height="80"/></svg>')
+    square = tmp_path / 'square.svg'
+    square.write_text('<svg viewBox="0 0 100 100"><rect fill="#112233" width="100" height="100"/></svg>')
+    dna = create_default_broadsheet_dna()
+    wide_profile = analyze_logo(wide)
+    square_profile = analyze_logo(square)
+    assert masthead_geometry(dna, wide_profile, 350)['mode'] == 'horizontal'
+    assert masthead_geometry(dna, square_profile, 350)['mode'] == 'ears'
+
+
+def test_custom_api_blocks_private_cloud_endpoint(monkeypatch):
+    from fastapi.testclient import TestClient
+    from backend.app.main import app
+    from backend.app.config import settings
+    monkeypatch.setattr(settings, 'admin_token', 'test-admin-token')
+    monkeypatch.setattr(settings, 'secrets_key', 'test-master-key')
+    payload = {'kind': 'photo_source', 'provider': 'custom', 'label': 'Private',
+               'config': {'base_url': 'http://127.0.0.1:8080/search'}}
+    response = TestClient(app).post('/settings/integrations', json=payload,
+                                    headers={'X-Zecro-Admin-Token': 'test-admin-token'})
+    assert response.status_code == 422
+    assert 'private' in str(response.json()).lower()
