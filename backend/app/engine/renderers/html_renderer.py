@@ -1,7 +1,18 @@
 import html
 from typing import Optional
 from ...models.schemas import SceneGraph, TitleDNA
-from ..image_ops import contour_to_css_polygon, offset_contour_polygon
+import re
+from ..image_ops import contour_to_css_polygon, contour_to_svg_path, offset_contour_polygon
+
+
+def _unit_path(outer, holes, w, h):
+    rings = [outer, *(holes or [])]
+    parts = []
+    for ring in rings:
+        if len(ring) < 3:
+            continue
+        parts.append("M " + " L ".join(f"{p[0] / w:.4f} {p[1] / h:.4f}" for p in ring) + " Z")
+    return " ".join(parts)
 
 class HTMLRenderer:
     def __init__(self, dna: Optional[TitleDNA] = None):
@@ -32,23 +43,31 @@ class HTMLRenderer:
             if elem.role == "photo":
                 clip_css = ""
                 wrap_css = ""
+                clip_svg = ""
                 if elem.treatment == "cutout" and elem.contour_points:
-                    poly_str = contour_to_css_polygon(elem.contour_points, fr.w, fr.h)
+                    # Holes need an even-odd clip; CSS polygon() cannot express
+                    # them, so use an objectBoundingBox SVG clipPath.
+                    clip_svg = (f'<svg width="0" height="0" style="position:absolute"><clipPath id="clip-{elem.id}" '
+                                f'clipPathUnits="objectBoundingBox"><path clip-rule="evenodd" d="{_unit_path(elem.contour_points, elem.contour_holes, fr.w, fr.h)}"/></clipPath></svg>')
+                    clip_css = f"clip-path: url(#clip-{elem.id}); -webkit-clip-path: url(#clip-{elem.id});"
                     wrap_poly = contour_to_css_polygon(
                         offset_contour_polygon(elem.contour_points, (elem.text_wrap.offset_mm if elem.text_wrap else 3.0)),
                         fr.w,
                         fr.h,
                     )
-                    clip_css = f"clip-path: {poly_str}; -webkit-clip-path: {poly_str};"
-                    # Keep shape-outside in the preview DOM so a browser can
-                    # flow a threaded text frame around the same vector mask.
-                    # The absolute frame remains the deterministic page
-                    # coordinate system used by SVG/IDML.
+                    # shape-outside follows the outer ring (text never flows
+                    # into an enclosed hole), same as InDesign's contour wrap.
                     wrap_css = f"shape-outside: {wrap_poly}; -webkit-shape-outside: {wrap_poly}; float: left;"
+                position_css = "object-position: 50% 50%;"
+                if elem.crop_box:
+                    l, t, r, b = elem.crop_box
+                    px = 50.0 if (1 - (r - l)) < 1e-6 else l / (1 - (r - l)) * 100
+                    py = 50.0 if (1 - (b - t)) < 1e-6 else t / (1 - (b - t)) * 100
+                    position_css = f"object-position: {px:.2f}% {py:.2f}%;"
 
                 img_src = elem.image_url if elem.image_url else ""
                 if img_src:
-                    content_html = f'<img src="{html.escape(img_src)}" style="width: 100%; height: 100%; object-fit: cover; {clip_css} {wrap_css}" alt="Photo"/>'
+                    content_html = f'<img src="{html.escape(img_src)}" style="width: 100%; height: 100%; object-fit: cover; {position_css} {clip_css} {wrap_css}" alt="Photo"/>{clip_svg}'
                 else:
                     content_html = f'<div style="width: 100%; height: 100%; background: #e0ded8; display: flex; align-items: center; justify-content: center; color: #777; font-family: sans-serif; font-size: 10pt; {clip_css} {wrap_css}">Photo: {elem.id}</div>'
 

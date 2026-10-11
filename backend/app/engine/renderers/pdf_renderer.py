@@ -154,17 +154,31 @@ class PDFRenderer:
             if elem.role == "photo":
                 asset = local_asset(elem.image_url)
                 if asset:
+                    from ..image_ops import cover_crop_box, crop_pixels
                     img = Image.open(asset)
-                    if img.mode in ("RGBA", "LA"):
+                    # A real cutout uses the segmented RGBA (subject on white),
+                    # so enclosed holes and the surround never show the old
+                    # background even before the vector clip is applied.
+                    mask_asset = local_asset(elem.mask_ref) if elem.treatment == "cutout" and elem.mask_ref else None
+                    if mask_asset:
+                        img = Image.open(mask_asset)
+                    crop = elem.crop_box or cover_crop_box(img.width, img.height, f.w, f.h, elem.focal_point)
+                    img = img.crop(crop_pixels(img.size, crop))
+                    if img.mode in ("RGBA", "LA", "P"):
+                        img = img.convert("RGBA")
                         bg = Image.new("RGB", img.size, (255, 255, 255)); bg.paste(img.convert("RGB"), mask=img.getchannel("A")); img = bg
                     if img.mode != "CMYK": img = img.convert("CMYK")
                     stream = io.BytesIO(); img.save(stream, format="JPEG", quality=95); stream.seek(0)
                     if elem.treatment == "cutout" and elem.contour_points and len(elem.contour_points) > 2:
                         path = c.beginPath()
-                        for i, point in enumerate(elem.contour_points):
-                            px, py = x + point[0] * MM_TO_PT, origin + trim_h - (f.y + point[1]) * MM_TO_PT
-                            (path.moveTo if i == 0 else path.lineTo)(px, py)
-                        path.close(); c.clipPath(path, stroke=0, fill=0)
+                        for ring in [elem.contour_points, *(elem.contour_holes or [])]:
+                            if len(ring) < 3:
+                                continue
+                            for i, point in enumerate(ring):
+                                px, py = x + point[0] * MM_TO_PT, origin + trim_h - (f.y + point[1]) * MM_TO_PT
+                                (path.moveTo if i == 0 else path.lineTo)(px, py)
+                            path.close()
+                        c.clipPath(path, stroke=0, fill=0, fillMode=0)  # 0 = even-odd: holes stay open
                     c.drawImage(ImageReader(stream), x, y, width=w, height=h, preserveAspectRatio=False)
                 else:
                     report["missing_assets"].append({"element": elem.id, "url": elem.image_url})

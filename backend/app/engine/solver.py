@@ -6,7 +6,7 @@ from ..models.schemas import (
     Element, Frame, ElementStyle, TextWrap, Relation, StoryInput
 )
 from .grammar import LayoutGrammar
-from .image_ops import extract_alpha_contour
+from .image_ops import extract_alpha_contour, photo_cutout_geometry
 from pathlib import Path
 
 class GridSolver:
@@ -229,16 +229,12 @@ class GridSolver:
             photo_h = 95.0
 
             treatment = main_photo.treatment or ("cutout" if (main_photo.is_cutout_candidate or seed_transgressions) else "crop")
-            contour = None
-            if treatment == "cutout":
-                # Imported manifests may already contain a vector mask. Keep
-                # it in scene-graph coordinates. A missing/unavailable mask
-                # must remain explicit; never invent a subject silhouette.
-                contour = main_photo.contour_polygon
-                if contour is None and main_photo.alpha_mask_url and Path(main_photo.alpha_mask_url).exists():
-                    contour = extract_alpha_contour(main_photo.alpha_mask_url, photo_w, photo_h)
-                if not contour:
-                    treatment = "crop"
+            geometry = photo_cutout_geometry(main_photo, photo_w, photo_h)
+            contour = geometry["contour"] if treatment == "cutout" else None
+            contour_holes = geometry["holes"] if treatment == "cutout" else None
+            # Never invent a subject silhouette; no real mask keeps the frame rectangular.
+            if treatment == "cutout" and not contour:
+                treatment = "crop"
 
             photo_id = f"photo-{lead_story.id}"
             photo_elem = Element(
@@ -257,6 +253,8 @@ class GridSolver:
                 z=4,
                 treatment=treatment,
                 contour_points=contour,
+                contour_holes=contour_holes or None,
+                crop_box=geometry["crop_box"],
                 text_wrap=TextWrap(mode="contour" if treatment == "cutout" else "bounding_box", offset_mm=3.5),
                 focal_point=main_photo.focal_point or [0.5, 0.4],
                 mask_ref=main_photo.alpha_mask_url,

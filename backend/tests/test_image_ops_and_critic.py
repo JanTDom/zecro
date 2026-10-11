@@ -1,29 +1,51 @@
 import pytest
+import numpy as np
+from PIL import Image
+from backend.app.engine import image_ops
 from backend.app.engine.image_ops import (
-    simplify_douglas_peucker, generate_default_silhouette_contour,
-    offset_contour_polygon, contour_to_css_polygon, contour_to_svg_path
+    simplify_douglas_peucker, extract_alpha_rings, extract_alpha_contour,
+    offset_rings, offset_contour_polygon, contour_to_css_polygon, contour_to_svg_path
 )
 from backend.app.engine.grammar import create_default_broadsheet_dna
 from backend.app.engine.solver import GridSolver
 from backend.app.engine.critic import LayoutCritic
 from backend.app.models.schemas import PageInputMaterial, StoryInput
 
-def test_image_ops_contour_helpers():
-    poly = generate_default_silhouette_contour(100.0, 150.0)
-    assert len(poly) >= 5
 
-    simplified = simplify_douglas_peucker([(p[0], p[1]) for p in poly], tolerance=2.0)
-    assert len(simplified) <= len(poly)
+def _akimbo_mask(path):
+    """Synthetic alpha mask: torso + an arm bent to the hip, enclosing a gap."""
+    alpha = np.zeros((300, 200), dtype=np.uint8)
+    alpha[40:300, 70:130] = 255          # torso
+    alpha[60:70, 130:180] = 255          # upper arm
+    alpha[60:200, 170:180] = 255         # forearm down
+    alpha[190:200, 130:180] = 255        # hand back to hip
+    rgba = np.dstack([np.full_like(alpha, 120)] * 3 + [alpha])
+    Image.fromarray(rgba, "RGBA").save(path)
 
-    dilated = offset_contour_polygon(poly, offset_mm=3.5)
-    assert len(dilated) == len(poly)
 
-    css_poly = contour_to_css_polygon(poly, 100.0, 150.0)
-    assert css_poly.startswith("polygon(")
+def test_real_mask_rings_keep_hole_and_concavity(tmp_path):
+    mask = tmp_path / "akimbo.png"
+    _akimbo_mask(mask)
+    rings = extract_alpha_rings(str(mask), 100.0, 150.0)
+    assert rings, "real mask must vectorise"
+    assert len(rings[0]["holes"]) == 1, "gap between arm and torso must be a hole"
+    outer = rings[0]["outer"]
+    assert extract_alpha_contour(str(mask), 100.0, 150.0) == outer
+    assert len(simplify_douglas_peucker([tuple(p) for p in outer], 2.0)) <= len(outer)
+    off = offset_rings(outer, 2.0, rings[0]["holes"])
+    assert off and off["holes"], "offset keeps the (shrunk) hole"
+    from shapely.geometry import Polygon
+    assert Polygon(off["outer"]).contains(Polygon(outer).buffer(-0.01))
+    assert contour_to_css_polygon(outer, 100.0, 150.0).startswith("polygon(")
+    d = contour_to_svg_path(outer, rings[0]["holes"])
+    assert d.count("M ") == 2 and d.endswith("Z")
 
-    svg_path = contour_to_svg_path(poly)
-    assert svg_path.startswith("M ")
-    assert svg_path.endswith("Z")
+
+def test_no_synthetic_silhouette_anywhere(tmp_path):
+    assert not hasattr(image_ops, "generate_default_silhouette_contour")
+    assert extract_alpha_contour(str(tmp_path / "missing.png"), 50, 50) == []
+    assert offset_contour_polygon([], 3.0) == []
+
 
 def test_critic_evaluation_on_valid_page():
     dna = create_default_broadsheet_dna()

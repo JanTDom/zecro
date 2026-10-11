@@ -10,7 +10,7 @@ from ..models.schemas import (
 from .grammar import LayoutGrammar
 from .solver import GridSolver
 from .critic import LayoutCritic
-from .image_ops import extract_alpha_contour
+from .image_ops import extract_alpha_contour, photo_cutout_geometry
 from .zone_solver import compose_page
 
 class LayoutGenome:
@@ -290,14 +290,12 @@ class EvolutionaryLayoutGenerator:
                 and (photo_info.is_cutout_candidate or photo_info.contour_polygon or photo_info.treatment == "cutout")
             )
             photo_treatment = requested_treatment if requested_treatment != "cutout" or can_cutout else "crop"
-            contour = None
-            if photo_treatment == "cutout":
-                contour = photo_info.contour_polygon
-                if contour is None and photo_info.alpha_mask_url and Path(photo_info.alpha_mask_url).exists():
-                    contour = extract_alpha_contour(photo_info.alpha_mask_url, photo_w_mm, photo_h_mm)
-                # No synthetic silhouette fallback: an unavailable mask keeps the photo rectangular.
-                if not contour:
-                    photo_treatment = "crop"
+            geometry = photo_cutout_geometry(photo_info, photo_w_mm, photo_h_mm)
+            contour = geometry["contour"] if photo_treatment == "cutout" else None
+            contour_holes = geometry["holes"] if photo_treatment == "cutout" else None
+            # No synthetic silhouette fallback: an unavailable mask keeps the photo rectangular.
+            if photo_treatment == "cutout" and not contour:
+                photo_treatment = "crop"
 
             if genome.photo_placement == "top_hero":
                 p_y = cur_y
@@ -322,6 +320,8 @@ class EvolutionaryLayoutGenerator:
                 z=4,
                 treatment=photo_treatment,
                 contour_points=contour,
+                contour_holes=contour_holes or None,
+                crop_box=geometry["crop_box"],
                 text_wrap=TextWrap(
                     mode=genome.photo_wrap_mode if photo_treatment == "cutout" else "bounding_box",
                     offset_mm=self.dna.photo_rules.text_wrap_offset_mm

@@ -26,8 +26,12 @@ class SVGRenderer:
         svg_lines.append('<defs>')
         for elem in sg.elements:
             if elem.treatment == "cutout" and elem.contour_points:
-                path_d = contour_to_svg_path(elem.contour_points)
-                svg_lines.append(f'<clipPath id="clip-{elem.id}"><path d="{path_d}"/></clipPath>')
+                # Contour is frame-relative; translate into page space.
+                path_d = contour_to_svg_path(
+                    [[p[0] + elem.frame.x, p[1] + elem.frame.y] for p in elem.contour_points],
+                    [[[p[0] + elem.frame.x, p[1] + elem.frame.y] for p in ring] for ring in (elem.contour_holes or [])],
+                )
+                svg_lines.append(f'<clipPath id="clip-{elem.id}"><path d="{path_d}" clip-rule="evenodd"/></clipPath>')
         svg_lines.append('</defs>')
 
         # Optional subtle modular grid lines
@@ -61,11 +65,21 @@ class SVGRenderer:
                     f'fill="#dcd8cd" rx="1.0"{clip_attr}/>'
                 )
 
-                if elem.image_url and elem.image_url.startswith("http"):
-                    svg_lines.append(
-                        f'<image xlink:href="{html.escape(elem.image_url)}" x="{fr.x:.1f}" y="{fr.y:.1f}" '
-                        f'width="{fr.w:.1f}" height="{fr.h:.1f}" preserveAspectRatio="xMidYMid slice"{clip_attr}/>'
-                    )
+                if elem.image_url and (elem.image_url.startswith(("http", "/static/", "data:"))):
+                    href = html.escape(elem.image_url)
+                    if elem.crop_box and elem.source_width_px and elem.source_height_px:
+                        l, t, r, b = elem.crop_box
+                        sw, sh = elem.source_width_px, elem.source_height_px
+                        svg_lines.append(
+                            f'<g{clip_attr}><svg x="{fr.x:.2f}" y="{fr.y:.2f}" width="{fr.w:.2f}" height="{fr.h:.2f}" '
+                            f'viewBox="{l*sw:.1f} {t*sh:.1f} {(r-l)*sw:.1f} {(b-t)*sh:.1f}" preserveAspectRatio="none">'
+                            f'<image xlink:href="{href}" width="{sw}" height="{sh}"/></svg></g>'
+                        )
+                    else:
+                        svg_lines.append(
+                            f'<image xlink:href="{href}" x="{fr.x:.1f}" y="{fr.y:.1f}" '
+                            f'width="{fr.w:.1f}" height="{fr.h:.1f}" preserveAspectRatio="xMidYMid slice"{clip_attr}/>'
+                        )
                 else:
                     # Graphic illustration placeholder
                     svg_lines.append(

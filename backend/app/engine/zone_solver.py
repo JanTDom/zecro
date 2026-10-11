@@ -13,7 +13,7 @@ from typing import Any
 from ..models.schemas import Element, ElementStyle, Frame, PageMeta, Relation, SceneGraph, TextWrap
 from .copyfit import estimate_text_capacity
 from .content_engine import rewrite_source_bound_copy
-from .image_ops import extract_alpha_contour, resolve_asset_path
+from .image_ops import extract_alpha_contour, photo_cutout_geometry, resolve_asset_path
 
 
 def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGraph:
@@ -143,25 +143,18 @@ def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGra
                               (image.alpha_mask_url or image.contour_polygon or image.is_cutout_candidate))
             requested = image.treatment or str(genes.get("photo_treatment", "crop"))
             treatment = "cutout" if requested == "cutout" and can_cutout else "crop"
-            contour = None
-            if treatment == "cutout":
-                if image.contour_polygon:
-                    raw = image.contour_polygon
-                    xmax = max((p[0] for p in raw), default=1.0)
-                    ymax = max((p[1] for p in raw), default=1.0)
-                    contour = [[p[0] * pw / (xmax or 1.0), p[1] * ph / (ymax or 1.0)] for p in raw]
-                else:
-                    mask = resolve_asset_path(image.alpha_mask_url)
-                    if mask:
-                        contour = extract_alpha_contour(str(mask), pw, ph)
-                if not contour:
-                    treatment = "crop"
+            geometry = photo_cutout_geometry(image, pw, ph)
+            contour = geometry["contour"] if treatment == "cutout" else None
+            holes = geometry["holes"] if treatment == "cutout" else None
+            if treatment == "cutout" and not contour:
+                treatment = "crop"
             photo = Element(
                 id=f"photo-{story.id}", role="photo", importance=min(.92, story.importance),
                 content_ref=f"{story.id}.image", image_url=image.url,
                 mask_ref=image.alpha_mask_url,
                 frame=Frame(x=px, y=py, w=pw, h=ph), z=4,
-                treatment=treatment, contour_points=contour, source_dpi=image.dpi,
+                treatment=treatment, contour_points=contour, contour_holes=holes or None,
+                crop_box=geometry["crop_box"], source_dpi=image.dpi,
                 source_width_px=image.width_px, source_height_px=image.height_px,
                 text_wrap=TextWrap(mode="contour" if treatment == "cutout" else "bounding_box",
                                    offset_mm=dna.photo_rules.text_wrap_offset_mm),

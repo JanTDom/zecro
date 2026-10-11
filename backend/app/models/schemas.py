@@ -183,6 +183,8 @@ class Element(BaseModel):
     mask_ref: Optional[str] = None
     image_url: Optional[str] = None
     contour_points: Optional[List[List[float]]] = None  # [[x,y], ...] relative to frame in mm
+    contour_holes: Optional[List[List[List[float]]]] = None  # enclosed background rings (evenodd)
+    crop_box: Optional[List[float]] = None  # normalised source crop [l,t,r,b] shared by all renderers
     text_wrap: Optional[TextWrap] = None
     focal_point: Optional[List[float]] = None  # [u, v] normalized 0..1
     source_dpi: Optional[float] = None
@@ -253,7 +255,8 @@ class StoryImageInput(BaseModel):
     aspect_ratio: Optional[float] = Field(default=None, gt=0.0)
     treatment: Optional[Literal["crop", "cutout", "full-bleed", "framed", "tinted"]] = None
     has_alpha_mask: bool = False
-    contour_polygon: Optional[List[List[float]]] = None
+    contour_polygon: Optional[List[List[float]]] = None  # normalised image space 0..100
+    contour_holes: Optional[List[List[List[float]]]] = None
     width_px: Optional[int] = Field(default=None, gt=0)
     height_px: Optional[int] = Field(default=None, gt=0)
     dpi: Optional[float] = Field(default=None, gt=0)

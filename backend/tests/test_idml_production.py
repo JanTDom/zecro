@@ -122,7 +122,9 @@ def test_cutout_path_and_local_link_are_packaged(tmp_path: Path):
         names = package.namelist()
         assert "Links/cutout-1.png" in names
         spread = ET.fromstring(package.read("Spreads/Spread_u_spread_0.xml"))
-        rectangle = spread.find(".//Rectangle")
+        # A contour cutout is a compound Polygon in InDesign, not a Rectangle.
+        assert spread.find(".//Rectangle") is None
+        rectangle = spread.find(".//Polygon")
         points = rectangle.findall("./Properties/PathGeometry/GeometryPathType/PathPointArray/PathPointType")
         assert len(points) == 3
         # The first point is translated from frame-relative mm to page points.

@@ -95,18 +95,26 @@ class IDMLRenderer:
 </idPkg:Story>"""
 
     @staticmethod
-    def _path_geometry(points):
-        point_xml = "\n".join(
-            f'                  <PathPointType Anchor="{x:.2f} {y:.2f}" LeftDirection="{x:.2f} {y:.2f}" RightDirection="{x:.2f} {y:.2f}"/>'
-            for x, y in points
-        )
-        return f"""
-            <PathGeometry>
+    def _path_geometry(points, extra_rings=None):
+        """PathGeometry; several GeometryPathType children form a compound
+        path (outer ring + holes), which InDesign renders even-odd."""
+        rings = [points, *(extra_rings or [])]
+        geometry = []
+        for ring in rings:
+            if len(ring) < 3:
+                continue
+            point_xml = "\n".join(
+                f'                  <PathPointType Anchor="{x:.2f} {y:.2f}" LeftDirection="{x:.2f} {y:.2f}" RightDirection="{x:.2f} {y:.2f}"/>'
+                for x, y in ring
+            )
+            geometry.append(f"""
               <GeometryPathType PathOpen="false">
                 <PathPointArray>
 {point_xml}
                 </PathPointArray>
-              </GeometryPathType>
+              </GeometryPathType>""")
+        return f"""
+            <PathGeometry>{''.join(geometry)}
             </PathGeometry>"""
 
     def render_to_zip(self, sg: SceneGraph, output_idml_path: str) -> str:
@@ -181,10 +189,32 @@ class IDMLRenderer:
                 link_xml = ""
                 if link_uri:
                     escaped_link_uri = saxutils.escape(link_uri, {'"': '&quot;'})
+                    # Reproduce the scene-graph crop: the full image is placed
+                    # in its own coordinates (pixels) and scaled/translated so
+                    # that crop_box exactly fills the frame — same crop as PDF.
+                    src_w, src_h = elem.source_width_px, elem.source_height_px
+                    if (not src_w or not src_h) and asset:
+                        try:
+                            from PIL import Image as _PILImage
+                            with _PILImage.open(asset) as _im:
+                                src_w, src_h = _im.size
+                        except Exception:
+                            src_w = src_h = None
+                    if src_w and src_h and elem.role == "photo":
+                        l, t, r, b = elem.crop_box or [0.0, 0.0, 1.0, 1.0]
+                        sx = w_pt / max(1e-6, (r - l) * src_w)
+                        sy = h_pt / max(1e-6, (b - t) * src_h)
+                        tx = left_pt - sx * l * src_w
+                        ty = top_pt - sy * t * src_h
+                        img_transform = f"{sx:.6f} 0 0 {sy:.6f} {tx:.3f} {ty:.3f}"
+                        graphic_bounds = f'Left="0" Top="0" Right="{src_w}" Bottom="{src_h}"'
+                    else:
+                        img_transform = "1 0 0 1 0 0"
+                        graphic_bounds = f'Left="0" Top="0" Right="{w_pt:.2f}" Bottom="{h_pt:.2f}"'
                     link_xml = f"""
-            <Image Self="u_image_{elem.id}" ItemTransform="1 0 0 1 0 0" GeometricBounds="{top_pt:.2f} {left_pt:.2f} {bottom_pt:.2f} {right_pt:.2f}">
-              <Properties><GraphicBounds Left="0" Top="0" Right="{w_pt:.2f}" Bottom="{h_pt:.2f}" /></Properties>
-              <Link Self="u_link_{elem.id}" LinkResourceURI="{escaped_link_uri}" AssetURL="{escaped_link_uri}" StoredState="Normal" CanPackage="true" CanEmbed="true" />
+            <Image Self="u_image_{elem.id}" ItemTransform="{img_transform}">
+              <Properties><GraphicBounds {graphic_bounds} /></Properties>
+              <Link Self="u_link_{elem.id}" LinkResourceURI="{escaped_link_uri}" StoredState="Normal" CanPackage="true" CanEmbed="true" />
             </Image>"""
 
                 # IDML's wrap preference belongs to the page item and its
@@ -208,25 +238,26 @@ class IDMLRenderer:
             <ContourOption ContourType="SameAsClipping" IncludeInsideEdges="false"{contour_attr} />
           </TextWrapPreference>"""
 
-                if elem.treatment == "cutout" and elem.contour_points and len(elem.contour_points) >= 3:
-                    clipping_points = [
-                        (left_pt + point[0] * MM_TO_PT, top_pt + point[1] * MM_TO_PT)
-                        for point in elem.contour_points
-                    ]
+                is_cutout = elem.treatment == "cutout" and elem.contour_points and len(elem.contour_points) >= 3
+                to_page = lambda ring: [(left_pt + point[0] * MM_TO_PT, top_pt + point[1] * MM_TO_PT) for point in ring]
+                if is_cutout:
+                    clipping_geometry = self._path_geometry(to_page(elem.contour_points), [to_page(r) for r in (elem.contour_holes or [])])
                 else:
-                    clipping_points = [
+                    clipping_geometry = self._path_geometry([
                         (left_pt, top_pt), (right_pt, top_pt),
                         (right_pt, bottom_pt), (left_pt, bottom_pt),
-                    ]
-                clipping_geometry = self._path_geometry(clipping_points)
+                    ])
+                # Non-rectangular (compound) frames are Polygons in InDesign.
+                tag = "Polygon" if is_cutout else "Rectangle"
+                layer_attr = f' ItemLayer="{masthead_layer}"' if elem.role == "logo" and masthead_layer else ""
                 rect_xml = f"""
-        <Rectangle Self="u_photo_{elem.id}" ItemTransform="1 0 0 1 0 0" GeometricBounds="{top_pt:.2f} {left_pt:.2f} {bottom_pt:.2f} {right_pt:.2f}" StrokeWeight="0" Locked="{'true' if elem.role == 'logo' else 'false'}">
+        <{tag} Self="u_photo_{elem.id}" ItemTransform="1 0 0 1 0 0" StrokeWeight="0" Locked="{'true' if elem.role == 'logo' else 'false'}"{layer_attr}>
           <Properties>
 {clipping_geometry}
           </Properties>
           {wrap_xml}
           {link_xml}
-        </Rectangle>"""
+        </{tag}>"""
                 spread_elements_xml.append(rect_xml)
 
             else:
