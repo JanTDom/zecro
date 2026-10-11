@@ -37,7 +37,7 @@ export const Slider: React.FC<SliderProps> = ({
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-1.5 bg-ink-800 rounded-lg appearance-none cursor-pointer accent-editorial-crimson focus:outline-none"
+        className="w-full h-1.5 bg-ink-800 rounded-lg appearance-none cursor-pointer accent-editorial-crimson focus:outline-hidden"
       />
       {description && <p className="text-[11px] text-ink-400 leading-tight">{description}</p>}
     </div>

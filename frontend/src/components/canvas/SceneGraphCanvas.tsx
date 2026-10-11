@@ -361,7 +361,7 @@ export const SceneGraphCanvas: React.FC = () => {
 
                   {/* Bounding Box Role Label */}
                   {showBoxes && (
-                    <span className="absolute -top-3 left-0 bg-ink-900 text-white text-[7px] font-mono px-1 rounded shadow-sm opacity-70">
+                    <span className="absolute -top-3 left-0 bg-ink-900 text-white text-[7px] font-mono px-1 rounded shadow-xs opacity-70">
                       {elem.role}
                     </span>
                   )}

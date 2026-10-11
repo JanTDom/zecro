@@ -175,7 +175,7 @@ export const CorpusManager: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-16 bg-paper-200 rounded border border-ink-700 flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+                    <div className="w-12 h-16 bg-paper-200 rounded border border-ink-700 flex items-center justify-center overflow-hidden shadow-xs shrink-0">
                       {page.thumbnailUrl ? (
                         <img src={page.thumbnailUrl} alt={page.fileName} className="w-full h-full object-cover" />
                       ) : (
@@ -264,7 +264,7 @@ export const CorpusManager: React.FC = () => {
                   {showBoundingBoxes && !previewUnavailable && selectedPage.boundingBoxes.map((box, index) => (
                     <div
                       key={index}
-                      className="absolute border border-editorial-crimson bg-editorial-crimson/10 pointer-events-none rounded-sm"
+                      className="absolute border border-editorial-crimson bg-editorial-crimson/10 pointer-events-none rounded-xs"
                       style={{
                         left: `${(box.x / selectedPage.widthMm) * 100}%`,
                         top: `${(box.y / selectedPage.heightMm) * 100}%`,

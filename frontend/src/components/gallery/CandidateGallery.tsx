@@ -93,7 +93,7 @@ export const CandidateGallery: React.FC<CandidateGalleryProps> = ({ onOpenExport
             <select
               value={filterSort}
               onChange={(e: any) => setFilterSort(e.target.value)}
-              className="bg-transparent text-ink-100 font-bold focus:outline-none cursor-pointer"
+              className="bg-transparent text-ink-100 font-bold focus:outline-hidden cursor-pointer"
             >
               <option value="taste" className="bg-ink-900 text-ink-100">Ranking gustu</option>
               <option value="critic" className="bg-ink-900 text-ink-100">Wynik krytyka</option>

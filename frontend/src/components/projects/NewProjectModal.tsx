@@ -129,7 +129,7 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClos
                 setName(e.target.value);
                 if (!newspaperTitle) setNewspaperTitle(e.target.value.toUpperCase());
               }}
-              className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-sm text-ink-100 placeholder:text-ink-600 focus:outline-none focus:border-editorial-crimson"
+              className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-sm text-ink-100 placeholder:text-ink-600 focus:outline-hidden focus:border-editorial-crimson"
             />
           </div>
           <div>
@@ -141,7 +141,7 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClos
               placeholder="e.g. THE DAILY CHRONICLE"
               value={newspaperTitle}
               onChange={(e) => setNewspaperTitle(e.target.value)}
-              className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-sm text-ink-100 font-headline placeholder:text-ink-600 focus:outline-none focus:border-editorial-crimson uppercase"
+              className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-sm text-ink-100 font-headline placeholder:text-ink-600 focus:outline-hidden focus:border-editorial-crimson uppercase"
             />
           </div>
         </div>
@@ -183,7 +183,7 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClos
               type="text"
               value={editionCode}
               onChange={(e) => setEditionCode(e.target.value)}
-              className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs font-mono text-ink-100 focus:outline-none focus:border-editorial-crimson uppercase"
+              className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs font-mono text-ink-100 focus:outline-hidden focus:border-editorial-crimson uppercase"
             />
           </div>
           <div>
@@ -193,7 +193,7 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClos
             <select
               value={accentFont}
               onChange={(e) => setAccentFont(e.target.value)}
-              className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-100 focus:outline-none focus:border-editorial-crimson"
+              className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-100 focus:outline-hidden focus:border-editorial-crimson"
             >
               <option value="Fraunces">Fraunces (Modern Editorial Serif)</option>
               <option value="Playfair Display">Playfair Display (Classic Serif)</option>
@@ -227,7 +227,7 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClos
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Briefly describe the editorial style, tone, and visual goals..."
-            className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-100 placeholder:text-ink-600 focus:outline-none focus:border-editorial-crimson resize-none"
+            className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-100 placeholder:text-ink-600 focus:outline-hidden focus:border-editorial-crimson resize-none"
           />
         </div>
 

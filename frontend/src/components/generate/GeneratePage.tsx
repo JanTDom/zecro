@@ -239,7 +239,7 @@ export const GeneratePage: React.FC = () => {
                 type="text"
                 value={leadStory.kicker}
                 onChange={(e) => setLeadStory({ ...leadStory, kicker: e.target.value })}
-                className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs font-mono text-editorial-crimson font-bold focus:outline-none focus:border-editorial-crimson uppercase"
+                className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs font-mono text-editorial-crimson font-bold focus:outline-hidden focus:border-editorial-crimson uppercase"
               />
             </div>
 
@@ -252,7 +252,7 @@ export const GeneratePage: React.FC = () => {
                 rows={2}
                 value={leadStory.headline}
                 onChange={(e) => setLeadStory({ ...leadStory, headline: e.target.value })}
-                className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-base font-headline font-black text-ink-100 focus:outline-none focus:border-editorial-crimson resize-none"
+                className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-base font-headline font-black text-ink-100 focus:outline-hidden focus:border-editorial-crimson resize-none"
               />
             </div>
 
@@ -266,7 +266,7 @@ export const GeneratePage: React.FC = () => {
                   rows={3}
                   value={leadStory.deck}
                   onChange={(e) => setLeadStory({ ...leadStory, deck: e.target.value })}
-                  className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-200 focus:outline-none focus:border-editorial-crimson resize-none"
+                  className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-200 focus:outline-hidden focus:border-editorial-crimson resize-none"
                 />
               </div>
               <div>
@@ -277,7 +277,7 @@ export const GeneratePage: React.FC = () => {
                   rows={3}
                   value={leadStory.lead}
                   onChange={(e) => setLeadStory({ ...leadStory, lead: e.target.value })}
-                  className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-200 focus:outline-none focus:border-editorial-crimson resize-none"
+                  className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-200 focus:outline-hidden focus:border-editorial-crimson resize-none"
                 />
               </div>
             </div>
@@ -296,7 +296,7 @@ export const GeneratePage: React.FC = () => {
                 rows={6}
                 value={leadStory.body}
                 onChange={(e) => setLeadStory({ ...leadStory, body: e.target.value })}
-                className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-300 focus:outline-none focus:border-editorial-crimson font-sans leading-relaxed"
+                className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-300 focus:outline-hidden focus:border-editorial-crimson font-sans leading-relaxed"
               />
             </div>
 
@@ -309,7 +309,7 @@ export const GeneratePage: React.FC = () => {
                   type="text"
                   value={leadStory.byline}
                   onChange={(e) => setLeadStory({ ...leadStory, byline: e.target.value })}
-                  className="w-full px-3 py-1.5 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-200 focus:outline-none focus:border-editorial-crimson"
+                  className="w-full px-3 py-1.5 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-200 focus:outline-hidden focus:border-editorial-crimson"
                 />
               </div>
               <div>
@@ -320,7 +320,7 @@ export const GeneratePage: React.FC = () => {
                   type="text"
                   value={leadStory.pullQuote || ''}
                   onChange={(e) => setLeadStory({ ...leadStory, pullQuote: e.target.value })}
-                  className="w-full px-3 py-1.5 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-200 focus:outline-none focus:border-editorial-crimson"
+                  className="w-full px-3 py-1.5 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-200 focus:outline-hidden focus:border-editorial-crimson"
                 />
               </div>
             </div>
