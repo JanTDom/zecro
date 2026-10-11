@@ -6,6 +6,7 @@ data/*.db
 data/uploads
 data/exports
 data/thumbnails
+data/fonts
 corpus
 __pycache__
 *.pyc
