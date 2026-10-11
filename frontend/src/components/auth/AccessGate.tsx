@@ -2,7 +2,10 @@ import React from 'react';
 
 const PBKDF2_ITERATIONS = 210_000;
 const PASSWORD_SALT = 'emVjcm8tcHJpdmF0ZS1wcmV2aWV3LTIwMjY=';
-const PASSWORD_DIGEST = 'M6B/U/U/v+nKe9YhkgGuMsVY906vLkpYFJHNptdyR/4=';
+const PASSWORD_DIGESTS = new Set([
+  'M6B/U/U/v+nKe9YhkgGuMsVY906vLkpYFJHNptdyR/4=',
+  'G6dCk/Z3s73Sz3wCHwPpYsr3gLpGItmk9HWURmDcOOY=',
+]);
 const ACCESS_STORAGE_KEY = 'zecro-private-preview-access';
 
 function encodeBase64(bytes: ArrayBuffer): string {
@@ -50,7 +53,7 @@ export function AccessGate({ children }: AccessGateProps) {
     setError('');
     try {
       const digest = await deriveDigest(password);
-      if (digest !== PASSWORD_DIGEST) {
+      if (!PASSWORD_DIGESTS.has(digest)) {
         setError('Hasło nie pasuje. Spróbuj ponownie.');
         setPassword('');
         return;
