@@ -42,7 +42,11 @@ def preflight_scene_graph(scene: SceneGraph, dna: TitleDNA, *, candidate_ref: Op
                     plan.height_mm = element.frame.h
             if plan is None:
                 plan = TextPlan(story_ref=element.content_ref or element.id, issue_ref="preflight", page_ref="scene", frame_ref=element.id, role=element.role, columns=int(element.style.columns or 1), width_mm=element.frame.w, height_mm=element.frame.h, min_font_size_pt=float(element.style.font_size_pt or dna.typography.scales.body))
-            fit = fit_text_plan(plan, element.text_content)
+            st = element.style
+            fit = fit_text_plan(plan, element.text_content, font_family=st.font_family if st else None,
+                                bold=bool(st and str(st.font_weight) in ("bold", "600", "700", "800", "900")),
+                                font_size_pt=st.font_size_pt if st else None, leading_pt=st.line_height_pt if st else None,
+                                gutter_mm=dna.grid.gutter_mm)
             checks.append({"id": f"copyfit:{element.id}", "status": fit.status, "value": fit.model_dump(mode="json")})
             if fit.status == "FAIL":
                 errors.extend([f"{element.id}: {warning}" for warning in fit.warnings])

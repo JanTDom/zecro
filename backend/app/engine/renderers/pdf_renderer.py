@@ -62,6 +62,8 @@ class PDFRenderer:
     def render_to_file(self, sg: SceneGraph, output_pdf_path: str) -> str:
         output = Path(output_pdf_path)
         output.parent.mkdir(parents=True, exist_ok=True)
+        if os.getenv("ZECRO_PDF_ENGINE", "typesetter") == "typesetter":
+            return self._render_reportlab(sg, output)
         html_content = self.html_renderer.render(sg)
         with tempfile.NamedTemporaryFile(suffix=".html", delete=False, mode="w", encoding="utf-8") as handle:
             handle.write(html_content)
@@ -133,7 +135,7 @@ class PDFRenderer:
         mark_gap = 7.0 * MM_TO_PT
         origin = bleed + mark_gap
         media_w, media_h = trim_w + 2 * origin, trim_h + 2 * origin
-        report = {"renderer": "reportlab_vector", "trim_mm": sg.page.trim, "bleed_mm": bleed / MM_TO_PT, "crop_marks": True, "fonts_embedded": True, "pdfx_compliant": False, "production_ready": False, "missing_assets": [], "overset_elements": [], "warnings": ["PDF/X output intent is not certified: no press ICC profile is configured."]}
+        report = {"renderer": "zecro_typesetter", "trim_mm": sg.page.trim, "bleed_mm": bleed / MM_TO_PT, "crop_marks": True, "fonts_embedded": True, "pdfx_compliant": False, "production_ready": False, "missing_assets": [], "overset_elements": [], "warnings": ["PDF/X output intent is not certified: no press ICC profile is configured."]}
         c = canvas.Canvas(str(output), pagesize=(media_w, media_h), pageCompression=1, pdfVersion=(1, 4))
         c.setTitle(sg.metadata.get("title", "ZECRO — strona prasowa"))
         c.setAuthor("ZECRO local layout engine")
@@ -184,32 +186,29 @@ class PDFRenderer:
                     report["missing_assets"].append({"element": elem.id, "url": elem.image_url})
                     c.setStrokeColorCMYK(0, 0, 0, .5); c.rect(x, y, w, h, stroke=1, fill=0)
                     c.setFillColorCMYK(0, 0, 0, 1); c.setFont("ZecroSans", 8); c.drawString(x + 4, y + 4, f"Brak lokalnego zdjęcia: {elem.id}")
+            elif elem.role == "logo" and elem.image_url and local_asset(elem.image_url):
+                from ..logo import rasterize
+                src = Path(local_asset(elem.image_url))
+                img = rasterize(src, width=max(600, int(f.w / 25.4 * 600)))
+                if img is None:
+                    report["missing_assets"].append({"element": elem.id, "url": elem.image_url})
+                else:
+                    bbox = img.getchannel("A").getbbox()
+                    if bbox:
+                        img = img.crop(bbox)
+                    scale = min(w / img.width, h / img.height)
+                    dw, dh = img.width * scale, img.height * scale
+                    flat = Image.new("RGB", img.size, (255, 255, 255)); flat.paste(img, mask=img.getchannel("A"))
+                    stream = io.BytesIO(); flat.convert("CMYK").save(stream, format="JPEG", quality=96); stream.seek(0)
+                    c.drawImage(ImageReader(stream), x + (w - dw) / 2, y + (h - dh) / 2, width=dw, height=dh)
+                    if src.suffix.lower() not in {".svg", ".pdf", ".eps", ".ai"}:
+                        report["warnings"].append("logo rastrowe w PDF — dostarcz wektor (SVG/PDF)")
             elif elem.role == "rule":
                 c.setStrokeColorCMYK(0, 0, 0, 1); c.setLineWidth(max(.25, ((st.border_width_mm if st else None) or .2) * MM_TO_PT)); c.line(x, y + h / 2, x + w, y + h / 2)
             elif elem.role == "band":
                 c.setFillColorCMYK(*cmyk_from_hex(st.bg_color if st else "#111111")); c.rect(x, y, w, h, stroke=0, fill=1)
             else:
-                text = elem.text_content or ""
-                if st and st.case == "upper": text = text.upper()
-                size = float((st.font_size_pt if st else None) or 9.5); leading = float((st.line_height_pt if st else None) or size * 1.2)
-                font = font_for(elem); c.setFont(font, size); c.setFillColorCMYK(0, 0, 0, 1); c.setFillOverprint(True)
-                columns = max(1, int((st.columns if st else 1) or 1)); gutter = float(self.dna.grid.gutter_mm if self.dna else 4.0) * MM_TO_PT; col_w = max(1, (w - (columns - 1) * gutter) / columns)
-                words, index, capacity = re.findall(r"\S+", text), 0, max(1, int(h / leading))
-                for col in range(columns):
-                    for line_no in range(capacity):
-                        if index >= len(words): break
-                        line_words = []
-                        while index < len(words):
-                            candidate = " ".join(line_words + [words[index]])
-                            if line_words and pdfmetrics.stringWidth(candidate, font, size) > col_w: break
-                            line_words.append(words[index]); index += 1
-                            if pdfmetrics.stringWidth(" ".join(line_words), font, size) > col_w: break
-                        line = " ".join(line_words); xx = x + col * (col_w + gutter); line_width = pdfmetrics.stringWidth(line, font, size)
-                        align = st.align if st else "left"
-                        if align == "center": xx += max(0, (col_w - line_width) / 2)
-                        elif align == "right": xx += max(0, col_w - line_width)
-                        c.drawString(xx, y + h - size - line_no * leading, line)
-                if index < len(words): report["overset_elements"].append({"element": elem.id, "remaining_words": len(words) - index})
+                self._draw_text(c, elem, x, y, w, h, report)
             c.restoreState()
 
         c.setStrokeColorCMYK(0, 0, 0, 1); c.setLineWidth(.25); length = 4 * MM_TO_PT
@@ -222,6 +221,85 @@ class PDFRenderer:
         report["content_present"] = bool(sg.elements)
         output.with_suffix(".preflight.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         return str(output)
+
+
+    # ------------------------------------------------------------ typesetter
+    _registered: dict = {}
+
+    def _pdf_font(self, elem, text: str):
+        """(reportlab font name, shaping path, face record) for an element."""
+        from ..fonts import resolve_face, local_file, ttf_for_pdf
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+        st = elem.style
+        weight = 700 if (st and str(st.font_weight) in ("bold", "600", "700", "800", "900")) else 400
+        italic = bool(st and getattr(st, "font_style", None) == "italic")
+        family = (st.font_family if st else None) or ("sans" if elem.role in ("caption", "kicker", "folio", "byline") else "serif")
+        face = resolve_face(family, weight=weight, italic=italic, text=text)
+        if face:
+            src = local_file(face)
+            if src:
+                ttf = ttf_for_pdf(str(src))
+                name = "Z_" + (face.get("postscript_name") or face["id"]).replace(" ", "")[:40]
+                if name not in pdfmetrics.getRegisteredFontNames():
+                    pdfmetrics.registerFont(TTFont(name, ttf))
+                return name, ttf, face
+        self._register_fonts()
+        fallback = ("ZecroSans" if family.lower().startswith("sans") or elem.role in ("caption", "kicker", "folio", "byline") else "ZecroSerif") + ("Bold" if weight >= 700 else "")
+        font = pdfmetrics.getFont(fallback)
+        return fallback, getattr(font.face, "filename", None) if hasattr(font, "face") else None, None
+
+    def _draw_text(self, c, elem, x, y, w, h, report):
+        from ..shaper import shape_text, glyph_offsets, hyphenate_for, LETTER_STRETCH, WORD_STRETCH, WORD_SHRINK, LETTER_SHRINK, width_pt
+        st = elem.style
+        text = elem.text_content or ""
+        if st and st.case == "upper":
+            text = text.upper()
+        size = float((st.font_size_pt if st else None) or 9.5)
+        leading = float((st.line_height_pt if st else None) or size * 1.2)
+        name, shape_path, face = self._pdf_font(elem, text)
+        c.setFont(name, size)
+        c.setFillColorCMYK(*cmyk_from_hex((st.color if st and st.color else "#000000")))
+        c.setFillOverprint(True)
+        columns = max(1, int((st.columns if st else 1) or 1))
+        gutter = float(self.dna.grid.gutter_mm if self.dna else 4.0) * MM_TO_PT
+        col_w = max(1.0, (w - (columns - 1) * gutter) / columns)
+        shaped = shape_text(text, width_pt=col_w, font_size_pt=size, leading_pt=leading, font_path=shape_path,
+                            hyphenate=hyphenate_for(size))
+        align = (st.align if st else "left") or "left"
+        per_col = max(1, int(h / leading + 1e-6))
+        space = width_pt(" ", size, shape_path)
+        drawn = 0
+        for i, line in enumerate(shaped.lines):
+            col, row = divmod(i, per_col)
+            if col >= columns:
+                break
+            xx = x + col * (col_w + gutter)
+            baseline = y + h - size * 0.8 - row * leading
+            justify = align == "justify" and not line.last and len(line.words) > 1
+            r = line.ratio if justify else 0.0
+            if align == "center":
+                xx += max(0, (col_w - line.width_pt) / 2)
+            elif align == "right":
+                xx += max(0, col_w - line.width_pt)
+            pen = xx
+            for wi, (word, ww) in enumerate(line.words):
+                k = (LETTER_STRETCH if r >= 0 else LETTER_SHRINK) * r
+                offsets = glyph_offsets(word, shape_path) if shape_path else [j * 0.48 for j in range(len(word))]
+                n = max(1, len(word) - 1)
+                for j, ch in enumerate(word):
+                    c.drawString(pen + offsets[j] * size + (ww * k) * (j / n if len(word) > 1 else 0), baseline, ch)
+                pen += ww * (1 + k)
+                if wi < len(line.words) - 1:
+                    pen += space * (1 + (WORD_STRETCH if r >= 0 else WORD_SHRINK) * r)
+            drawn += 1
+        if drawn < shaped.line_count:
+            report["overset_elements"].append({"element": elem.id, "overset_lines": shaped.line_count - drawn})
+        report.setdefault("typeset", []).append({"element": elem.id, "lines": shaped.line_count, "drawn": drawn,
+                                                  "measure": shaped.status, "font": (face or {}).get("full_name") or name,
+                                                  "polish": (face or {}).get("polish")})
+        if face is None:
+            report["warnings"].append(f"{elem.id}: krój spoza biblioteki (zastępczy {name}) — pomiar szacunkowy")
 
     @staticmethod
     def _set_pdf_boxes(path: Path, media_w: float, media_h: float, origin: float, trim_w: float, trim_h: float, bleed: float):

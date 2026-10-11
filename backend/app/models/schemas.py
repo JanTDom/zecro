@@ -116,6 +116,11 @@ class LogoProfile(BaseModel):
     layout_mode: Literal["horizontal", "ears", "side"] = "horizontal"
     vector: bool = False
     approved: bool = False
+    cmyk_colors: List[List[float]] = Field(default_factory=list)
+    raster_px: Optional[List[int]] = None
+    vector_ref: Optional[str] = None          # auto-vectorised SVG (needs editor approval)
+    ai_analysis: Dict[str, Any] = Field(default_factory=dict)
+    preflight: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class TitleDNA(BaseModel):
@@ -479,6 +484,7 @@ class GenerationRequest(BaseModel):
     population_size: int = Field(default=30, ge=10, le=100)
     generations: int = Field(default=15, ge=1, le=50)
     allow_transgressions: bool = True
+    visual_review: bool = True
     energy_budget_override: Optional[float] = None
     style_blend: Optional[StyleBlend] = None
     page_zone: Optional[Literal["front_page", "spread", "back_page"]] = None

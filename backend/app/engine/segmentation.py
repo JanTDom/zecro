@@ -41,7 +41,7 @@ _SESSIONS: dict[str, Any] = {}
 
 def default_model() -> str:
     import os
-    return os.getenv("ZECRO_SEGMENTATION_MODEL", "birefnet-general")
+    return os.getenv("ZECRO_SEGMENTATION_MODEL", "birefnet-general-lite")
 
 
 def _session(model: str):

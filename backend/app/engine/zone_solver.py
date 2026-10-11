@@ -16,8 +16,32 @@ from .content_engine import rewrite_source_bound_copy
 from .image_ops import extract_alpha_contour, photo_cutout_geometry, resolve_asset_path
 
 
+_BOLD_ROLES = {"headline", "logo", "kicker", "lead"}
+
+
+def _role_family(dna, role: str) -> str:
+    key = "headline" if role in ["headline", "pullquote", "logo"] else "sans" if role in ["kicker", "byline", "caption", "folio"] else "body"
+    return dna.typography.fonts.get(key, "serif")
+
+
+def _font_kw(dna, role: str) -> dict:
+    return {"font_family": _role_family(dna, role), "bold": role in _BOLD_ROLES, "gutter_mm": dna.grid.gutter_mm}
+
+
+def _style_kw(dna, element) -> dict:
+    st = element.style
+    return {"font_family": (st.font_family if st else None) or _role_family(dna, element.role),
+            "bold": bool(st and str(st.font_weight) in ("bold", "600", "700", "800", "900")), "gutter_mm": dna.grid.gutter_mm}
+
+
 def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGraph:
     genes = genes or {}
+    ranked = any(getattr(s, "rank", None) not in (None, "second") for s in material.stories)
+    # One-story pages keep the single-module architectures (they differ in
+    # measure and photo placement); multi-story pages are composed from ranks.
+    if material.page_zone != "spread" and len(material.stories) >= 2 and (len(material.stories) >= 3 or ranked) and not genes.get("legacy_modules"):
+        from .plan_composer import compose_planned_page
+        return compose_planned_page(dna, material, genes)
     fmt, grid = dna.format, dna.grid
     zone = material.page_zone
     page_count = 2 if zone == "spread" else 1
@@ -124,12 +148,12 @@ def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGra
         photo = None
 
         def fit_height(value: str, width: float, size: float, columns: int = 1,
-                       minimum: float = 4.0, maximum: float | None = None) -> float:
+                       minimum: float = 4.0, maximum: float | None = None, role: str = "body") -> float:
             line_h = max(1.5, size * .352778 * (1.08 if size >= 18 else 1.20))
             height = max(minimum, line_h + 1.0)
             limit = max(height, maximum if maximum is not None else h)
             while height < limit:
-                report = estimate_text_capacity(str(value), width, height, columns, size, line_h / .352778)
+                report = estimate_text_capacity(str(value), width, height, columns, size, line_h / .352778, **_font_kw(dna, role))
                 if report.passes:
                     return round(height, 2)
                 height += line_h
@@ -195,7 +219,7 @@ def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGra
                 text_w = w if placement == "cutout_overlap" and photo and photo.treatment == "cutout" else max(30.0, w - photo_w - gutter_local)
 
         if getattr(story, "kicker", None):
-            depth = fit_height(story.kicker, text_w, dna.typography.scales.kicker, minimum=4.5)
+            depth = fit_height(story.kicker, text_w, dna.typography.scales.kicker, minimum=4.5, role="kicker")
             eid = text("kicker", story, "kicker", x, cursor, text_w, depth, dna.typography.scales.kicker)
             if eid:
                 members.append(eid); cursor += depth + (2.0 if compact else 3.0)
@@ -209,7 +233,7 @@ def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGra
         # candidate fail the hard gate before it reached the gallery.
         headline_h = max(
             8.0 if compact else 10.0,
-            fit_height(story.headline, text_w, headline_size, minimum=8.0 if compact else 10.0,
+            fit_height(story.headline, text_w, headline_size, role="headline", minimum=8.0 if compact else 10.0,
                        maximum=max(10.0, content_end - cursor)),
         )
         eid = text("headline", story, "headline", x, cursor, text_w, headline_h, headline_size, dominant)
@@ -234,7 +258,7 @@ def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGra
                 fit_adjustments.append({"story_ref": story.id, "role": role, "action": "source_bound_shorten", "reason": "compact module budget", "metadata": meta})
                 value = shortened
             minimum = 4.0 if role == "byline" else (6.0 if compact else 7.0)
-            depth = fit_height(value, text_w, size, minimum=minimum)
+            depth = fit_height(value, text_w, size, minimum=minimum, role=role)
             eid = text(role, role_story, field, x, cursor, text_w, depth, size)
             if eid:
                 members.append(eid); cursor += depth + (1.5 if compact else 2.0)
@@ -260,14 +284,14 @@ def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGra
                 body_columns = 1
             available = max(7.0, body_limit - cursor)
             body_story = story
-            probe = estimate_text_capacity(body_text, text_w, available, body_columns, dna.typography.scales.body, dna.typography.scales.body * 1.2)
+            probe = estimate_text_capacity(body_text, text_w, available, body_columns, dna.typography.scales.body, dna.typography.scales.body * 1.2, **_font_kw(dna, "body"))
             if not probe.passes:
                 target_words = max(8, int(probe.capacity_characters / 7.5))
                 fitted, meta = rewrite_source_bound_copy(body_text, role="body", target_words=target_words, locked_passages=getattr(story, "locked_passages", []))
                 # Sentence boundaries and locked passages can leave a variant
                 # slightly over target; converge deterministically on a fit.
                 for _ in range(3):
-                    check = estimate_text_capacity(fitted, text_w, available, body_columns, dna.typography.scales.body, dna.typography.scales.body * 1.2)
+                    check = estimate_text_capacity(fitted, text_w, available, body_columns, dna.typography.scales.body, dna.typography.scales.body * 1.2, **_font_kw(dna, "body"))
                     if check.passes:
                         break
                     target_words = max(8, int(target_words * .72))
@@ -279,7 +303,7 @@ def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGra
                 elif getattr(story, "continue_to_page", None):
                     fit_adjustments.append({"story_ref": story.id, "role": "body", "action": "jump_line", "continuation_page": story.continue_to_page})
             body_value = body_story.body
-            minimum_body = fit_height(body_value, text_w, dna.typography.scales.body, body_columns, minimum=7.0, maximum=available)
+            minimum_body = fit_height(body_value, text_w, dna.typography.scales.body, body_columns, minimum=7.0, maximum=available, role="body")
             body_h = min(available, max(minimum_body, minimum_body + (6.0 if len(body_value.split()) < 180 else 0.0)))
             body_id = text("body", body_story, "body", x, cursor, text_w, body_h,
                            dna.typography.scales.body, columns=body_columns)
@@ -409,7 +433,7 @@ def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGra
         columns = max(1, int(element.style.columns if element.style else 1))
         size = float(element.style.font_size_pt if element.style and element.style.font_size_pt else dna.typography.scales.body)
         leading = float(element.style.line_height_pt if element.style and element.style.line_height_pt else size * 1.2)
-        report = estimate_text_capacity(element.text_content, element.frame.w, element.frame.h, columns, size, leading)
+        report = estimate_text_capacity(element.text_content, element.frame.w, element.frame.h, columns, size, leading, **_style_kw(dna, element))
         if report.passes:
             continue
         original = element.text_content
@@ -417,7 +441,7 @@ def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGra
         for _ in range(4):
             fitted, meta = rewrite_source_bound_copy(original, role=element.role if element.role in {"headline", "deck", "lead", "body", "kicker", "byline", "pullquote", "infobox", "teaser"} else "body", target_words=target)
             element.text_content = fitted
-            if estimate_text_capacity(fitted, element.frame.w, element.frame.h, columns, size, leading).passes:
+            if estimate_text_capacity(fitted, element.frame.w, element.frame.h, columns, size, leading, **_style_kw(dna, element)).passes:
                 fit_adjustments.append({"element_ref": element.id, "action": "copyfit_shorten", "from_words": len(original.split()), "to_words": len(fitted.split()), "metadata": meta})
                 break
             target = max(3, int(target * .7))

@@ -282,12 +282,14 @@ def _fit_warnings(plan: TextPlan, report: CopyfitReport, text: str) -> List[str]
     return warnings
 
 
-def fit_text_plan(plan: TextPlan, text: str, *, variant_ref: Optional[str] = None) -> TextFitResult:
+def fit_text_plan(plan: TextPlan, text: str, *, variant_ref: Optional[str] = None, font_family: Optional[str] = None,
+                  bold: bool = False, font_size_pt: Optional[float] = None, leading_pt: Optional[float] = None,
+                  gutter_mm: float = 4.0) -> TextFitResult:
     # Use the plan's declared minimum as the hard lower bound.  Tracking and
     # leading are measured explicitly so the same result can be reproduced by
     # the SVG critic and the production preflight.
-    base_font_size = max(1.0, float(plan.min_font_size_pt))
-    base_leading = base_font_size + 2.0
+    base_font_size = max(1.0, float(font_size_pt or plan.min_font_size_pt))
+    base_leading = float(leading_pt or base_font_size + 2.0)
     report = estimate_text_capacity(
         polish_microtypography(text or ""),
         plan.width_mm,
@@ -298,8 +300,11 @@ def fit_text_plan(plan: TextPlan, text: str, *, variant_ref: Optional[str] = Non
         widow_lines=plan.widow_lines,
         orphan_lines=plan.orphan_lines,
         no_break_tokens=plan.no_break_tokens,
+        font_family=font_family,
+        bold=bold,
+        gutter_mm=gutter_mm,
     )
-    measure = (plan.width_mm - (plan.columns - 1) * 4.0) / max(1, plan.columns)
+    measure = (plan.width_mm - (plan.columns - 1) * gutter_mm) / max(1, plan.columns)
     too_narrow = measure < 30.0
     overflow_lines = max(0, report.estimated_lines - report.capacity_lines)
     leading_mm = base_leading * 0.352778

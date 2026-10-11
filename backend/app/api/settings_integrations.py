@@ -32,24 +32,7 @@ class IntegrationPayload(BaseModel):
     status: str = "unconfigured"
 
 
-def _fernet():
-    if not settings.secrets_key:
-        return None
-    try:
-        from cryptography.fernet import Fernet
-        key = settings.secrets_key.encode()
-        try:
-            Fernet(key)
-        except Exception:
-            key = base64.urlsafe_b64encode(hashlib.sha256(key).digest())
-        return Fernet(key)
-    except Exception:
-        return None
-
-
-def _mask(secret: str | None) -> str | None:
-    if not secret: return None
-    return secret[:5] + "…" + secret[-3:] if len(secret) > 8 else "••••••"
+from ..ai.secrets_store import fernet as _fernet, mask as _mask, decrypt as _decrypt
 
 
 def _public(item: dict[str, Any]) -> dict[str, Any]:
@@ -115,55 +98,160 @@ def delete_integration(integration_id: str):
     if not db.delete_integration(integration_id): raise HTTPException(status_code=404, detail="Integration not found")
     db.record_integration_audit(integration_id,"deleted",{}); return {"status":"deleted"}
 
+PROVIDER_DEFAULT_BASE = {"openai": "https://api.openai.com/v1", "mistral": "https://api.mistral.ai/v1", "anthropic": "https://api.anthropic.com"}
+
+
+def _list_provider_models(item: dict) -> dict:
+    import requests
+    provider = item.get("provider")
+    cfg = item.get("config_json") or {}
+    key = _decrypt(item.get("secret_ref"))
+    if provider == "gemini":
+        state, models = list_models(key)
+        return {"status": state, "models": models}
+    if provider in {"openai", "mistral", "openai_compatible"} or (provider == "custom" and cfg.get("type") == "openai_compatible"):
+        base = (cfg.get("base_url") or PROVIDER_DEFAULT_BASE.get(provider, "")).rstrip("/")
+        from ..integrations.connector import check_url
+        check_url(base, allow_private=bool(cfg.get("allow_private")))
+        r = requests.get(f"{base}/models", headers={"Authorization": f"Bearer {key}"} if key else {}, timeout=15)
+        if r.status_code >= 400:
+            return {"status": "error", "reason": f"HTTP {r.status_code}: {r.text[:200]}"}
+        return {"status": "ready", "models": sorted(m.get("id") for m in r.json().get("data", []))}
+    if provider == "anthropic":
+        r = requests.get((cfg.get("base_url") or PROVIDER_DEFAULT_BASE["anthropic"]).rstrip("/") + "/v1/models",
+                         headers={"x-api-key": key or "", "anthropic-version": "2023-06-01"}, timeout=15)
+        if r.status_code >= 400:
+            return {"status": "error", "reason": f"HTTP {r.status_code}: {r.text[:200]}"}
+        return {"status": "ready", "models": [m.get("id") for m in r.json().get("data", [])]}
+    return {"status": "unconfigured", "models": [], "reason": "ten adapter nie udostępnia listy modeli"}
+
+
+class TestPayload(BaseModel):
+    query: str = "Warszawa"
+    params: dict[str, Any] = Field(default_factory=dict)
+
+
 @router.post("/integrations/{integration_id}/test")
-def test_integration(integration_id: str):
-    item=db.get_integration(integration_id)
-    if not item: raise HTTPException(status_code=404, detail="Integration not found")
-    provider=item.get("provider")
+def test_integration(integration_id: str, payload: TestPayload = TestPayload()):
+    import time
+    item = db.get_integration(integration_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Integration not found")
+    cfg = item.get("config_json") or {}
+    started = time.time()
     try:
-        if provider == "gemini": state, models = list_models(); result={"status":state,"models":models}
-        elif provider in {"custom", "openai", "anthropic", "mistral"}:
-            base=item.get("config_json",{}).get("base_url")
-            if not base: raise ValueError("base_url is required")
-            _validate_url(base)
-            import requests
-            response = requests.get(base, timeout=8, allow_redirects=False, stream=True)
-            if response.status_code >= 400:
-                result={"status":"error","reason":f"provider returned HTTP {response.status_code}"}
-            elif response.is_redirect:
-                result={"status":"error","reason":"redirect blocked; configure the final URL"}
-            else:
-                result={"status":"ready","http_status":response.status_code,"message":"real provider HTTP probe succeeded"}
-            response.close()
-        else: result={"status":"unconfigured","reason":"provider adapter requires credentials or an agency contract"}
-    except Exception as exc: result={"status":"error","reason":str(exc)}
-    item["status"]=result["status"]; item["last_test_at"]=datetime.now(timezone.utc).isoformat(); item["last_test_result"]=json.dumps(result,ensure_ascii=False); saved=db.save_integration(item); db.record_integration_audit(integration_id,"tested",{"status":result["status"]}); return {**_public(saved),"test":result}
+        if item.get("kind") == "ai_provider":
+            listed = _list_provider_models(item)
+            result = {**listed, "models": listed.get("models", [])[:50]}
+            if listed.get("status") in {"ready", "warning"} and cfg.get("model"):
+                from ..ai.integration_registry import Route
+                from ..ai.runtime import PROVIDERS
+                route = Route(item["provider"], cfg["model"], api_key=_decrypt(item.get("secret_ref")), base_url=cfg.get("base_url"), integration_id=item["id"], config=cfg)
+                call = PROVIDERS.get(item["provider"] if item["provider"] != "custom" else "custom")
+                data, tin, tout = call(route, "Odpowiadasz JSON.", 'Zwróć {"ok": true}', {"type": "object", "properties": {"ok": {"type": "boolean"}}, "required": ["ok"]}, [], 0, 64)
+                result["probe"] = {"response": data, "input_tokens": tin, "output_tokens": tout}
+        elif cfg.get("request"):
+            from ..integrations.connector import execute
+            out = execute(item, {"query": payload.query, **payload.params}, raw=True)
+            raw = out.get("raw")
+            result = {"status": "ready" if not [e for e in out["errors"] if e.get("item") is not None] else "warning", "count": out["count"],
+                      "items": out["items"][:3], "mapping_errors": out["errors"][:20], "raw_sample": json.dumps(raw, ensure_ascii=False)[:4000] if not isinstance(raw, str) else raw[:4000]}
+        elif item.get("provider") in {"openverse", "wikimedia", "unsplash", "pexels", "pixabay"}:
+            from ..integrations.photo_sources import BUILTIN
+            rows = BUILTIN[item["provider"]](payload.query, 3)
+            result = {"status": "ready", "count": len(rows), "items": rows[:3]}
+        else:
+            result = {"status": "unconfigured", "reason": "adapter wymaga umowy/danych dostępowych — skonfiguruj go jako własne API"}
+    except LookupError:
+        result = {"status": "unconfigured", "reason": "brak klucza"}
+    except Exception as exc:
+        result = {"status": "error", "reason": str(exc)[:400]}
+    result["elapsed_ms"] = int((time.time() - started) * 1000)
+    item["status"] = result["status"]
+    item["last_test_at"] = datetime.now(timezone.utc).isoformat()
+    item["last_test_result"] = json.dumps(result, ensure_ascii=False, default=str)[:8000]
+    saved = db.save_integration(item)
+    db.record_integration_audit(integration_id, "tested", {"status": result["status"]})
+    return {**_public(saved), "test": result}
+
 
 @router.get("/integrations/{integration_id}/models")
 def integration_models(integration_id: str):
-    item=db.get_integration(integration_id)
-    if not item: raise HTTPException(status_code=404, detail="Integration not found")
-    if item.get("provider") == "gemini":
-        state, models=list_models(); return {"status":state,"models":models}
-    return {"status":"unconfigured","models":[],"reason":"model discovery is not configured for this adapter"}
+    item = db.get_integration(integration_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Integration not found")
+    try:
+        return _list_provider_models(item)
+    except Exception as exc:
+        return {"status": "error", "models": [], "reason": str(exc)[:300]}
+
+
+class OpenAPIImport(BaseModel):
+    spec: Optional[dict[str, Any]] = None
+    url: Optional[str] = None
+    role: str = "photo_source"
+
 
 @router.post("/integrations/import-openapi")
-def import_openapi(spec: dict[str, Any]):
-    paths=spec.get("paths") or {}
-    operations=[]
-    for path, methods in paths.items():
-        for method, operation in (methods or {}).items():
-            if method.lower() in {"get","post","put","patch","delete"}:
-                operations.append({"method":method.upper(),"path":path,"operation_id":(operation or {}).get("operationId")})
-    return {"status":"ready","operations":operations}
+def import_openapi(payload: OpenAPIImport):
+    from ..integrations.connector import import_openapi as do_import, check_url
+    spec = payload.spec
+    if not spec and payload.url:
+        import requests
+        check_url(payload.url)
+        r = requests.get(payload.url, timeout=20)
+        r.raise_for_status()
+        text = r.text
+        try:
+            spec = json.loads(text)
+        except Exception:
+            try:
+                import yaml
+                spec = yaml.safe_load(text)
+            except Exception:
+                raise HTTPException(status_code=422, detail="specyfikacja nie jest JSON/YAML")
+    if not spec:
+        raise HTTPException(status_code=422, detail="podaj spec albo url")
+    return do_import(spec, payload.role)
+
 
 @router.get("/routing")
-def get_routing(): return db.get_routing()
+def get_routing():
+    from ..ai.integration_registry import TASK_DEFAULTS, registry
+    saved = db.get_routing()
+    out = {}
+    for task, attr in TASK_DEFAULTS.items():
+        resolved = registry.resolve(task)
+        out[task] = {"config": saved.get(task) or {}, "default_model": getattr(settings, attr), "status": resolved.status,
+                     "chain": [{"provider": r.provider, "model": r.model, "integration_id": r.integration_id} for r in resolved.chain],
+                     "reason": resolved.reason}
+    return out
+
+
 @router.put("/routing")
-def put_routing(payload: dict[str, Any]): return db.save_routing(payload)
+def put_routing(payload: dict[str, Any]):
+    from ..ai.integration_registry import TASK_DEFAULTS
+    unknown = [t for t in payload if t.split(":")[-1] not in TASK_DEFAULTS]
+    if unknown:
+        raise HTTPException(status_code=422, detail=f"nieznane zadania: {unknown}")
+    db.save_routing(payload)
+    db.record_integration_audit("routing", "updated", {"tasks": list(payload)})
+    return get_routing()
+
+
 @router.get("/limits")
-def get_limits(): return db.get_limits()
+def get_limits():
+    from ..ai.runtime import month_spend_usd
+    spent, complete = month_spend_usd()
+    return {**(db.get_limits() or {}), "month_spend_usd": spent, "price_table_complete": complete}
+
+
 @router.put("/limits")
-def put_limits(payload: dict[str, Any]): return db.save_limits(payload)
+def put_limits(payload: dict[str, Any]):
+    db.save_limits({k: v for k, v in payload.items() if k in {"monthly_budget_usd", "prices", "rpm", "project_budgets"}})
+    return get_limits()
+
+
 @router.get("/audit")
-def get_audit(): return db.list_integration_audit()
+def get_audit():
+    return db.list_integration_audit()

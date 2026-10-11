@@ -178,7 +178,11 @@ def test_full_e2e_lifecycle_and_idml_audit():
     })
     assert res_g.status_code == 201
     candidates = res_g.json()["candidates"]
-    assert len(candidates) == 8
+    # A one-story page has a small space of genuinely different layouts; the
+    # generator returns distinct candidates rather than padding with clones.
+    assert 4 <= len(candidates) <= 8
+    signatures = {tuple(sorted((e["role"], round(e["frame"]["x"]), round(e["frame"]["y"]), round(e["frame"]["w"]), round(e["frame"]["h"])) for e in c["scene_graph"]["elements"])) for c in candidates}
+    assert len(signatures) == len(candidates)
 
     cand_1 = candidates[0]
     cand_2 = candidates[1]

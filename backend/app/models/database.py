@@ -381,6 +381,15 @@ class Database:
                 id TEXT PRIMARY KEY, config_json TEXT NOT NULL, updated_at TEXT NOT NULL
             );
             """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS fonts (
+                id TEXT PRIMARY KEY, family TEXT NOT NULL, subfamily TEXT, full_name TEXT, postscript_name TEXT,
+                weight INTEGER, italic INTEGER, width INTEGER, storage_ref TEXT NOT NULL, font_number INTEGER DEFAULT 0,
+                format TEXT, sha256 TEXT UNIQUE, fs_type INTEGER, embedding TEXT, polish TEXT, missing_chars TEXT,
+                has_kerning INTEGER, glyph_count INTEGER, source TEXT, license_note TEXT, is_variable INTEGER DEFAULT 0,
+                project_id TEXT, created_at TEXT NOT NULL
+            );
+            """)
             conn.commit()
 
     # --- Project Operations ---
@@ -652,6 +661,46 @@ class Database:
                 (payload["id"], payload["cache_key"], payload.get("provider", "gemini"), payload["model"], payload["prompt_id"], payload.get("prompt_version", "1"), payload["input_sha256"], payload.get("status", "draft"), payload.get("input_tokens"), payload.get("output_tokens"), json.dumps(payload.get("raw_response"), ensure_ascii=False), payload.get("error"), payload["created_at"]))
             conn.commit()
         return payload
+
+    # --- Font library ---
+    def save_font(self, rec: Dict[str, Any]) -> Dict[str, Any]:
+        rec = dict(rec); rec.setdefault("id", str(uuid.uuid4())); rec.setdefault("created_at", datetime.now(timezone.utc).isoformat())
+        cols = ["id","family","subfamily","full_name","postscript_name","weight","italic","width","storage_ref","font_number","format","sha256","fs_type","embedding","polish","missing_chars","has_kerning","glyph_count","source","license_note","is_variable","project_id","created_at"]
+        vals = [json.dumps(rec.get(c), ensure_ascii=False) if c == "missing_chars" else rec.get(c) for c in cols]
+        with self.get_connection() as conn:
+            conn.execute(f"INSERT INTO fonts({','.join(cols)}) VALUES ({','.join('?'*len(cols))}) ON CONFLICT(sha256) DO UPDATE SET family=excluded.family, subfamily=excluded.subfamily, polish=excluded.polish, missing_chars=excluded.missing_chars, source=excluded.source", vals)
+            conn.commit()
+        return self.get_font_by_sha(rec["sha256"]) or rec
+
+    def _font_row(self, row) -> Dict[str, Any]:
+        d = dict(row); d["missing_chars"] = json.loads(d.get("missing_chars") or "[]"); d["italic"] = bool(d.get("italic")); d["has_kerning"] = bool(d.get("has_kerning")); d["is_variable"] = bool(d.get("is_variable")); return d
+
+    def get_font_by_sha(self, sha: str) -> Optional[Dict[str, Any]]:
+        with self.get_connection() as conn:
+            row = conn.execute("SELECT * FROM fonts WHERE sha256 = ?", (sha,)).fetchone()
+            return self._font_row(row) if row else None
+
+    def get_font(self, font_id: str) -> Optional[Dict[str, Any]]:
+        with self.get_connection() as conn:
+            row = conn.execute("SELECT * FROM fonts WHERE id = ?", (font_id,)).fetchone()
+            return self._font_row(row) if row else None
+
+    def list_fonts(self, family: Optional[str] = None) -> List[Dict[str, Any]]:
+        with self.get_connection() as conn:
+            if family:
+                rows = conn.execute("SELECT * FROM fonts WHERE lower(family) = lower(?) ORDER BY weight, italic", (family,)).fetchall()
+            else:
+                rows = conn.execute("SELECT * FROM fonts ORDER BY family, weight, italic").fetchall()
+            return [self._font_row(r) for r in rows]
+
+    def delete_font(self, font_id: str) -> bool:
+        with self.get_connection() as conn:
+            cur = conn.execute("DELETE FROM fonts WHERE id = ?", (font_id,)); conn.commit(); return (cur.rowcount or 0) > 0
+
+    def ai_usage_since(self, since_iso: str) -> List[Dict[str, Any]]:
+        with self.get_connection() as conn:
+            rows = conn.execute("SELECT model, COALESCE(SUM(input_tokens),0) AS input_tokens, COALESCE(SUM(output_tokens),0) AS output_tokens, COUNT(*) AS calls FROM ai_calls WHERE created_at >= ? AND status != 'failed' GROUP BY model", (since_iso,)).fetchall()
+            return [dict(row) for row in rows]
 
     def list_ai_usage(self) -> List[Dict[str, Any]]:
         with self.get_connection() as conn:

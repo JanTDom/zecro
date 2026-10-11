@@ -53,7 +53,7 @@ class LayoutCritic:
                 if fs is not None:
                     if elem.role == "body" and fs < 6.5:
                         violations.append(f"Element {elem.id} ({elem.role}) font size {fs}pt is below minimum readable 6.5pt.")
-                    elif elem.role == "headline" and fs < 14.0:
+                    elif elem.role == "headline" and fs < (10.0 if "brief" in (elem.constraints or []) else 14.0):
                         violations.append(f"Headline {elem.id} font size {fs}pt is too small for prominent reading.")
                     elif elem.role == "caption" and fs < 5.5:
                         violations.append(f"Caption {elem.id} font size {fs}pt is below prepress legibility 5.5pt.")
@@ -119,6 +119,9 @@ class LayoutCritic:
                         column_count,
                         elem.style.font_size_pt or self.dna.typography.scales.body,
                         elem.style.line_height_pt,
+                        font_family=elem.style.font_family,
+                        bold=str(elem.style.font_weight) in ("bold", "600", "700", "800", "900"),
+                        gutter_mm=self.dna.grid.gutter_mm,
                     )
                     if not report.passes:
                         reason = (

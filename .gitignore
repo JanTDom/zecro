@@ -32,3 +32,6 @@ frontend/*.tsbuildinfo
 .tmp-chrome/
 .tmp-chrome-user-dir/
 .codex/
+
+# Local QA renders
+output/_qa/

@@ -91,6 +91,11 @@ def execute_generation_run(project_id: str, request: GenerationRequest):
         allow_transgressions=request.allow_transgressions,
     )
 
+    visual_status = {"status": "skipped"}
+    if getattr(request, "visual_review", True):
+        from ..ai.visual_critic import rerank
+        pairs, visual_status = rerank(pairs, dna, limit=min(4, len(pairs)), project_id=project_id)
+
     svg_renderer = SVGRenderer(dna)
     ai_director = AIDirector(dna=dna, knowledge=corpus_knowledge, preference_model=taste_model)
     run_id = str(uuid.uuid4())
@@ -133,6 +138,7 @@ def execute_generation_run(project_id: str, request: GenerationRequest):
         status="completed",
         stats={
             "candidates_count": len(candidates),
+            "visual_review": visual_status,
             "energy_budget_used": dna.page_energy_budget,
             "population_size": request.population_size,
             "generations": request.generations,

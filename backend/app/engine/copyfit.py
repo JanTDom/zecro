@@ -49,8 +49,15 @@ def estimate_text_capacity(
     widow_lines: int = 0,
     orphan_lines: int = 0,
     no_break_tokens: Iterable[str] | None = None,
+    font_family: str | None = None,
+    bold: bool = False,
+    gutter_mm: float = 4.0,
 ) -> CopyfitReport:
-    """Estimate whether ``text`` fits a multi-column frame.
+    """Whether ``text`` fits a multi-column frame.
+
+    With ``font_family`` resolvable in the font library the result is measured
+    by the production typesetter (HarfBuzz + Knuth–Plass) — the same breaks
+    the PDF draws.  Otherwise a conservative estimate is used.
 
     The model uses a conservative average glyph width and reserves a little
     capacity for paragraph endings.  It is intentionally stable across
@@ -61,7 +68,10 @@ def estimate_text_capacity(
     font_size_pt = max(1.0, float(font_size_pt))
     leading_pt = float(leading_pt or font_size_pt * 1.2)
     tracking_em = float(tracking_em)
-    gutter_mm = 4.0
+    if font_family:
+        measured = _measured_capacity(text, width_mm, height_mm, columns, font_size_pt, leading_pt, font_family, bold, gutter_mm)
+        if measured is not None:
+            return measured
     measure_mm = max(1.0, (float(width_mm) - (columns - 1) * gutter_mm) / columns)
     glyph_mm = max(0.8, font_size_pt * 0.17)
     # Tracking is expressed in em, e.g. -0.01em is the usual emergency
@@ -132,6 +142,32 @@ def estimate_text_capacity(
         overlong_tokens=overlong_tokens,
         warnings=tuple(warnings),
     )
+
+
+def _measured_capacity(text, width_mm, height_mm, columns, size, leading, family, bold, gutter_mm):
+    try:
+        from .fonts import resolve_font
+        from .shaper import fill_columns
+        path = resolve_font(family, bold=bold, text=text)
+        if not path:
+            return None
+        fit = fill_columns(text or "", width_mm=float(width_mm), height_mm=float(height_mm), columns=columns, gutter_mm=gutter_mm,
+                           font_size_pt=size, leading_pt=leading, font_path=path)
+    except Exception:
+        return None
+    shaped = fit["shaped"]
+    words = len((text or "").split())
+    characters = len(re.sub(r"\s+", " ", text or "").strip())
+    cap, need = fit["capacity"], fit["lines"]
+    avg = characters / max(1, need)
+    warnings = [] if need <= cap else [f"copy needs {need} lines; frame holds {cap}"]
+    if shaped.overfull:
+        warnings.append("a single word is wider than the column")
+    return CopyfitReport(characters=characters, words=words, estimated_lines=need, capacity_lines=cap,
+                         capacity_characters=max(1, int(cap * avg)), overflow_ratio=round(need / max(1, cap), 3), leading_pt=round(leading, 2),
+                         passes=need <= cap and not shaped.overfull, chars_per_line=int(avg), lines_per_column=fit["lines_per_column"],
+                         free_lines=cap - need, widows=shaped.widows, orphans=0, paragraph_lines=(need,),
+                         warnings=tuple(warnings + ["measured: " + str(path).split("/")[-1]]))
 
 
 def copyfit_text(text: str, width_mm: float, height_mm: float, columns: int = 1, font_size_pt: float = 9.5, leading_pt: float | None = None, **kwargs) -> CopyfitReport:
