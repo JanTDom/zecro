@@ -299,7 +299,7 @@ def compose_planned_page(dna, material, genes: Optional[dict] = None) -> SceneGr
     briefs = [s for s in body_stories if s is not lead and s not in seconds]
 
     # ---------------- teaser band (each cell ≥ 2 columns)
-    if teasers and zone == "front_page":
+    if teasers and zone == "front_page" and getattr(material.page_plan, "geometry", "auto") != "fixed":
         n = min(len(teasers), max(1, grid.columns // 2))
         cell = (usable_w - (n - 1) * gut) / n
         for i, t in enumerate(teasers[:n]):
@@ -311,112 +311,140 @@ def compose_planned_page(dna, material, genes: Optional[dict] = None) -> SceneGr
         y += 14
         ctx.rule(left, y - 2, usable_w, "teasers")
 
+    plan = material.page_plan
+    fixed = bool(plan and plan.slots and getattr(plan, "geometry", "auto") == "fixed")
     gene_mode = str(genes.get("layout_mode", "dominant-left"))
-    arch = {"dominant-left": "rail-right", "dominant-right": "rail-left", "modular-grid": "rail-right", "photo-top": "lead-rail"}.get(gene_mode, gene_mode)
-    wide_rail = gene_mode == "modular-grid"
-    if not briefs and arch in {"rail-right", "rail-left"} and len(seconds) >= 2 and genes.get("variation", .5) > .5:
-        arch = "lead-rail"
-    rail_cols = 0
-    if briefs and arch in {"rail-right", "rail-left"}:
-        rail_cols = 1 if (ctx.col_w >= 38 or grid.columns <= 4) else 2
-        if wide_rail:
-            rail_cols += 1
-        rail_cols = min(rail_cols, max(1, grid.columns - 3))
-    if arch == "lead-rail":
-        rail_cols = max(2, round(grid.columns * 0.34)) if seconds else 0
-    main_cols = grid.columns - rail_cols
-    rail_left = arch == "rail-left"
-    main_x = colx(rail_cols) if rail_left else left
-    rail_x = left if rail_left else colx(main_cols)
-    main_w, rail_w = spanw(main_cols), (spanw(rail_cols) if rail_cols else 0)
-    avail_h = bottom - y
+    arch, rail_cols = "fixed", 0
+    if fixed:
+        # Editor-drawn plan: every slot is a hard rectangle on the grid.
+        # Rows below the masthead share the remaining depth evenly.
+        content_rows = max(1, plan.rows - plan.masthead_rows)
+        row_h = (bottom - y) / content_rows
+        by_id = {s.id: s for s in stories}
+        for sl in sorted(plan.slots, key=lambda s: (s.row_start, s.col_start)):
+            s = by_id.get(sl.story_ref)
+            if s is None or sl.page_number != 1:
+                continue
+            c0 = max(0, min(sl.col_start, grid.columns - 1))
+            span = max(1, min(sl.col_span, grid.columns - c0))
+            r0 = max(0, sl.row_start - plan.masthead_rows)
+            sy = y + r0 * row_h + (1.5 if r0 else 0)
+            sh = sl.row_span * row_h - (3 if r0 else 1.5)
+            if sl.teaser_only or sl.rank == "teaser":
+                pg = getattr(s, "continue_to_page", None) or sl.continuation_page
+                ctx.text("band", s, "headline", colx(c0), sy, spanw(span), min(sh, 12), sc.kicker * 1.1,
+                         value=s.headline + (f" — str. {pg}" if pg else ""))
+                continue
+            if r0:
+                ctx.rule(colx(c0), sy - 1.5, spanw(span), f"fx-{s.id}")
+            ctx.place(s, colx(c0), sy, spanw(span), sh, sl.rank)
+    if not fixed:
+        gene_mode = str(genes.get("layout_mode", "dominant-left"))
+        arch = {"dominant-left": "rail-right", "dominant-right": "rail-left", "modular-grid": "rail-right", "photo-top": "lead-rail"}.get(gene_mode, gene_mode)
+        wide_rail = gene_mode == "modular-grid"
+        if not briefs and arch in {"rail-right", "rail-left"} and len(seconds) >= 2 and genes.get("variation", .5) > .5:
+            arch = "lead-rail"
+        rail_cols = 0
+        if briefs and arch in {"rail-right", "rail-left"}:
+            rail_cols = 1 if (ctx.col_w >= 38 or grid.columns <= 4) else 2
+            if wide_rail:
+                rail_cols += 1
+            rail_cols = min(rail_cols, max(1, grid.columns - 3))
+        if arch == "lead-rail":
+            rail_cols = max(2, round(grid.columns * 0.34)) if seconds else 0
+        main_cols = grid.columns - rail_cols
+        rail_left = arch == "rail-left"
+        main_x = colx(rail_cols) if rail_left else left
+        rail_x = left if rail_left else colx(main_cols)
+        main_w, rail_w = spanw(main_cols), (spanw(rail_cols) if rail_cols else 0)
+        avail_h = bottom - y
 
-    # ---------------- rail
-    if rail_cols and arch != "lead-rail":
-        ry = y
-        label = ctx.text("kicker", None, "rail_label", rail_x, ry, rail_w, 6, sc.kicker, value="W SKRÓCIE")
-        ry += 8
-        n = len(briefs)
-        per = (bottom - ry - (n - 1) * 3) / max(1, n)
-        for i, b in enumerate(briefs):
-            used = ctx.place(b, rail_x, ry, rail_w, per, "brief")
-            ry += used + 1.5
-            if i < n - 1:
-                ctx.rule(rail_x, ry, rail_w, b.id); ry += 1.5
-        spare = bottom - ry
-        if spare > 25:
-            ctx.fit.append({"action": "rail_spare", "mm": round(spare, 1), "reason": "krótkie wiadomości nie wypełniają szpalty"})
-        briefs_rendered = True
-    else:
-        briefs_rendered = False
-
-    # ---------------- main area: lead + seconds row (+ briefs row when no rail)
-    row_items = seconds if arch != "lead-rail" else []
-    bottom_briefs = briefs if not briefs_rendered else []
-    def row_demand(items, r_override=None):
-        if not items:
-            return 0.0
-        k = len(items)
-        base = main_cols // k
-        if base < 2:
-            half = math.ceil(k / 2)
-            return row_demand(items[:half], r_override) + row_demand(items[half:], r_override) + 4
-        return max(ctx.demand(s, spanw(base), r_override or (rank(s) if rank(s) != "lead" else "second")) for s in items)
-    seconds_need = row_demand(row_items)
-    briefs_need = row_demand(bottom_briefs, "brief")
-    lead_area = avail_h - (seconds_need + 6 if row_items else 0) - (briefs_need + 6 if bottom_briefs else 0)
-    if lead is not None:
-        lead_need = ctx.demand(lead, main_w, "lead")
-        lead_h = max(lead_need, lead_area) if lead_area > lead_need else lead_area
-        # don't give the lead more than its full content needs: surplus to rows
-        p = ctx.module_parts(lead, main_w, "lead")
-        lead_full = p["fixed"] + p["photo_ideal"] + (p["caption"] + 1.5 if p["caption"] else 0) + p["body"]
-        lead_h = min(lead_h, max(lead_need, lead_full))
-        used = ctx.place(lead, main_x, y, main_w, lead_h, "lead")
-        ly = y + max(used, 0) + 3
-        if arch == "lead-rail" and seconds:
+        # ---------------- rail
+        if rail_cols and arch != "lead-rail":
             ry = y
-            per = (bottom - y - (len(seconds) - 1) * 4) / len(seconds)
-            for i, s in enumerate(seconds):
-                u = ctx.place(s, rail_x, ry, rail_w, per, rank(s) if rank(s) != "lead" else "second", photo_side=True)
-                ry += u + 2
-                if i < len(seconds) - 1:
-                    ctx.rule(rail_x, ry, rail_w, s.id); ry += 2
-    else:
-        ly = y
+            label = ctx.text("kicker", None, "rail_label", rail_x, ry, rail_w, 6, sc.kicker, value="W SKRÓCIE")
+            ry += 8
+            n = len(briefs)
+            per = (bottom - ry - (n - 1) * 3) / max(1, n)
+            for i, b in enumerate(briefs):
+                used = ctx.place(b, rail_x, ry, rail_w, per, "brief")
+                ry += used + 1.5
+                if i < n - 1:
+                    ctx.rule(rail_x, ry, rail_w, b.id); ry += 1.5
+            spare = bottom - ry
+            if spare > 25:
+                ctx.fit.append({"action": "rail_spare", "mm": round(spare, 1), "reason": "krótkie wiadomości nie wypełniają szpalty"})
+            briefs_rendered = True
+        else:
+            briefs_rendered = False
 
-    def place_row(items, y0, height, r_override=None):
-        if not items:
-            return y0
-        k = len(items)
-        total_cols = main_cols
-        base, extra = divmod(total_cols, k)
-        if base < 2:  # too many for one row → two rows
-            half = math.ceil(k / 2)
-            hh = (height - 4) / 2
-            y1 = place_row(items[:half], y0, hh, r_override)
-            return place_row(items[half:], y1 + 4, hh, r_override)
-        c0 = rail_cols if rail_left else 0
-        heights = []
-        weights = [max(1.0, len((s.body or "").split()) + 25 * bool(s.images)) for s in items]
-        spans = [2] * k
-        free = total_cols - 2 * k
-        while free > 0:  # give columns to the module with the highest demand per column
-            j = max(range(k), key=lambda i: weights[i] / spans[i])
-            spans[j] += 1; free -= 1
-        for i, s in enumerate(items):
-            span = spans[i]
-            heights.append(ctx.place(s, colx(c0), y0, spanw(span), height, r_override or (rank(s) if rank(s) != "lead" else "second")))
-            c0 += span
-        return y0 + max(heights)
+        # ---------------- main area: lead + seconds row (+ briefs row when no rail)
+        row_items = seconds if arch != "lead-rail" else []
+        bottom_briefs = briefs if not briefs_rendered else []
+        def row_demand(items, r_override=None):
+            if not items:
+                return 0.0
+            k = len(items)
+            base = main_cols // k
+            if base < 2:
+                half = math.ceil(k / 2)
+                return row_demand(items[:half], r_override) + row_demand(items[half:], r_override) + 4
+            return max(ctx.demand(s, spanw(base), r_override or (rank(s) if rank(s) != "lead" else "second")) for s in items)
+        seconds_need = row_demand(row_items)
+        briefs_need = row_demand(bottom_briefs, "brief")
+        lead_area = avail_h - (seconds_need + 6 if row_items else 0) - (briefs_need + 6 if bottom_briefs else 0)
+        if lead is not None:
+            lead_need = ctx.demand(lead, main_w, "lead")
+            lead_h = max(lead_need, lead_area) if lead_area > lead_need else lead_area
+            # don't give the lead more than its full content needs: surplus to rows
+            p = ctx.module_parts(lead, main_w, "lead")
+            lead_full = p["fixed"] + p["photo_ideal"] + (p["caption"] + 1.5 if p["caption"] else 0) + p["body"]
+            lead_h = min(lead_h, max(lead_need, lead_full))
+            used = ctx.place(lead, main_x, y, main_w, lead_h, "lead")
+            ly = y + max(used, 0) + 3
+            if arch == "lead-rail" and seconds:
+                ry = y
+                per = (bottom - y - (len(seconds) - 1) * 4) / len(seconds)
+                for i, s in enumerate(seconds):
+                    u = ctx.place(s, rail_x, ry, rail_w, per, rank(s) if rank(s) != "lead" else "second", photo_side=True)
+                    ry += u + 2
+                    if i < len(seconds) - 1:
+                        ctx.rule(rail_x, ry, rail_w, s.id); ry += 2
+        else:
+            ly = y
 
-    if row_items:
-        ctx.rule(main_x, ly - 1.5, main_w, "row1")
-        remaining = bottom - ly - (briefs_need + 6 if bottom_briefs else 0)
-        ly = place_row(row_items, ly + 1, max(remaining, seconds_need)) + 3
-    if bottom_briefs:
-        ctx.rule(main_x, ly - 1.5, main_w, "row2")
-        ly = place_row(bottom_briefs, ly + 1, bottom - ly - 1, "brief")
+        def place_row(items, y0, height, r_override=None):
+            if not items:
+                return y0
+            k = len(items)
+            total_cols = main_cols
+            base, extra = divmod(total_cols, k)
+            if base < 2:  # too many for one row → two rows
+                half = math.ceil(k / 2)
+                hh = (height - 4) / 2
+                y1 = place_row(items[:half], y0, hh, r_override)
+                return place_row(items[half:], y1 + 4, hh, r_override)
+            c0 = rail_cols if rail_left else 0
+            heights = []
+            weights = [max(1.0, len((s.body or "").split()) + 25 * bool(s.images)) for s in items]
+            spans = [2] * k
+            free = total_cols - 2 * k
+            while free > 0:  # give columns to the module with the highest demand per column
+                j = max(range(k), key=lambda i: weights[i] / spans[i])
+                spans[j] += 1; free -= 1
+            for i, s in enumerate(items):
+                span = spans[i]
+                heights.append(ctx.place(s, colx(c0), y0, spanw(span), height, r_override or (rank(s) if rank(s) != "lead" else "second")))
+                c0 += span
+            return y0 + max(heights)
+
+        if row_items:
+            ctx.rule(main_x, ly - 1.5, main_w, "row1")
+            remaining = bottom - ly - (briefs_need + 6 if bottom_briefs else 0)
+            ly = place_row(row_items, ly + 1, max(remaining, seconds_need)) + 3
+        if bottom_briefs:
+            ctx.rule(main_x, ly - 1.5, main_w, "row2")
+            ly = place_row(bottom_briefs, ly + 1, bottom - ly - 1, "brief")
 
     # ---------------- result
     content_bottom = max((e.frame.y + e.frame.h for e in ctx.elements if e.role not in {"rule"}), default=y)

@@ -87,9 +87,10 @@ def test_spread_emits_two_pages_and_preserves_canvas_coordinates(tmp_path: Path)
         assert second_bounds[3] == pytest.approx(420.0 * MM_TO_PT, abs=0.01)
 
         frame = next(frame for frame in root.findall("TextFrame") if frame.attrib["Self"] == "u_tf_body-b")
-        bounds = [float(value) for value in frame.attrib["GeometricBounds"].split()]
-        assert bounds[1] == pytest.approx(222.0 * MM_TO_PT, abs=0.01)
-        assert bounds[3] == pytest.approx((222.0 + 90.0) * MM_TO_PT, abs=0.01)
+        # InDesign reads frame geometry from PathGeometry anchors (x y), not GeometricBounds.
+        xs = [float(pt.attrib["Anchor"].split()[0]) for pt in frame.iter("PathPointType")]
+        assert min(xs) == pytest.approx(222.0 * MM_TO_PT, abs=0.01)
+        assert max(xs) == pytest.approx((222.0 + 90.0) * MM_TO_PT, abs=0.01)
         prefs = ET.fromstring(package.read("Resources/Preferences.xml"))
         pref = prefs.find("DocumentPreference")
         assert float(pref.attrib["PageWidth"]) == pytest.approx(210.0 * MM_TO_PT, abs=0.01)

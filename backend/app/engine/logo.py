@@ -164,7 +164,8 @@ def masthead_geometry(dna: TitleDNA, profile: LogoProfile | None, page_width_mm:
     else:
         w = min(usable * 0.22, max(20, profile.min_width_mm or 24))
     h = w / profile.aspect_ratio
-    h = max(base * 6, min(h, base * 24))
+    cap = dna.format.trim_h_mm * (0.09 if mode == "horizontal" else 0.12 if mode == "ears" else 0.2)
+    h = max(base * 6, min(h, base * 24, cap))
     h = round(h / base) * base  # snap to baseline grid
     if mode != "side":
         w = min(w, h * profile.aspect_ratio)

@@ -16,16 +16,38 @@ MAC_DIRS = [Path.home() / "Library/Fonts", Path("/Library/Fonts"), Path("/System
 
 def ingest_dir(root: Path, source: str) -> None:
     added = rejected = dup = failed = 0
+    done_log = fonts.FONT_DIR / ".ingested_files.txt"  # resumable: skip files already processed
+    done = set(done_log.read_text(encoding="utf-8").splitlines()) if done_log.exists() else set()
     for path in sorted(p for p in root.rglob("*") if p.is_file() and p.suffix.lower() in fonts.FONT_EXT | {".dfont"}):
+        key = f"{path.name}|{path.stat().st_size}|{int(path.stat().st_mtime)}"
+        if key in done:
+            dup += 1
+            continue
+        if path.stat().st_size == 0:  # cloud placeholder / empty file
+            failed += 1
+            print(f"pominięty {path.name}: pusty plik (niepobrany z chmury?)")
+            continue
+        import signal
+        def _too_slow(*_):
+            raise TimeoutError("analiza > 45 s (zwykle wielka kolekcja CJK) — pominięty")
+        signal.signal(signal.SIGALRM, _too_slow)
+        signal.alarm(45)
         try:
             for rec in fonts.ingest_path(path, source=source):
                 st = rec.get("status")
                 added += st == "added"; dup += st == "duplicate"; rejected += st == "rejected"
                 if st in {"added", "rejected"}:
                     print(f"{st:9s} {rec.get('family')} {rec.get('subfamily')}  PL={rec.get('polish')} {''.join(rec.get('missing_chars') or [])}  {rec.get('embedding')}")
+            with done_log.open("a", encoding="utf-8") as fh:
+                fh.write(key + "\n")
         except Exception as exc:
+            if isinstance(exc, TimeoutError):
+                with done_log.open("a", encoding="utf-8") as fh:
+                    fh.write(key + "\n")
             failed += 1
             print(f"pominięty {path.name}: {exc}")
+        finally:
+            signal.alarm(0)
     print(f"{root}: dodane {added}, duplikaty {dup}, odrzucone (Restricted) {rejected}, nieobsługiwane {failed}")
 
 

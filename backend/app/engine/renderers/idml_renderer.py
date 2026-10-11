@@ -63,15 +63,42 @@ class IDMLRenderer:
             raise ValueError("IDML text thread IDs collide after sanitization")
         return groups, references
 
-    @staticmethod
-    def _story_xml(story_id, members, style_map):
+    # ------------------------------------------------------------ typography
+    def _face(self, elem):
+        """(family, InDesign font style, face record) for a text element."""
+        from ..fonts import resolve_face
+        st = elem.style
+        weight = 700 if (st and str(st.font_weight) in ("bold", "600", "700", "800", "900")) else 400
+        family = (st.font_family if st else None) or "serif"
+        face = resolve_face(family, weight=weight, text=elem.text_content or "")
+        if face:
+            style = face.get("subfamily") or ("Bold" if weight >= 700 else "Regular")
+            self._used_fonts[(face["family"], style)] = face
+            return face["family"], style, face
+        name = family.split(",")[0].strip()
+        style = "Bold" if weight >= 700 else "Regular"
+        self._used_fonts[(name, style)] = None
+        return name, style, None
+
+    def _swatch(self, hex_color: Optional[str]) -> str:
+        if not hex_color or hex_color.lower() in {"#000", "#000000", "#111111", "#0f0f0f"}:
+            return "Color/Black"
+        h = hex_color.lstrip("#")
+        if len(h) == 3:
+            h = "".join(c * 2 for c in h)
+        r, g, b = (int(h[i:i + 2], 16) / 255 for i in (0, 2, 4))
+        k = 1 - max(r, g, b)
+        c, m, y = [(0 if k >= 1 else (1 - v - k) / (1 - k)) for v in (r, g, b)]
+        name = f"Color/Z_{h.upper()}"
+        self._swatches[name] = f"{c*100:.0f} {m*100:.0f} {y*100:.0f} {k*100:.0f}"
+        return name
+
+    def _story_xml(self, story_id, members, style_map):
         ranges = []
         previous_text = ""
+        just = {"justify": "LeftJustified", "left": "LeftAlign", "center": "CenterAlign", "right": "RightAlign"}
         for elem in members:
             text = elem.text_content or ""
-            # The zone solver splits body copy at word boundaries. Joining the
-            # fragments with one space restores continuous copy; existing
-            # whitespace and paragraph breaks remain intact.
             if previous_text and text and not previous_text[-1].isspace() and not text[0].isspace():
                 text = " " + text
             content_xml = "<Br/>".join(
@@ -79,9 +106,18 @@ class IDMLRenderer:
                 for line in text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
             )
             style_name = f"ParagraphStyle/{style_map.get(elem.role, 'Korpus')}"
+            st = elem.style
+            size = float((st.font_size_pt if st else None) or 9.5)
+            leading = float((st.line_height_pt if st else None) or size * 1.2)
+            family, fstyle, _ = self._face(elem)
+            align = just.get((st.align if st else "left") or "left", "LeftAlign")
+            hyph = "true" if size < 14 else "false"
+            caps = ' Capitalization="AllCaps"' if st and st.case == "upper" else ""
+            color = self._swatch(st.color if st else None)
             ranges.append(f"""
-    <ParagraphStyleRange AppliedParagraphStyle="{style_name}">
-      <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/$ID/[No character style]">
+    <ParagraphStyleRange AppliedParagraphStyle="{style_name}" Justification="{align}" Hyphenation="{hyph}" HyphenateWordsLongerThan="5" HyphenateAfterFirst="2" HyphenateBeforeLast="3" HyphenationZone="0">
+      <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/$ID/[No character style]" AppliedLanguage="$ID/Polish" PointSize="{size:.2f}" FontStyle="{saxutils.escape(fstyle)}" FillColor="{color}"{caps}>
+        <Properties><AppliedFont type="string">{saxutils.escape(family)}</AppliedFont><Leading type="unit">{leading:.2f}</Leading></Properties>
         {content_xml}
       </CharacterStyleRange>
     </ParagraphStyleRange>""")
@@ -117,6 +153,34 @@ class IDMLRenderer:
             <PathGeometry>{''.join(geometry)}
             </PathGeometry>"""
 
+    def render_package(self, sg: SceneGraph, package_dir: str) -> dict:
+        """InDesign-style package: <dir>/<name>.idml + Links/ + Document fonts/ + report."""
+        import json, shutil
+        out = Path(package_dir)
+        (out / "Links").mkdir(parents=True, exist_ok=True)
+        idml = out / f"{out.name}.idml"
+        self._package_links_dir = out / "Links"
+        self.render_to_zip(sg, str(idml))
+        fonts_dir = out / "Document fonts"
+        fonts_dir.mkdir(exist_ok=True)
+        report = []
+        from ..fonts import local_file
+        for (family, style), face in self._used_fonts.items():
+            row = {"family": family, "style": style, "in_library": bool(face), "polish": (face or {}).get("polish"),
+                   "embedding": (face or {}).get("embedding"), "packaged": False}
+            if face and face.get("embedding") in {"installable", "editable"}:
+                src = local_file(face)
+                if src:
+                    shutil.copy2(src, fonts_dir / src.name.split("_", 1)[-1]); row["packaged"] = True
+            elif face:
+                row["note"] = "licencja nie pozwala dołączyć pliku — zainstaluj font na komputerze z InDesignem"
+            else:
+                row["note"] = "font spoza biblioteki"
+            report.append(row)
+        (out / "fonts_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        self._package_links_dir = None
+        return {"idml": str(idml), "links": sorted(p.name for p in (out / "Links").iterdir()), "fonts": report}
+
     def render_to_zip(self, sg: SceneGraph, output_idml_path: str) -> str:
         """
         Generate an IDML package from scene geometry and editorial text chains.
@@ -124,6 +188,10 @@ class IDMLRenderer:
         XML and reference integrity are locally testable. Adobe InDesign must
         still open the package to verify composition and final print output.
         """
+        self._used_fonts: dict = {}
+        self._swatches: dict = {}
+        masthead_layer = "u_layer_winieta"
+        text_layer, image_layer = "u_layer_tekst", "u_layer_zdjecia"
         pw_pt = sg.page.trim[0] * MM_TO_PT
         ph_pt = sg.page.trim[1] * MM_TO_PT
         bleed_pt = sg.page.bleed_mm * MM_TO_PT
@@ -186,6 +254,15 @@ class IDMLRenderer:
                     asset_name = f"Links/{elem.id}{suffix}"
                     linked_assets[asset_name] = asset
                 link_uri = asset_name or (elem.image_url or "")
+                links_dir = getattr(self, "_package_links_dir", None)
+                if links_dir and asset_name:
+                    import os
+                    abs_path = str((Path(links_dir) / Path(asset_name).name).resolve())
+                    for pair in filter(None, os.getenv("ZECRO_LINK_PATH_MAP", "").split(";")):
+                        src_prefix, _, dst_prefix = pair.partition("=")
+                        if abs_path.startswith(src_prefix):
+                            abs_path = dst_prefix + abs_path[len(src_prefix):]
+                    link_uri = "file:" + abs_path
                 link_xml = ""
                 if link_uri:
                     escaped_link_uri = saxutils.escape(link_uri, {'"': '&quot;'})
@@ -207,6 +284,13 @@ class IDMLRenderer:
                         tx = left_pt - sx * l * src_w
                         ty = top_pt - sy * t * src_h
                         img_transform = f"{sx:.6f} 0 0 {sy:.6f} {tx:.3f} {ty:.3f}"
+                        graphic_bounds = f'Left="0" Top="0" Right="{src_w}" Bottom="{src_h}"'
+                    elif src_w and src_h and elem.role == "logo":
+                        # Logo: proportional fit (contain), centred in frame.
+                        sc = min(w_pt / src_w, h_pt / src_h)
+                        tx = left_pt + (w_pt - sc * src_w) / 2
+                        ty = top_pt + (h_pt - sc * src_h) / 2
+                        img_transform = f"{sc:.6f} 0 0 {sc:.6f} {tx:.3f} {ty:.3f}"
                         graphic_bounds = f'Left="0" Top="0" Right="{src_w}" Bottom="{src_h}"'
                     else:
                         img_transform = "1 0 0 1 0 0"
@@ -249,7 +333,7 @@ class IDMLRenderer:
                     ])
                 # Non-rectangular (compound) frames are Polygons in InDesign.
                 tag = "Polygon" if is_cutout else "Rectangle"
-                layer_attr = f' ItemLayer="{masthead_layer}"' if elem.role == "logo" and masthead_layer else ""
+                layer_attr = f' ItemLayer="{masthead_layer if elem.role == "logo" else image_layer}"'
                 rect_xml = f"""
         <{tag} Self="u_photo_{elem.id}" ItemTransform="1 0 0 1 0 0" StrokeWeight="0" Locked="{'true' if elem.role == 'logo' else 'false'}"{layer_attr}>
           <Properties>
@@ -260,10 +344,29 @@ class IDMLRenderer:
         </{tag}>"""
                 spread_elements_xml.append(rect_xml)
 
+            elif elem.role == "rule":
+                ymid = top_pt + h_pt / 2
+                weight = max(0.25, float((elem.style.border_width_mm if elem.style else None) or 0.25) * MM_TO_PT)
+                spread_elements_xml.append(f"""
+        <GraphicLine Self="u_rule_{elem.id}" ItemLayer="{text_layer}" StrokeWeight="{weight:.2f}" StrokeColor="Color/Black" ItemTransform="1 0 0 1 0 0">
+          <Properties>
+            <PathGeometry>
+              <GeometryPathType PathOpen="true">
+                <PathPointArray>
+                  <PathPointType Anchor="{left_pt:.2f} {ymid:.2f}" LeftDirection="{left_pt:.2f} {ymid:.2f}" RightDirection="{left_pt:.2f} {ymid:.2f}"/>
+                  <PathPointType Anchor="{right_pt:.2f} {ymid:.2f}" LeftDirection="{right_pt:.2f} {ymid:.2f}" RightDirection="{right_pt:.2f} {ymid:.2f}"/>
+                </PathPointArray>
+              </GeometryPathType>
+            </PathGeometry>
+          </Properties>
+        </GraphicLine>""")
             else:
                 story_id, previous_frame, next_frame = text_references[elem.id]
+                cols = int((elem.style.columns if elem.style else 1) or 1)
+                gutter_pt = float(self.dna.grid.gutter_mm if self.dna else 4.0) * MM_TO_PT
+                layer = masthead_layer if elem.role == "logo" else text_layer
                 tf_xml = f"""
-        <TextFrame Self="u_tf_{elem.id}" ParentStory="{story_id}" PreviousTextFrame="{previous_frame}" NextTextFrame="{next_frame}" ContentType="TextType" TextColumnFixedWidth="{w_pt:.2f}" TextColumnCount="{elem.style.columns or 1}" ItemTransform="1 0 0 1 0 0" GeometricBounds="{top_pt:.2f} {left_pt:.2f} {bottom_pt:.2f} {right_pt:.2f}">
+        <TextFrame Self="u_tf_{elem.id}" ParentStory="{story_id}" PreviousTextFrame="{previous_frame}" NextTextFrame="{next_frame}" ContentType="TextType" ItemLayer="{layer}" ItemTransform="1 0 0 1 0 0">
           <Properties>
             <PathGeometry>
               <GeometryPathType PathOpen="false">
@@ -276,6 +379,7 @@ class IDMLRenderer:
               </GeometryPathType>
             </PathGeometry>
           </Properties>
+          <TextFramePreference TextColumnCount="{cols}" TextColumnGutter="{gutter_pt:.2f}" UseFixedColumnWidth="false" FirstBaselineOffset="AscentOffset" VerticalJustification="TopAlign" InsetSpacing="0 0 0 0"/>
         </TextFrame>"""
                 spread_elements_xml.append(tf_xml)
 
@@ -283,19 +387,29 @@ class IDMLRenderer:
         story_idpkg_entries = "\n".join([f'  <idPkg:Story src="Stories/Story_{sid}.xml"/>' for sid in story_ids])
         story_list = " ".join(story_ids)
         designmap_xml = f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Document xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="8.0" Self="d" StoryList="{saxutils.escape(story_list, {'"': '&quot;'})}">
+<?aid style="50" type="document" readerVersion="6.0" featureSet="257" product="8.0(370)" ?>
+<Document xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="8.0" Self="d" StoryList="{saxutils.escape(story_list, {'"': '&quot;'})}" Name="Zecro.indd" ActiveLayer="{text_layer}" CMYKProfile="ISOnewspaper26v4" RGBProfile="sRGB IEC61966-2.1">
+  <Language Self="Language/$ID/Polish" Name="$ID/Polish" HyphenationVendor="Hunspell" SpellingVendor="Hunspell"/>
   <idPkg:Graphic src="Resources/Graphic.xml"/>
   <idPkg:Fonts src="Resources/Fonts.xml"/>
   <idPkg:Styles src="Resources/Styles.xml"/>
   <idPkg:Preferences src="Resources/Preferences.xml"/>
+  <Layer Self="{masthead_layer}" Name="Winieta" Visible="true" Locked="true" Printable="true"/>
+  <Layer Self="{text_layer}" Name="Tekst" Visible="true" Locked="false" Printable="true"/>
+  <Layer Self="{image_layer}" Name="Zdjęcia" Visible="true" Locked="false" Printable="true"/>
   <idPkg:Spread src="Spreads/Spread_u_spread_0.xml"/>
+  <Section Self="u_section_0" Length="{page_count}" Name="" ContinueNumbering="false" IncludeSectionPrefix="false" PageNumberStart="1" Marker="" PageStart="u_page_0" SectionPrefix=""/>
 {story_idpkg_entries}
 </Document>"""
 
         # 4. Resources/Styles.xml
         styles_xml = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <idPkg:Styles xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="8.0">
+  <RootCharacterStyleGroup Self="u_rcsg">
+    <CharacterStyle Self="CharacterStyle/$ID/[No character style]" Name="$ID/[No character style]"/>
+  </RootCharacterStyleGroup>
   <RootParagraphStyleGroup Self="u_rpsg">
+    <ParagraphStyle Self="ParagraphStyle/$ID/[No paragraph style]" Name="$ID/[No paragraph style]"/>
     <ParagraphStyle Self="ParagraphStyle/$ID/[Normal Paragraph Style]" Name="$ID/[Normal Paragraph Style]" PointSize="10" Leading="12"/>
     <ParagraphStyle Self="ParagraphStyle/Tytul" Name="Tytul" PointSize="36" Leading="38" FontStyle="Bold" Justification="LeftAlign"/>
     <ParagraphStyle Self="ParagraphStyle/Lead" Name="Lead" PointSize="13" Leading="16" FontStyle="SemiBold" Justification="LeftAlign"/>
@@ -313,33 +427,35 @@ class IDMLRenderer:
     <ParagraphStyle Self="ParagraphStyle/CiagDalszy" Name="CiagDalszy" PointSize="8" Leading="9" Justification="LeftAlign"/>
     <ParagraphStyle Self="ParagraphStyle/Felieton" Name="Felieton" PointSize="10" Leading="12" Justification="LeftAlign"/>
   </RootParagraphStyleGroup>
-  <RootCharacterStyleGroup Self="u_rcsg">
-    <CharacterStyle Self="CharacterStyle/$ID/[No character style]" Name="$ID/[No character style]"/>
-  </RootCharacterStyleGroup>
+  <RootObjectStyleGroup Self="u_rosg">
+    <ObjectStyle Self="ObjectStyle/$ID/[None]" Name="$ID/[None]"/>
+    <ObjectStyle Self="ObjectStyle/$ID/[Normal Graphics Frame]" Name="$ID/[Normal Graphics Frame]"/>
+    <ObjectStyle Self="ObjectStyle/$ID/[Normal Text Frame]" Name="$ID/[Normal Text Frame]"/>
+  </RootObjectStyleGroup>
 </idPkg:Styles>"""
 
         # 5. Resources/Fonts.xml
+        families: dict = {}
+        for (family, style), face in self._used_fonts.items():
+            families.setdefault(family, []).append((style, face))
+        fam_xml = []
+        for family, faces in families.items():
+            fx = "".join(f'\n    <Font Self="di{saxutils.escape(family)}{saxutils.escape(style)}" FontFamily="{saxutils.escape(family)}" Name="{saxutils.escape(family)} {saxutils.escape(style)}" PostScriptName="{saxutils.escape((face or {}).get("postscript_name") or (family + "-" + style).replace(" ", ""))}" Status="Installed" FontStyleName="{saxutils.escape(style)}"/>' for style, face in faces)
+            fam_xml.append(f'  <FontFamily Self="di{saxutils.escape(family)}" Name="{saxutils.escape(family)}">{fx}\n  </FontFamily>')
         fonts_xml = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <idPkg:Fonts xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="8.0">
-  <FontFamily Self="Playfair Display" Name="Playfair Display">
-    <Font Self="Playfair Display-Regular" FontFamily="Playfair Display" Name="Playfair Display Regular" PostScriptName="PlayfairDisplay-Regular"/>
-    <Font Self="Playfair Display-Bold" FontFamily="Playfair Display" Name="Playfair Display Bold" PostScriptName="PlayfairDisplay-Bold"/>
-  </FontFamily>
-  <FontFamily Self="PT Serif" Name="PT Serif">
-    <Font Self="PT Serif-Regular" FontFamily="PT Serif" Name="PT Serif Regular" PostScriptName="PTSerif-Regular"/>
-  </FontFamily>
-  <FontFamily Self="Inter" Name="Inter">
-    <Font Self="Inter-Bold" FontFamily="Inter" Name="Inter Bold" PostScriptName="Inter-Bold"/>
-  </FontFamily>
+""" + "\n".join(fam_xml) + """
 </idPkg:Fonts>"""
 
         # 6. Resources/Graphic.xml
         graphic_xml = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <idPkg:Graphic xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="8.0">
+  <Swatch Self="Swatch/None" Name="None"/>
+  <Color Self="Color/Registration" Model="Registration" Space="CMYK" ColorValue="100 100 100 100" Name="Registration"/>
   <Color Self="Color/Black" Model="Process" Space="CMYK" ColorValue="0 0 0 100" Name="Black"/>
   <Color Self="Color/Paper" Model="Process" Space="CMYK" ColorValue="0 0 0 0" Name="Paper"/>
   <Color Self="Color/RedAccent" Model="Process" Space="CMYK" ColorValue="0 100 100 0" Name="RedAccent"/>
-</idPkg:Graphic>"""
+""" + "".join(f'  <Color Self="{k}" Model="Process" Space="CMYK" ColorValue="{v}" Name="{k.split("/")[1]}"/>\n' for k, v in self._swatches.items()) + """</idPkg:Graphic>"""
 
         # 7. Resources/Preferences.xml
         prefs_xml = f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -351,13 +467,13 @@ class IDMLRenderer:
         spread_children_str = "\n".join(spread_elements_xml)
         spread_xml = f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <idPkg:Spread xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="8.0">
-  <Spread Self="u_spread_0" PageCount="{page_count}">
-    <Page Self="u_page_0" GeometricBounds="0 0 {ph_pt:.2f} {page_width_pt:.2f}">
+  <Spread Self="u_spread_0" PageCount="{page_count}" ItemTransform="1 0 0 1 0 0" BindingLocation="0">
+    <Page Self="u_page_0" Name="1" AppliedMaster="n" ItemTransform="1 0 0 1 0 0" GeometricBounds="0 0 {ph_pt:.2f} {page_width_pt:.2f}">
       <Properties>
         <PageColor Value="Color/Paper"/>
       </Properties>
     </Page>
-{f'''    <Page Self="u_page_1" GeometricBounds="0 {page_width_pt:.2f} {ph_pt:.2f} {pw_pt:.2f}">
+{f'''    <Page Self="u_page_1" Name="2" AppliedMaster="n" ItemTransform="1 0 0 1 0 0" GeometricBounds="0 {page_width_pt:.2f} {ph_pt:.2f} {pw_pt:.2f}">
       <Properties>
         <PageColor Value="Color/Paper"/>
       </Properties>
@@ -389,5 +505,10 @@ class IDMLRenderer:
             # LinkResourceURI without a machine-specific absolute path.
             for archive_name, source_path in linked_assets.items():
                 zf.write(source_path, archive_name)
+        links_dir = getattr(self, "_package_links_dir", None)
+        if links_dir:
+            import shutil
+            for archive_name, source_path in linked_assets.items():
+                shutil.copy2(source_path, Path(links_dir) / Path(archive_name).name)
 
         return output_idml_path

@@ -35,3 +35,4 @@ frontend/*.tsbuildinfo
 
 # Local QA renders
 output/_qa/
+corpus/.audit_cache.jsonl

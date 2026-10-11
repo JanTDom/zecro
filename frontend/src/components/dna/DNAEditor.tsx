@@ -7,6 +7,7 @@ import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
 import { Slider } from '../common/Slider';
 import { Toggle } from '../common/Toggle';
+import { MastheadEditor } from './MastheadEditor';
 import {
   Sliders,
   Save,
@@ -23,7 +24,7 @@ import {
 export const DNAEditor: React.FC = () => {
   const { activeProject, dna, reloadDNA, addToast } = useProject();
   const [localDna, setLocalDna] = useState<TitleDNA | null>(dna ? JSON.parse(JSON.stringify(dna)) : null);
-  const [activeSubTab, setActiveSubTab] = useState<'grid' | 'typography' | 'palette' | 'photos' | 'transgressions'>('grid');
+  const [activeSubTab, setActiveSubTab] = useState<'grid' | 'typography' | 'palette' | 'photos' | 'transgressions' | 'masthead'>('grid');
   const [isSaving, setIsSaving] = useState(false);
 
   // Sync if dna updates
@@ -199,7 +200,21 @@ export const DNAEditor: React.FC = () => {
           <Flame className="w-4 h-4 text-editorial-crimson" />
           5. Transgressions & Energy Budget
         </button>
+
+        <button
+          onClick={() => setActiveSubTab('masthead')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold uppercase transition-all ${
+            activeSubTab === 'masthead'
+              ? 'bg-ink-800 text-ink-100 border-b-2 border-editorial-crimson'
+              : 'text-ink-400 hover:text-ink-100'
+          }`}
+        >
+          <Eye className="w-4 h-4 text-editorial-crimson" />
+          6. Winieta i logo
+        </button>
       </div>
+
+      {activeSubTab === 'masthead' && <MastheadEditor onApproved={() => void reloadDNA()} />}
 
       {/* Main Grid: Controls + Live Specimen Preview */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

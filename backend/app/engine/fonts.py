@@ -106,6 +106,11 @@ def ingest_bytes(data: bytes, filename: str, *, source: str = "upload", license_
             saved.append({**info, "status": "rejected", "reason": "fsType: Restricted License — font nie pozwala na osadzanie"})
             continue
         if len(faces) > 1:  # split collection faces into standalone files
+            same = [r for r in db.list_fonts(info["family"]) if r.get("postscript_name") == info["postscript_name"]
+                    and r.get("subfamily") == info["subfamily"]]
+            if same:  # re-serialising big collections is slow; identical PS name = same face
+                saved.append({**same[0], "status": "duplicate"})
+                continue
             buf = io.BytesIO()
             font.save(buf)
             face_bytes = buf.getvalue()
@@ -140,6 +145,9 @@ def local_file(rec: dict[str, Any]) -> Optional[Path]:
     p = Path(ref)
     if p.is_file():
         return p
+    moved = FONT_DIR / p.name  # library copied between machines (absolute path differs)
+    if p.name and moved.is_file():
+        return moved
     from ..storage.asset_store import materialize_asset
     return materialize_asset(ref, prefix="fonts", cache_dir=FONT_DIR / "_remote")
 

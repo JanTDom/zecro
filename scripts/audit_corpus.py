@@ -58,6 +58,7 @@ def main() -> None:
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--exclude", action="append", default=[], help="top-level folder never moved by --apply (e.g. own assets)")
     a = ap.parse_args()
     root = a.root
     cache_path = root / ".audit_cache.jsonl"
@@ -99,7 +100,7 @@ def main() -> None:
     if a.apply:
         q = root / "_quarantine"
         for r in rows:
-            if r["verdict"] == "rejected":
+            if r["verdict"] == "rejected" and r["path"].split("/")[0] not in a.exclude:
                 src = root / r["path"]; dst = q / r["path"]
                 if src.exists():
                     dst.parent.mkdir(parents=True, exist_ok=True); shutil.move(str(src), str(dst)); moved += 1

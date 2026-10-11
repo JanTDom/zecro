@@ -1,5 +1,15 @@
 # Changelog — Etap 2
 
+## 2026-10-11 — domknięcie
+
+- IDML otwiera się w InDesign 2026: instrukcja `aid`, sekcja, style bazowe, warstwy, linie jako GraphicLine, logo dopasowane proporcjonalnie w ramce, ścieżki linków przemapowane na Maca, paczka z Links/Document fonts.
+- Makieta: ręczna edycja slotów (przeciąganie, skalowanie) z `PagePlan.geometry = "fixed"` honorowanym przez kompozytor; 3 propozycje planu z Gemini; generowanie strony prosto z makiety.
+- Nowe panele: dobór zdjęć i ilustracji, operacje AI w otekstowaniu ze strażnikiem, winieta i logo, pełne ustawienia AI i źródeł, biblioteka fontów.
+- Ilustracje i zaakceptowane zdjęcia dostają publiczny URL (`/static/uploads/…`) używany przez podgląd i renderery.
+- Import 779 odmian fontów z Maca (wznawialny, pomija puste pliki i zbyt wolne kolekcje); fonty odnajdywane także po przeniesieniu biblioteki.
+- Audyt korpusu dokończony, odrzucone strony w kwarantannie, indeks cech przycięty (`scripts/prune_feature_index.py`).
+- Wygenerowane `ZECRO_ADMIN_TOKEN` i `ZECRO_SECRETS_KEY` w `.env.local`.
+
 ## 2026-10-11
 
 ### Etap 1 — plan, integracje, moduły i logo

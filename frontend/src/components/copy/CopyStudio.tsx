@@ -7,6 +7,7 @@ import { SceneGraphElement } from '../../types/sceneGraph';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
+import { AIOperations } from './AIOperations';
 
 const TEXT_ROLES = new Set(['headline', 'deck', 'lead', 'body', 'caption', 'kicker', 'byline', 'pullquote', 'infobox', 'band']);
 
@@ -137,6 +138,9 @@ export const CopyStudio: React.FC = () => {
               <label className="block"><span className="text-[10px] uppercase font-mono tracking-wider text-ink-500">Zablokowane frazy</span><textarea value={lockedText} onChange={(event) => setLockedText(event.target.value)} placeholder="Jedna fraza w wierszu" className="mt-2 w-full h-[42px] rounded-lg border border-ink-700 bg-ink-950 px-3 py-2 text-xs text-ink-100 focus:border-editorial-crimson focus:outline-none" /></label>
             </div>
             <div className="flex items-center gap-2"><Button variant="editorial" onClick={inspectFit} isLoading={busy} leftIcon={<RefreshCw className="w-3.5 h-3.5" />}>Sprawdź dopasowanie</Button><Button variant="outline" onClick={() => setDraft(selected.content)} leftIcon={<RotateCcw className="w-3.5 h-3.5" />}>Przywróć źródło</Button></div>
+            <div className="border-t border-ink-800 pt-3"><p className="text-[10px] uppercase font-mono tracking-wider text-ink-500 mb-2">Operacje AI (ze strażnikiem źródeł)</p>
+              <AIOperations element={selected} source={selected.content} draft={draft} onUse={setDraft}
+                headline={(selectedCandidate.sceneGraph.elements.find((e) => e.role === 'headline' && e.id.split('-').slice(1, 2).join() === selected.id.split('-').slice(1, 2).join()) || selectedCandidate.sceneGraph.elements.find((e) => e.role === 'headline'))?.content} /></div>
           </> : <p className="text-sm text-ink-500">Wybierz ramę po lewej.</p>}
         </Card>
 

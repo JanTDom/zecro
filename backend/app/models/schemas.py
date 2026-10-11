@@ -340,6 +340,9 @@ class PagePlan(BaseModel):
     columns: int = Field(default=6, ge=1)
     rows: int = Field(default=12, ge=1)
     masthead_rows: int = Field(default=1, ge=0)
+    # "fixed" = slots drawn/edited by the editor are hard rectangles;
+    # "auto" = only ranks are binding, the composer chooses the geometry.
+    geometry: Literal["auto", "fixed"] = "auto"
     slots: List[PagePlanSlot] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
     status: Literal["valid", "invalid"] = "valid"

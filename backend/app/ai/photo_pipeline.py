@@ -129,10 +129,21 @@ def accept_photo(candidate: dict, story=None, *, project_id: Optional[str] = Non
     up = settings.uploads_dir / f"asset_{sha}{ext}"
     shutil.copy2(path, up)
     ref = persist_asset(up, prefix="uploads", key=up.name) or str(up)
-    return {"url": ref, "width_px": w, "height_px": h, "dpi": dpi, "focal_point": focal, "credit": candidate.get("credit_line"),
+    return {"url": _public(ref, up), "storage_ref": ref, "width_px": w, "height_px": h, "dpi": dpi, "focal_point": focal, "credit": candidate.get("credit_line"),
             "license": candidate.get("license"), "license_url": candidate.get("license_url"), "source_page": candidate.get("source_page"),
             "caption": (caption or {}).get("caption"), "caption_identity_basis": (caption or {}).get("identity_basis"),
             "provider": candidate.get("provider"), "ai_generated": False, "status": "draft"}
+
+
+def _public(ref: str, local: Path) -> str:
+    """URL usable both by the browser and by the renderers."""
+    from ..storage.supabase_storage import parse_storage_reference, get_storage_public_url
+    try:
+        if parse_storage_reference(ref):
+            return get_storage_public_url(ref)
+    except Exception:
+        pass
+    return f"/static/uploads/{local.name}"
 
 
 def generate_illustration(story, *, project_id: Optional[str] = None, aspect_ratio: str = "4:3", style: str = "editorial vector illustration",
@@ -147,7 +158,15 @@ def generate_illustration(story, *, project_id: Optional[str] = None, aspect_rat
                  "style": style, "aspect_ratio": aspect_ratio}, S.ImagePrompt, project_id=project_id)
     prompt = p.data["prompt"] + " Avoid: " + ", ".join(p.data["negative"] + ["real people likeness", "logos", "text", "photojournalism look"])
     gen = generate_image(prompt, aspect_ratio, n=n)
-    files = [_label_ai(Path(f), prompt) for f in gen["files"]]
+    import shutil
+    from ..storage.asset_store import persist_asset
+    files = []
+    for f in gen["files"]:
+        labelled = Path(_label_ai(Path(f), prompt))
+        up = settings.uploads_dir / f"ai_{labelled.name}"
+        shutil.copy2(labelled, up)
+        ref = persist_asset(up, prefix="uploads", key=up.name) or str(up)
+        files.append({"url": _public(ref, up), "storage_ref": ref, "path": str(labelled)})
     return {"status": "draft", "files": files, "prompt": prompt, "brief": brief.model_dump(), "ai_generated": True,
             "caption_suffix": "Ilustracja wygenerowana przez AI", "provenance": {**gen["provenance"], "prompt_task": p.provenance}}
 

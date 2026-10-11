@@ -324,6 +324,17 @@ export const api = {
       style_blend: intake.styleBlend, page_zone: intake.pageZone || 'front_page', seed: intake.seed,
     })));
   },
+  async generateFromPlan(projectId: string, payload: { stories: Data[]; pagePlan: Data | null; issueDate: string; issueNumber: string;
+    section: string; candidates?: number; pageZone?: string }): Promise<GenerationRun> {
+    const project = await this.getProject(projectId);
+    return runFromApi(await request(`/projects/${projectId}/generate`, json('POST', {
+      material: { issue_date: payload.issueDate, issue_number: payload.issueNumber, section_name: payload.section,
+        masthead_title: project.newspaperTitle, stories: payload.stories, page_zone: payload.pageZone || 'front_page',
+        page_plan: payload.pagePlan },
+      page_plan: payload.pagePlan, num_candidates: payload.candidates || 4, population_size: 20, generations: 6,
+      page_zone: payload.pageZone || 'front_page', visual_review: true,
+    })));
+  },
   async getGenerationRuns(projectId: string): Promise<GenerationRun[]> { return (await request<Data[]>(`/projects/${projectId}/runs`)).map(runFromApi); },
   async getCandidate(id: string): Promise<Candidate> { return candidateFromApi(await request(`/candidates/${id}`)); },
   async saveCandidate(id: string, scene: SceneGraph): Promise<Candidate> { return candidateFromApi(await request(`/candidates/${id}`, json('PUT', sceneToApi(scene)))); },
