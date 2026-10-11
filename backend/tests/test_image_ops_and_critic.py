@@ -24,6 +24,8 @@ def _akimbo_mask(path):
 
 
 def test_real_mask_rings_keep_hole_and_concavity(tmp_path):
+    pytest.importorskip("cv2", reason="OpenCV is required for real contour extraction")
+    pytest.importorskip("shapely", reason="Shapely is required to verify offset geometry")
     mask = tmp_path / "akimbo.png"
     _akimbo_mask(mask)
     rings = extract_alpha_rings(str(mask), 100.0, 150.0)

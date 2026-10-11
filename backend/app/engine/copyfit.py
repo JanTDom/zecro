@@ -146,6 +146,11 @@ def estimate_text_capacity(
 
 def _measured_capacity(text, width_mm, height_mm, columns, size, leading, family, bold, gutter_mm):
     try:
+        # Avoid entering the expensive measured path when the optional shaping
+        # stack is not installed.  The caller then uses the deterministic
+        # estimate below and the PDF renderer reports the same limitation.
+        import fontTools  # noqa: F401
+        import uharfbuzz  # noqa: F401
         from .fonts import resolve_font
         from .shaper import fill_columns
         path = resolve_font(family, bold=bold, text=text)

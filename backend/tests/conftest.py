@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 @pytest.fixture(scope="session")
 def library_fonts():
     """Ingest the repository's own fonts (Wukadka package) into the library."""
+    pytest.importorskip("fontTools", reason="fontTools is required for font-library and measured-typesetter tests")
     from backend.app.engine import fonts
     seen = set()
     for f in sorted(glob.glob(str(ROOT / "corpus/wukadka/**/Document fonts/*.otf"), recursive=True)):

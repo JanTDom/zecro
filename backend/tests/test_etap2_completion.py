@@ -262,7 +262,10 @@ class _Handler(BaseHTTPRequestHandler):
 
 @pytest.fixture
 def local_api():
-    srv = HTTPServer(("127.0.0.1", 0), _Handler)
+    try:
+        srv = HTTPServer(("127.0.0.1", 0), _Handler)
+    except PermissionError:
+        pytest.skip("sandbox does not permit binding a local HTTP test server")
     t = threading.Thread(target=srv.serve_forever, daemon=True); t.start()
     yield f"http://127.0.0.1:{srv.server_port}"
     srv.shutdown()

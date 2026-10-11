@@ -239,15 +239,29 @@ class PDFRenderer:
         if face:
             src = local_file(face)
             if src:
-                ttf = ttf_for_pdf(str(src))
-                name = "Z_" + (face.get("postscript_name") or face["id"]).replace(" ", "")[:40]
-                if name not in pdfmetrics.getRegisteredFontNames():
-                    pdfmetrics.registerFont(TTFont(name, ttf))
-                return name, ttf, face
-        self._register_fonts()
+                try:
+                    ttf = ttf_for_pdf(str(src))
+                    name = "Z_" + (face.get("postscript_name") or face["id"]).replace(" ", "")[:40]
+                    if name not in pdfmetrics.getRegisteredFontNames():
+                        pdfmetrics.registerFont(TTFont(name, ttf))
+                    return name, ttf, face
+                except (ImportError, ModuleNotFoundError, OSError, RuntimeError):
+                    # FontTools is optional in the offline preview environment.
+                    # Do not fail the whole PDF because a cached CFF face cannot
+                    # be converted; use a built-in ReportLab face and expose the
+                    # limitation through the preflight warning path.
+                    pass
+        try:
+            self._register_fonts()
+        except (ImportError, ModuleNotFoundError, OSError, RuntimeError):
+            pass
         fallback = ("ZecroSans" if family.lower().startswith("sans") or elem.role in ("caption", "kicker", "folio", "byline") else "ZecroSerif") + ("Bold" if weight >= 700 else "")
-        font = pdfmetrics.getFont(fallback)
-        return fallback, getattr(font.face, "filename", None) if hasattr(font, "face") else None, None
+        if fallback in pdfmetrics.getRegisteredFontNames():
+            # The ReportLab fallback may be backed by a local TTF, but keep
+            # shaping disabled unless the HarfBuzz path above succeeded.
+            return fallback, None, None
+        builtin = ("Helvetica-Bold" if weight >= 700 else "Helvetica") if family.lower().startswith("sans") or elem.role in ("caption", "kicker", "folio", "byline") else ("Times-Bold" if weight >= 700 else "Times-Roman")
+        return builtin, None, None
 
     def _draw_text(self, c, elem, x, y, w, h, report):
         from ..shaper import shape_text, glyph_offsets, hyphenate_for, LETTER_STRETCH, WORD_STRETCH, WORD_SHRINK, LETTER_SHRINK, width_pt

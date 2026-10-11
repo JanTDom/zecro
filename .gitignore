@@ -21,6 +21,7 @@ frontend/.vite/
 frontend/*.tsbuildinfo
 *.tsbuildinfo
 .venv/
+Fonts/
 
 # Local environment and secrets
 .env

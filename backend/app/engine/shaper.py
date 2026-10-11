@@ -85,7 +85,12 @@ def glyph_offsets(text: str, path: str) -> list[float]:
 
 def width_pt(text: str, size: float, path: Optional[str]) -> float:
     if path and Path(path).exists():
-        return advance(text, path) * size
+        try:
+            return advance(text, path) * size
+        except (ImportError, ModuleNotFoundError, OSError, RuntimeError):
+            # HarfBuzz is optional for local previews. Keep the same
+            # deterministic estimate used by the explicit estimate mode.
+            return len(text) * size * 0.48
     return len(text) * size * 0.48
 
 
@@ -274,6 +279,11 @@ def shape_text(text: str, *, width_pt: float, font_size_pt: float = 9.5, leading
     if width_pt <= 0:
         return ShapeResult(status="unavailable", warnings=["width must be positive"])
     measured = bool(font_path and Path(font_path).exists())
+    if measured:
+        try:
+            import uharfbuzz  # noqa: F401
+        except (ImportError, ModuleNotFoundError):
+            measured = False
     path = font_path if measured else None
     lines: list[ShapedLine] = []
     widows = orphans = 0
