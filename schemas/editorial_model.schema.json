@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zecro.local/schemas/editorial-model.schema.json",
+  "title": "Zecro Editorial Model",
+  "type": "object",
+  "required": ["schema_version", "edition"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 2},
+    "edition": {"$ref": "#/definitions/edition"},
+    "stories": {"type": "array", "items": {"$ref": "#/definitions/story"}},
+    "shorts_blocks": {"type": "array", "items": {"$ref": "#/definitions/shorts"}},
+    "waiting_room": {"type": "array", "items": {"$ref": "#/definitions/waiting"}}
+  },
+  "definitions": {
+    "edition": {
+      "type": "object", "required": ["pages", "imposition", "page_plan"],
+      "properties": {
+        "date": {"type": "string"},
+        "pages": {"type": "integer", "minimum": 1},
+        "imposition": {"type": "integer", "enum": [4, 8, 16]},
+        "centerfold": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "integer"}},
+        "page_plan": {"type": "array", "items": {"$ref": "#/definitions/page"}}
+      }
+    },
+    "page": {
+      "type": "object", "required": ["no", "type"],
+      "properties": {
+        "no": {"type": "integer", "minimum": 1},
+        "type": {"enum": ["front", "back", "inner-left", "inner-right", "spread-left", "spread-right"]},
+        "section": {"type": ["string", "null"]},
+        "spread_id": {"type": ["string", "null"]},
+        "spread_kind": {"enum": ["centerfold", "regular", null]},
+        "facing_full_page_ad": {"type": "boolean"},
+        "fixed": {"type": "array"},
+        "ads": {"type": "array", "items": {"$ref": "#/definitions/ad"}},
+        "story_refs": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "ad": {
+      "type": "object", "required": ["id", "format"],
+      "properties": {
+        "id": {"type": "string"},
+        "format": {"type": "string"},
+        "position": {"type": ["string", "null"]},
+        "status": {"enum": ["booked", "tentative"]},
+        "advertiser": {"type": ["string", "null"]},
+        "advertiser_category": {"type": ["string", "null"]},
+        "asset": {"type": ["string", "null"]},
+        "is_advertorial": {"type": "boolean"},
+        "advertorial_label": {"type": ["string", "null"]},
+        "locked": {"type": "boolean", "const": true}
+      }
+    },
+    "story": {"type": "object", "required": ["id", "rank", "elements"], "properties": {"id": {"type": "string"}, "page": {"type": ["integer", "null"]}, "rank": {"enum": ["A", "B", "C"]}, "topic_tags": {"type": "array", "items": {"type": "string"}}, "source_material": {"type": ["string", "null"]}, "elements": {"type": "array"}}},
+    "shorts": {"type": "object", "required": ["page", "items"], "properties": {"page": {"type": "integer"}, "min_items": {"type": "integer"}, "max_items": {"type": "integer"}, "item_format": {"type": "array", "items": {"type": "integer"}}, "items": {"type": "array"}}},
+    "waiting": {"type": "object", "required": ["id", "rank"], "properties": {"id": {"type": "string"}, "rank": {"enum": ["A", "B", "C"]}, "headline": {"type": "string"}, "body": {"type": "string"}}}
+  }
+}

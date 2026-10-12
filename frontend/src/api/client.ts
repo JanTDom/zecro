@@ -23,12 +23,21 @@ export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Nie udało się połączyć z usługą ZECRO API.';
 }
 
+const API_REQUEST_TIMEOUT_MS = 120_000;
+
 async function request<T = Data>(path: string, init?: RequestInit): Promise<T> {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
   let response: Response;
   try {
-    response = await fetch(apiUrl(path), init);
+    response = await fetch(apiUrl(path), { ...init, signal: init?.signal || controller.signal });
   } catch {
+    if (controller.signal.aborted) {
+      throw new Error('Generowanie trwało zbyt długo. Wyłącz ocenę wizualną AI albo spróbuj z mniejszą liczbą wariantów.');
+    }
     throw new Error('Usługa ZECRO API jest niedostępna. Sprawdź połączenie z serwerem.');
+  } finally {
+    window.clearTimeout(timeout);
   }
   if (!response.ok) {
     const body = await response.json().catch(() => null);
@@ -245,6 +254,8 @@ function tasteFromApi(raw: Data): TasteModelMetrics {
   const weights = raw.feature_weights || {};
   return { modelVersion: `v${raw.version}`, lastTrainedAt: raw.updated_at, totalComparisons: raw.sample_count,
     preferenceWinRate: raw.human_preference_win_rate, avgTimeToApproveSec: raw.time_to_approve_avg_iterations,
+    heldOutWinRate: raw.held_out_win_rate || 0, evaluatedSampleCount: raw.evaluated_sample_count || 0,
+    feedbackCount: raw.feedback_count || raw.sample_count || 0,
     featureWeights: { tensionTolerance: weights.tension_adherence || 0, cutoutAffinity: weights.cutout_affinity || 0,
       whitespaceGenerosity: weights.breathing_space || 0, headlineDominance: weights.rhythm_and_scale || 0,
       asymmetryPreference: weights.visual_balance || 0 }, learningHistory: [] };
@@ -321,6 +332,10 @@ export const api = {
       num_candidates: intake.generationConfig.candidateCount, energy_budget_override: intake.generationConfig.tensionTarget,
       population_size: Math.round(10 + intake.generationConfig.explorationTemp * 40), generations: 6,
       allow_transgressions: intake.generationConfig.tensionTarget > 0,
+      prioritize_novelty: intake.generationConfig.prioritizeNovelty,
+      // Visual review is an external, potentially slow call. Keep the
+      // deterministic generator responsive unless the editor opts in.
+      visual_review: intake.generationConfig.visualReview ?? false,
       style_blend: intake.styleBlend, page_zone: intake.pageZone || 'front_page', seed: intake.seed,
     })));
   },
@@ -332,7 +347,7 @@ export const api = {
         masthead_title: project.newspaperTitle, stories: payload.stories, page_zone: payload.pageZone || 'front_page',
         page_plan: payload.pagePlan },
       page_plan: payload.pagePlan, num_candidates: payload.candidates || 4, population_size: 20, generations: 6,
-      page_zone: payload.pageZone || 'front_page', visual_review: true,
+      page_zone: payload.pageZone || 'front_page', visual_review: false,
     })));
   },
   async getGenerationRuns(projectId: string): Promise<GenerationRun[]> { return (await request<Data[]>(`/projects/${projectId}/runs`)).map(runFromApi); },
@@ -357,6 +372,7 @@ export const api = {
       winner_candidate_id: signal.winnerCandidateId,
       loser_candidate_id: signal.type === 'pairwise_choice' ? (signal.candidateAId === signal.winnerCandidateId ? signal.candidateBId : signal.candidateAId) : null,
       delta_features: deltas.length ? deltaFeatures : null, notes: signal.feedbackNotes,
+      review_duration_sec: signal.reviewDurationSec,
     }));
     return { ok: true, updatedMetrics: await this.getTasteMetrics(signal.projectId) };
   },
@@ -394,5 +410,11 @@ export const api = {
   async createTextPlan(plan: Data): Promise<Data> { return request('/text-plans', json('POST', plan)); },
   async fitTextPlan(planId: string, textValue: string, variantRef?: string): Promise<Data> { return request(`/text-plans/${planId}/fit`, json('POST', { text: textValue, variant_ref: variantRef })); },
   async getIssueManifest(issueId: string): Promise<Data> { return request(`/issues/${issueId}/manifest`); },
+  async createEditorialEdition(pages = 16, imposition = 8, issueDate?: string): Promise<Data> {
+    return request('/editorial-model/editions', json('POST', { pages, imposition, issue_date: issueDate }));
+  },
+  async validateEditorialEdition(payload: Data): Promise<Data> {
+    return request('/editorial-model/editions/validate', json('POST', payload));
+  },
   async preflightCandidate(candidateId: string): Promise<Data> { return request(`/candidates/${candidateId}/preflight`, { method: 'POST' }); },
 };

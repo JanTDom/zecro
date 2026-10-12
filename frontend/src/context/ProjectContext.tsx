@@ -12,6 +12,7 @@ export type NavigationTab =
   | 'dna' 
   | 'generate' 
   | 'plan'
+  | 'edition'
   | 'settings'
   | 'gallery' 
   | 'copy'

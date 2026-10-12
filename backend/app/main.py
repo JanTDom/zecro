@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .config import settings
-from .api import projects, corpus, dna, generate, preferences, export, assets, archetypes, editorial, production, ai, settings_integrations, logo, page_plan, studio
+from .api import projects, corpus, dna, generate, preferences, export, assets, archetypes, editorial, editorial_model, production, ai, settings_integrations, logo, page_plan, studio
 from .models.database import db
 from .storage.asset_store import storage_configured
 
@@ -31,6 +31,7 @@ app.include_router(export.router)
 app.include_router(assets.router)
 app.include_router(archetypes.router)
 app.include_router(editorial.router)
+app.include_router(editorial_model.router)
 app.include_router(production.router)
 app.include_router(ai.router)
 app.include_router(settings_integrations.router)

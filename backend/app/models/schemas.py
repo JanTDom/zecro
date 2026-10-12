@@ -138,6 +138,17 @@ class TitleDNA(BaseModel):
     style_blend: StyleBlend = Field(default_factory=StyleBlend)
     corpus_stats: Dict[str, Any] = Field(default_factory=dict)
     logo_profile: Optional[LogoProfile] = None
+    # Edition-level editorial grammar.  Kept as data so a title can change its
+    # advertising catalogue and page energy without changing the generator.
+    ad_modules: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    ad_separation_mm: float = Field(default=3.0, ge=0.0)
+    ad_area_simplified_threshold: float = Field(default=0.5, ge=0.0, le=1.0)
+    advertorial_label: str = "materiał reklamowy"
+    advertorial_style: str = "advertorial"
+    competitive_ad_categories: Dict[str, List[str]] = Field(default_factory=dict)
+    context_collision_matrix: Dict[str, List[str]] = Field(default_factory=dict)
+    page_energy_budgets: Dict[str, float] = Field(default_factory=dict)
+    copyfit_tolerance: Dict[str, float] = Field(default_factory=lambda: {"tracking_em": 0.01, "font_size_pt": 0.25, "leading_pt": 0.5})
 
 # ---------------------------------------------------------
 # Scene Graph Models (Contracts)
@@ -487,7 +498,10 @@ class GenerationRequest(BaseModel):
     population_size: int = Field(default=30, ge=10, le=100)
     generations: int = Field(default=15, ge=1, le=50)
     allow_transgressions: bool = True
-    visual_review: bool = True
+    # The deterministic critic is always part of generation. Visual VLM
+    # review is opt-in because it is an external, potentially slow operation.
+    visual_review: bool = False
+    prioritize_novelty: bool = True
     energy_budget_override: Optional[float] = None
     style_blend: Optional[StyleBlend] = None
     page_zone: Optional[Literal["front_page", "spread", "back_page"]] = None
@@ -514,6 +528,10 @@ class PreferenceSignal(BaseModel):
     loser_candidate_id: Optional[str] = None
     delta_features: Optional[Dict[str, float]] = None
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    # Measured by the review surface from pair presentation until the editor
+    # chooses or skips.  Keeping this on the signal makes approval metrics
+    # auditable instead of inferred from a synthetic formula.
+    review_duration_sec: Optional[float] = Field(default=None, ge=0.0, le=86400.0)
     notes: Optional[str] = None
 
 class TasteModel(BaseModel):
@@ -524,6 +542,9 @@ class TasteModel(BaseModel):
     sample_count: int = 0
     human_preference_win_rate: float = 0.0
     time_to_approve_avg_iterations: float = 0.0
+    held_out_win_rate: float = 0.0
+    evaluated_sample_count: int = 0
+    feedback_count: int = 0
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 # ---------------------------------------------------------
@@ -804,3 +825,15 @@ class PreflightReport(RevisionedModel):
     warnings: List[str] = Field(default_factory=list)
     repairs: List[Dict[str, Any]] = Field(default_factory=list)
     profile_ref: Optional[str] = None
+
+
+# Edition-level contracts live in an adapter module to keep the legacy scene
+# graph importable.  Re-exporting them here gives API clients one canonical
+# schema namespace without duplicating Pydantic definitions.
+from ..engine.editorial_model import (  # noqa: E402  (intentional late import)
+    Advertisement, Edition, EditorialModel, EditorialPage, FixedElement,
+    ShortItem, ShortsBlock, StoryElement, StoryPackage, WaitingRoomItem,
+)
+
+Ad = Advertisement
+EditorialEdition = Edition

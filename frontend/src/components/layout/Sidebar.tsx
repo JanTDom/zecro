@@ -25,6 +25,7 @@ export const Sidebar: React.FC = () => {
     { id: 'corpus', label: 'Korpus inspiracji', icon: FileStack, badge: activeProject?.corpusCount ? String(activeProject.corpusCount) : undefined },
     { id: 'dna', label: 'DNA tytułu', icon: SlidersHorizontal, badge: activeProject ? `v${activeProject.dnaVersion}` : undefined },
     { id: 'plan', label: 'Makieta', icon: Grid3X3 },
+    { id: 'edition', label: 'Wydanie', icon: BookOpen },
     { id: 'generate', label: 'Generator', icon: Sparkles },
     { id: 'gallery', label: 'Galeria', icon: Grid3X3, badge: currentRun?.candidates.length ? String(currentRun.candidates.length) : undefined },
     { id: 'copy', label: 'Studio tekstu', icon: Type },

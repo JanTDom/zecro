@@ -13,6 +13,7 @@ import { ProjectsList } from './components/projects/ProjectsList';
 import { AccessGate } from './components/auth/AccessGate';
 import { IntegrationsSettings } from './components/settings/IntegrationsSettings';
 import { PagePlanner } from './components/plan/PagePlanner';
+import { EditionFlatplan } from './components/edition/EditionFlatplan';
 
 interface MainContentProps {
   onOpenNewProject: () => void;
@@ -35,6 +36,9 @@ const MainContent: React.FC<MainContentProps> = ({ onOpenNewProject, onOpenExpor
       break;
     case 'plan':
       content = <PagePlanner />;
+      break;
+    case 'edition':
+      content = <EditionFlatplan />;
       break;
     case 'settings':
       content = <IntegrationsSettings />;
