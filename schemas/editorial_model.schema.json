@@ -19,7 +19,8 @@
         "pages": {"type": "integer", "minimum": 1},
         "imposition": {"type": "integer", "enum": [4, 8, 16]},
         "centerfold": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "integer"}},
-        "page_plan": {"type": "array", "items": {"$ref": "#/definitions/page"}}
+        "page_plan": {"type": "array", "items": {"$ref": "#/definitions/page"}},
+        "spreads": {"type": "array", "items": {"$ref": "#/definitions/spread"}}
       }
     },
     "page": {
@@ -36,6 +37,7 @@
         "story_refs": {"type": "array", "items": {"type": "string"}}
       }
     },
+    "spread": {"type": "object", "required": ["id", "left_page", "right_page", "kind"], "properties": {"id": {"type": "string"}, "left_page": {"type": "integer"}, "right_page": {"type": "integer"}, "kind": {"enum": ["centerfold", "regular"]}, "spine_zone_mm": {"type": "number"}, "continuous_text_allowed": {"type": "boolean"}}},
     "ad": {
       "type": "object", "required": ["id", "format"],
       "properties": {

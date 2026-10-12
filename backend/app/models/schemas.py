@@ -832,7 +832,7 @@ class PreflightReport(RevisionedModel):
 # schema namespace without duplicating Pydantic definitions.
 from ..engine.editorial_model import (  # noqa: E402  (intentional late import)
     Advertisement, Edition, EditorialModel, EditorialPage, FixedElement,
-    ShortItem, ShortsBlock, StoryElement, StoryPackage, WaitingRoomItem,
+    ShortItem, ShortsBlock, Spread, StoryElement, StoryPackage, WaitingRoomItem,
 )
 
 Ad = Advertisement

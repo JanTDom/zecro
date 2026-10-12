@@ -59,7 +59,7 @@ class Advertisement(BaseModel):
     status: AdStatus = "booked"
     advertiser: str | None = None
     advertiser_category: str | None = None
-    asset: str | None = None
+    asset: str | dict[str, Any] | None = None
     asset_ref: str | None = None
     is_advertorial: bool = False
     advertorial_label: str | None = None
@@ -88,6 +88,15 @@ class EditorialPage(BaseModel):
     status: Literal["empty", "in_progress", "approved"] = "empty"
 
 
+class Spread(BaseModel):
+    id: str
+    left_page: int = Field(ge=1)
+    right_page: int = Field(ge=1)
+    kind: SpreadKind = "regular"
+    spine_zone_mm: float = Field(default=6.0, ge=0.0)
+    continuous_text_allowed: bool = False
+
+
 class Edition(BaseModel):
     """Versioned issue flatplan.  ``page_plan`` is kept as the public name."""
     model_config = ConfigDict(extra="allow")
@@ -97,6 +106,7 @@ class Edition(BaseModel):
     imposition: Literal[4, 8, 16] = 4
     centerfold: list[int] | None = None
     page_plan: list[EditorialPage] = Field(default_factory=list)
+    spreads: list[Spread] = Field(default_factory=list)
     wrapper: dict[str, Any] | None = None
     insert: dict[str, Any] | None = None
 
@@ -110,6 +120,9 @@ class Edition(BaseModel):
             raise ValueError("page_plan musi zawierać dokładnie tyle stron, ile ma wydanie")
         if self.centerfold is None:
             self.centerfold = [self.pages // 2, self.pages // 2 + 1]
+        if not self.spreads:
+            left, right = self.centerfold
+            self.spreads = [Spread(id="centerfold", left_page=left, right_page=right, kind="centerfold")]
         return self
 
 
@@ -450,4 +463,4 @@ def late_ad_change(page: EditorialPage | Mapping[str, Any], *, removed: Iterable
             "protected_untouched": True, "full_rebuild": bool(freed and freed > 12 * 16 * 0.25)}
 
 
-__all__ = ["AD_MODULE_CATALOG", "Advertisement", "Edition", "EditorialModel", "EditorialPage", "FixedElement", "ShortItem", "ShortsBlock", "StoryElement", "StoryPackage", "WaitingRoomItem", "ad_catalog", "build_edition", "compute_editorial_area", "copyfit_delta", "import_ads_csv", "late_ad_change", "make_page_plan", "page_area_ratio", "protect_approved", "run_copyfit_ladder", "suggest_capacity", "tentative_variants", "validate_editorial_model", "validate_source_bound_text", "validate_spine_constraints"]
+__all__ = ["AD_MODULE_CATALOG", "Advertisement", "Edition", "EditorialModel", "EditorialPage", "FixedElement", "ShortItem", "ShortsBlock", "Spread", "StoryElement", "StoryPackage", "WaitingRoomItem", "ad_catalog", "build_edition", "compute_editorial_area", "copyfit_delta", "import_ads_csv", "late_ad_change", "make_page_plan", "page_area_ratio", "protect_approved", "run_copyfit_ladder", "suggest_capacity", "tentative_variants", "validate_editorial_model", "validate_source_bound_text", "validate_spine_constraints"]
