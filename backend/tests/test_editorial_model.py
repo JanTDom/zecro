@@ -85,6 +85,8 @@ def test_locked_ads_materialize_into_shared_scene_graph():
     ad = next(element for element in scene.elements if element.id == "ad-adv")
     assert ad.locked is True and ad.approval_status == "protected"
     assert scene.metadata["advertorial_labels"]["ad-adv"] == "materiał reklamowy"
+    from backend.app.engine.critic import LayoutCritic
+    assert LayoutCritic(dna).evaluate(scene).hard_gate.passed
 
 
 def test_removed_ad_moves_waiting_copy_into_short_buffer():

@@ -8,6 +8,10 @@ from .transgressions import TransgressionManager
 from .copyfit import estimate_text_capacity
 
 
+def _is_locked_ad(elem: Element) -> bool:
+    return bool(getattr(elem, "locked", False) and "advertisement_locked" in (elem.constraints or []))
+
+
 def effective_print_dpi(elem: Element) -> Optional[float]:
     """Return the raster resolution at the element's actual print size.
 
@@ -87,7 +91,7 @@ class LayoutCritic:
             if f.w <= 0 or f.h <= 0:
                 violations.append(f"Element {elem.id} has a non-positive frame ({f.w:.1f}x{f.h:.1f}mm).")
             # Check if text element exceeds safe margin boundaries
-            if elem.role in ["headline", "body", "lead", "deck", "caption", "byline", "kicker", "band"]:
+            if elem.role in ["headline", "body", "lead", "deck", "caption", "byline", "kicker", "band"] and not _is_locked_ad(elem):
                 if f.x < fmt.margin_left_mm - 2.0 or (f.x + f.w) > (page_w - fmt.margin_right_mm + 2.0):
                     violations.append(f"Text element {elem.id} ({elem.role}) breaches trim safe margins (x={f.x:.1f}, w={f.w:.1f}).")
                 if f.y < fmt.margin_top_mm - 2.0 or (f.y + f.h) > (page_h - fmt.margin_bottom_mm + 2.0):
@@ -102,7 +106,7 @@ class LayoutCritic:
             # A newspaper column narrower than 30 mm is not printable as a
             # readable text measure.  Check the actual column measure after
             # internal gutters, not just the outer frame width.
-            if elem.role in ["headline", "body", "lead", "deck", "caption", "byline", "kicker", "band"] and elem.style:
+            if elem.role in ["headline", "body", "lead", "deck", "caption", "byline", "kicker", "band"] and elem.style and not _is_locked_ad(elem):
                 column_count = max(1, int(elem.style.columns or 1))
                 inner_gutters = max(0, column_count - 1) * fmt.margin_left_mm * 0.0
                 gutter = self.dna.grid.gutter_mm
@@ -161,6 +165,8 @@ class LayoutCritic:
                 overlap_y = max(0.0, min(f1.y + f1.h, f2.y + f2.h) - max(f1.y, f2.y))
 
                 if overlap_x > 5.0 and overlap_y > 5.0:
+                    if _is_locked_ad(e1) or _is_locked_ad(e2):
+                        continue
                     # Allow overlap if one is photo with cutout/scrim and other is text with overlap transgression
                     is_allowed_overlap = (
                         (e1.role == "photo" or e2.role == "photo") and
