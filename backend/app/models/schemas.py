@@ -494,6 +494,7 @@ class Candidate(BaseModel):
 class GenerationRequest(BaseModel):
     material: PageInputMaterial
     page_plan: Optional[PagePlan] = None
+    editorial_edition: Optional[Dict[str, Any]] = None
     num_candidates: int = Field(default=8, ge=1, le=24)
     population_size: int = Field(default=30, ge=10, le=100)
     generations: int = Field(default=15, ge=1, le=50)

@@ -1,6 +1,6 @@
 from backend.app.engine.editorial_model import (
     Advertisement, EditorialModel, EditorialPage, StoryPackage, build_edition,
-    compute_editorial_area, import_ads_csv, run_copyfit_ladder,
+    apply_ads_to_scene, compute_editorial_area, import_ads_csv, run_copyfit_ladder,
     tentative_variants, validate_editorial_model, validate_source_bound_text,
 )
 from backend.app.engine.editorial_migration import migrate_editorial_model
@@ -72,3 +72,39 @@ def test_project_edition_persists_ads_and_short_buffer():
     reloaded = client.get(f"/editorial-model/projects/{project_id}/edition").json()
     assert reloaded["page_plan"][1]["ads"][0]["status"] == "tentative"
     assert reloaded["shorts_blocks"][0]["items"][0]["id"] == "short-1"
+
+
+def test_locked_ads_materialize_into_shared_scene_graph():
+    from backend.app.engine.grammar import create_default_broadsheet_dna
+    from backend.app.engine.solver import GridSolver
+    from backend.app.models.schemas import PageInputMaterial, StoryInput
+    dna = create_default_broadsheet_dna()
+    scene = GridSolver(dna).solve(PageInputMaterial(stories=[StoryInput(id="s-ad", headline="Materiał", body="Tekst", importance=1)]))
+    page = EditorialPage(no=1, ads=[Advertisement(id="adv", format="front-ear-right", is_advertorial=True, advertorial_label="materiał reklamowy")])
+    apply_ads_to_scene(scene, page, dna)
+    ad = next(element for element in scene.elements if element.id == "ad-adv")
+    assert ad.locked is True and ad.approval_status == "protected"
+    assert scene.metadata["advertorial_labels"]["ad-adv"] == "materiał reklamowy"
+
+
+def test_removed_ad_moves_waiting_copy_into_short_buffer():
+    client = TestClient(app)
+    project_id = client.post("/projects", json={"name": "Ad removal acceptance"}).json()["id"]
+    added = client.post(f"/editorial-model/projects/{project_id}/edition/ads", json={
+        "page_no": 2, "ads": [{"id": "half", "format": "1/2-horizontal", "position": "bottom"}]
+    })
+    assert added.status_code == 200
+    waiting = client.post(f"/editorial-model/projects/{project_id}/edition/shorts", json={
+        "page_no": 2, "waiting": True,
+        "item": {"id": "ready-1", "headline": "Tekst z poczekalni", "body": "Gotowy tekst źródłowy", "source": "editor"}
+    })
+    assert waiting.status_code == 200
+    removed = client.post(f"/editorial-model/projects/{project_id}/edition/ads", json={
+        "page_no": 2, "removed": ["half"]
+    })
+    assert removed.status_code == 200
+    result = removed.json()
+    assert result["change"]["freed_units"] == 96
+    assert result["change"]["shorts_moved"] == ["ready-1"]
+    assert result["edition"]["shorts_blocks"][0]["items"][0]["id"] == "ready-1"
+    assert result["edition"]["waiting_room"] == []

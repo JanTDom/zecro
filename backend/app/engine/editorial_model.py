@@ -275,6 +275,12 @@ def suggest_capacity(editorial_area: Mapping[str, Any] | float, page_type: str =
 def _rect(ad: Advertisement, page_no: int, dna: Any = None) -> tuple[float, float, float, float]:
     spec = ad_catalog(dna).get(ad.format, {})
     w, h = float(spec.get("w", 0)), float(spec.get("h", 0))
+    if ad.format == "front-ear-right":
+        return 12.0 - w, 0.0, w, h
+    if ad.format == "front-ear-left":
+        return 0.0, 0.0, w, h
+    if ad.format == "front-banner-bottom":
+        return 0.0, 2.0, w, h
     pos = ad.position or "anywhere"
     x = 0.0 if pos in {"left", "top", "bottom", "anywhere", "front"} else 12.0 - w
     y = 0.0 if pos in {"top", "left", "anywhere", "front"} else 16.0 - h
@@ -463,4 +469,39 @@ def late_ad_change(page: EditorialPage | Mapping[str, Any], *, removed: Iterable
             "protected_untouched": True, "full_rebuild": bool(freed and freed > 12 * 16 * 0.25)}
 
 
-__all__ = ["AD_MODULE_CATALOG", "Advertisement", "Edition", "EditorialModel", "EditorialPage", "FixedElement", "ShortItem", "ShortsBlock", "Spread", "StoryElement", "StoryPackage", "WaitingRoomItem", "ad_catalog", "build_edition", "compute_editorial_area", "copyfit_delta", "import_ads_csv", "late_ad_change", "make_page_plan", "page_area_ratio", "protect_approved", "run_copyfit_ladder", "suggest_capacity", "tentative_variants", "validate_editorial_model", "validate_source_bound_text", "validate_spine_constraints"]
+def apply_ads_to_scene(scene_graph: Any, page: EditorialPage | Mapping[str, Any], dna: Any = None) -> Any:
+    """Materialize locked ad modules into the shared Scene Graph.
+
+    The generator still owns editorial geometry.  This adapter adds reserved
+    advertising frames after generation and marks them protected so all
+    renderers and the critic see the same locked objects.
+    """
+    from ..models.schemas import Element, ElementStyle, Frame
+    page = _as_page(page)
+    existing = {element.id for element in scene_graph.elements}
+    page_w, page_h = float(scene_graph.page.trim[0]), float(scene_graph.page.trim[1])
+    labels = dict(scene_graph.metadata.get("advertorial_labels") or {})
+    advertorial_ids = list(scene_graph.metadata.get("advertorial_ids") or [])
+    for ad in page.ads:
+        element_id = f"ad-{ad.id}"
+        if element_id in existing:
+            continue
+        x, y, w, h = _rect(ad, page.no, dna)
+        frame = Frame(x=x / 12 * page_w, y=y / 16 * page_h, w=w / 12 * page_w, h=h / 16 * page_h)
+        text = ad.advertorial_label or ("REKLAMA" if not ad.asset else "")
+        asset_ref = ad.asset_ref or (ad.asset if isinstance(ad.asset, str) else None)
+        scene_graph.elements.append(Element(id=element_id, role="band", text_content=text, frame=frame, z=100,
+                                             style=ElementStyle(font_size_pt=7, font_weight="bold", color="#111", bg_color="#f2ede4"),
+                                             locked=True, approval_status="protected", constraints=["advertisement_locked", "no_overlap"],
+                                             content_ref=asset_ref))
+        if ad.is_advertorial:
+            advertorial_ids.append(element_id)
+            if ad.advertorial_label:
+                labels[element_id] = ad.advertorial_label
+    scene_graph.metadata["advertorial_ids"] = advertorial_ids
+    scene_graph.metadata["advertorial_labels"] = labels
+    scene_graph.metadata["locked_ad_ids"] = [f"ad-{ad.id}" for ad in page.ads]
+    return scene_graph
+
+
+__all__ = ["AD_MODULE_CATALOG", "Advertisement", "Edition", "EditorialModel", "EditorialPage", "FixedElement", "ShortItem", "ShortsBlock", "Spread", "StoryElement", "StoryPackage", "WaitingRoomItem", "ad_catalog", "apply_ads_to_scene", "build_edition", "compute_editorial_area", "copyfit_delta", "import_ads_csv", "late_ad_change", "make_page_plan", "page_area_ratio", "protect_approved", "run_copyfit_ladder", "suggest_capacity", "tentative_variants", "validate_editorial_model", "validate_source_bound_text", "validate_spine_constraints"]

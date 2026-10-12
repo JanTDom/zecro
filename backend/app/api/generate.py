@@ -12,6 +12,7 @@ from ..engine.corpus_knowledge import load_corpus_knowledge
 from ..engine.ai_director import AIDirector
 from ..engine.art_direction import build_art_direction_plan
 from ..engine.page_planner import plan_page
+from ..engine.editorial_model import EditorialModel, apply_ads_to_scene
 
 router = APIRouter(tags=["generate"])
 
@@ -106,6 +107,17 @@ def execute_generation_run(project_id: str, request: GenerationRequest):
         # lookup.  TitleDNA remains a versioned object, while this ref is an
         # explicit project foreign key.
         sg.page.title_dna_ref = project_id
+        if request.editorial_edition:
+            editorial_model = EditorialModel.model_validate(request.editorial_edition)
+            page_no = int(sg.page.page_number or 1)
+            editorial_page = next((page for page in editorial_model.edition.page_plan if page.no == page_no), None)
+            if editorial_page:
+                apply_ads_to_scene(sg, editorial_page, dna)
+                # Ads are locked inputs to the critic. Re-evaluate after the
+                # adapter materializes them so candidates cannot be exported
+                # without the same advertising constraints.
+                critic_res = LayoutCritic(dna, corpus_features=corpus_features,
+                                          corpus_guidance=corpus_guidance).evaluate(sg)
         # Bind editorial intent and exact writing budgets to the concrete
         # candidate.  This is the bridge between art direction and fast page
         # copy: every frame becomes an actionable writing brief.
@@ -114,6 +126,8 @@ def execute_generation_run(project_id: str, request: GenerationRequest):
         sg.metadata["ai_director"] = ai_director.candidate_trace(sg, critic_res)
         sg.metadata["corpus_guidance"] = corpus_guidance
         sg.metadata["page_plan"] = page_plan.model_dump(mode="json")
+        if request.editorial_edition:
+            sg.metadata["editorial_edition"] = request.editorial_edition
         cand_id = str(uuid.uuid4())
         svg_thumb = svg_renderer.render(sg)
 

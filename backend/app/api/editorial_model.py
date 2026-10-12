@@ -54,6 +54,13 @@ def _stored_version(project_id: str) -> int:
     return int((rows[0] if rows else {}).get("version", 0) or 0)
 
 
+def _flat_edition(model: EditorialModel) -> dict[str, Any]:
+    result = model.edition.model_dump(mode="json")
+    result["shorts_blocks"] = [block.model_dump(mode="json") for block in model.shorts_blocks]
+    result["waiting_room"] = [item.model_dump(mode="json") for item in model.waiting_room]
+    return result
+
+
 @router.get("/ad-modules")
 def ad_modules():
     from ..engine.editorial_model import AD_MODULE_CATALOG
@@ -100,7 +107,7 @@ def save_project_edition(project_id: str, payload: PersistedEditionRequest):
             raise HTTPException(status_code=422, detail={"status": "FAIL", "errors": errors})
         saved = {"id": f"edition:{project_id}", "version": _stored_version(project_id) + 1, "project_id": project_id, "model": model}
         db.save_editorial_object("editorial_edition", saved, project_id=project_id, reason="edition_saved")
-        return model["edition"]
+        return _flat_edition(EditorialModel.model_validate(model))
     except HTTPException:
         raise
     except (TypeError, ValueError) as exc:
@@ -124,15 +131,36 @@ def update_project_ads(project_id: str, payload: EditionAdsRequest):
         raise HTTPException(status_code=404, detail="page not found")
     try:
         incoming = import_ads_csv(payload.csv) if payload.csv else [Advertisement.model_validate(item) for item in payload.ads]
+        before_change = page.model_copy(deep=True)
         page.ads = [ad for ad in page.ads if ad.id not in set(payload.removed)]
         page.ads.extend(incoming)
+        change = late_ad_change(before_change, removed=payload.removed, added=incoming)
+        page.editorial_area = compute_editorial_area(page)
         errors = validate_editorial_model(model)
         if errors:
             raise HTTPException(status_code=422, detail={"status": "FAIL", "errors": errors})
+        if change["freed_units"]:
+            block = next((item for item in model.shorts_blocks if item.page == page.no), None)
+            if block is None:
+                block = ShortsBlock(page=page.no)
+                model.shorts_blocks.append(block)
+            # One short consumes roughly one twelfth of the page grid. Move
+            # existing source-backed waiting-room copy before requesting more.
+            slots = min(int(change["freed_units"] // 12), block.max_items - len(block.items))
+            moved = []
+            for item in list(model.waiting_room):
+                if len(moved) >= slots:
+                    break
+                block.items.append(ShortItem(id=item.id, rank={"A": 1, "B": 2, "C": 3}[item.rank],
+                                             headline=item.headline, body=item.body, source=item.source))
+                model.waiting_room.remove(item)
+                moved.append(item.id)
+            change["shorts_moved"] = moved
+            change["unfilled_short_slots"] = max(0, slots - len(moved))
         saved = {"id": f"edition:{project_id}", "version": _stored_version(project_id) + 1, "project_id": project_id, "model": model.model_dump(mode="json")}
         db.save_editorial_object("editorial_edition", saved, project_id=project_id, reason="ads_updated")
-        return {"edition": model.edition.model_dump(mode="json"), "model": model.model_dump(mode="json"),
-                "change": late_ad_change(page, removed=payload.removed, added=incoming)}
+        return {"edition": _flat_edition(model), "model": model.model_dump(mode="json"),
+                "change": change}
     except HTTPException:
         raise
     except ValueError as exc:
@@ -163,7 +191,7 @@ def add_short_or_waiting(project_id: str, payload: ShortsRequest):
             block.items.append(ShortItem.model_validate(payload.item))
         saved = {"id": f"edition:{project_id}", "version": _stored_version(project_id) + 1, "project_id": project_id, "model": model.model_dump(mode="json")}
         db.save_editorial_object("editorial_edition", saved, project_id=project_id, reason="short_added")
-        return model.model_dump(mode="json")
+        return {"edition": _flat_edition(model), "model": model.model_dump(mode="json")}
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
 
