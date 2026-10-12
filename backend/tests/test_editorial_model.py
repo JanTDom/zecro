@@ -4,6 +4,8 @@ from backend.app.engine.editorial_model import (
     tentative_variants, validate_editorial_model, validate_source_bound_text,
 )
 from backend.app.engine.editorial_migration import migrate_editorial_model
+from fastapi.testclient import TestClient
+from backend.app.main import app
 
 
 def test_build_16_page_edition_and_centerfold():
@@ -52,3 +54,21 @@ def test_csv_import_has_locked_ad_and_fields():
     ads = import_ads_csv("id,format,advertiser_category\na1,full-page,telecom\n")
     assert ads[0].locked is True
     assert ads[0].advertiser_category == "telecom"
+
+
+def test_project_edition_persists_ads_and_short_buffer():
+    client = TestClient(app)
+    project = client.post("/projects", json={"name": "Edition persistence acceptance"}).json()
+    project_id = project["id"]
+    assert client.get(f"/editorial-model/projects/{project_id}/edition").status_code == 200
+    changed = client.post(f"/editorial-model/projects/{project_id}/edition/ads", json={
+        "page_no": 2, "ads": [{"id": "tentative-1", "format": "1/2-horizontal", "status": "tentative"}]
+    })
+    assert changed.status_code == 200
+    short = client.post(f"/editorial-model/projects/{project_id}/edition/shorts", json={
+        "page_no": 2, "item": {"id": "short-1", "headline": "Krótki tytuł", "body": "Źródłowy tekst shorta"}
+    })
+    assert short.status_code == 200
+    reloaded = client.get(f"/editorial-model/projects/{project_id}/edition").json()
+    assert reloaded["page_plan"][1]["ads"][0]["status"] == "tentative"
+    assert reloaded["shorts_blocks"][0]["items"][0]["id"] == "short-1"

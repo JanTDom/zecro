@@ -15,6 +15,12 @@ def preflight_scene_graph(scene: SceneGraph, dna: TitleDNA, *, candidate_ref: Op
     checks = []
     errors = []
     warnings = []
+    advertorial_labels = scene.metadata.get("advertorial_labels") or {}
+    advertorial_ids = scene.metadata.get("advertorial_ids") or []
+    if advertorial_ids:
+        missing_labels = [str(item) for item in advertorial_ids if not advertorial_labels.get(str(item))]
+        checks.append({"id": "advertorial_labels", "status": "FAIL" if missing_labels else "PASS", "value": missing_labels})
+        errors.extend([f"advertorial {item}: etykieta jest obowiązkowa" for item in missing_labels])
     critic = LayoutCritic(dna).evaluate(scene)
     checks.append({"id": "hard_gate", "status": "PASS" if critic.hard_gate.passed else "FAIL", "value": critic.hard_gate.violations})
     if not critic.hard_gate.passed:

@@ -413,6 +413,18 @@ export const api = {
   async createEditorialEdition(pages = 16, imposition = 8, issueDate?: string): Promise<Data> {
     return request('/editorial-model/editions', json('POST', { pages, imposition, issue_date: issueDate }));
   },
+  async getProjectEditorialEdition(projectId: string): Promise<Data> {
+    return request(`/editorial-model/projects/${encodeURIComponent(projectId)}/edition`);
+  },
+  async saveProjectEditorialEdition(projectId: string, edition: Data): Promise<Data> {
+    return request(`/editorial-model/projects/${encodeURIComponent(projectId)}/edition`, json('POST', { edition }));
+  },
+  async addEditorialAds(projectId: string, pageNo: number, ads: Data[] = [], csv?: string, removed: string[] = []): Promise<Data> {
+    return request(`/editorial-model/projects/${encodeURIComponent(projectId)}/edition/ads`, json('POST', { page_no: pageNo, ads, csv, removed }));
+  },
+  async addEditionShort(projectId: string, pageNo: number, item: Data, waiting = false): Promise<Data> {
+    return request(`/editorial-model/projects/${encodeURIComponent(projectId)}/edition/shorts`, json('POST', { page_no: pageNo, item, waiting }));
+  },
   async validateEditorialEdition(payload: Data): Promise<Data> {
     return request('/editorial-model/editions/validate', json('POST', payload));
   },

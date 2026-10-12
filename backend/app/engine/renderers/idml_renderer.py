@@ -93,12 +93,15 @@ class IDMLRenderer:
         self._swatches[name] = f"{c*100:.0f} {m*100:.0f} {y*100:.0f} {k*100:.0f}"
         return name
 
-    def _story_xml(self, story_id, members, style_map):
+    def _story_xml(self, story_id, members, style_map, advertorial_labels=None):
         ranges = []
         previous_text = ""
         just = {"justify": "LeftJustified", "left": "LeftAlign", "center": "CenterAlign", "right": "RightAlign"}
         for elem in members:
             text = elem.text_content or ""
+            label = (advertorial_labels or {}).get(elem.id) if isinstance(advertorial_labels, dict) else None
+            if label:
+                text = f"{label}\n{text}"
             if previous_text and text and not previous_text[-1].isspace() and not text[0].isspace():
                 text = " " + text
             content_xml = "<Br/>".join(
@@ -228,8 +231,13 @@ class IDMLRenderer:
         }
         story_groups, text_references = self._text_threads(sg)
         story_ids = [story_id for story_id, _ in story_groups]
+        advertorial_labels = sg.metadata.get("advertorial_labels") or {}
+        labels_xml = "".join(
+            f'<Label Element="{saxutils.escape(str(element_id))}" Text="{saxutils.escape(str(label))}"/>'
+            for element_id, label in advertorial_labels.items()
+        ) if isinstance(advertorial_labels, dict) else ""
         stories_xml = {
-            f"Stories/Story_{story_id}.xml": self._story_xml(story_id, members, style_map)
+            f"Stories/Story_{story_id}.xml": self._story_xml(story_id, members, style_map, advertorial_labels)
             for story_id, members in story_groups
         }
 
@@ -501,6 +509,8 @@ class IDMLRenderer:
             # 6. Stories
             for path, xml_data in stories_xml.items():
                 zf.writestr(path, xml_data)
+            if labels_xml:
+                zf.writestr("Metadata/AdvertorialLabels.xml", f'<?xml version="1.0" encoding="UTF-8"?><AdvertorialLabels>{labels_xml}</AdvertorialLabels>')
             # Package local photo files in Links/ so InDesign can resolve the
             # LinkResourceURI without a machine-specific absolute path.
             for archive_name, source_path in linked_assets.items():

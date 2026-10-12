@@ -31,3 +31,16 @@ oraz zmiana geometrii przez copyfit.
 
 Reklama ma `locked=true`, a walidacja kolizji odbywa się przed generacją
 geometrii. Pozwala to zachować istniejący generator i zgłaszać konflikty w UI.
+
+## 2026-10-12 — Persystencja wydania przez istniejący store rewizji
+
+Plan wydania musi przeżyć odświeżenie aplikacji i zachować historię. Zapisuję
+`EditorialModel` jako `editorial_edition` przez istniejące
+`save_editorial_object`, zamiast dodawać drugą bazę lub nową tabelę. Reklamy,
+shorty i poczekalnia dzielą wersjonowanie wydania.
+
+## 2026-10-12 — Etykiety advertorial w grafie sceny
+
+Etykiety są przekazywane przez `SceneGraph.metadata` (`advertorial_ids` i
+`advertorial_labels`). Preflight blokuje brak etykiety, a SVG, HTML i IDML
+zachowują ją bez rozszerzania modelu geometrii o dane reklamowe.

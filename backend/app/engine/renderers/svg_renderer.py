@@ -48,6 +48,7 @@ class SVGRenderer:
 
         # Sort elements by Z-index
         sorted_elements = sorted(sg.elements, key=lambda e: e.z)
+        advertorial_labels = sg.metadata.get("advertorial_labels") or {}
 
         for elem in sorted_elements:
             fr = elem.frame
@@ -169,6 +170,10 @@ class SVGRenderer:
                     f'</foreignObject>'
                 )
 
+            label = advertorial_labels.get(elem.id) if isinstance(advertorial_labels, dict) else None
+            if label:
+                svg_lines.append(f'<rect x="{fr.x + 1:.1f}" y="{fr.y + 1:.1f}" width="{max(12.0, min(max(12.0, fr.w - 2), 40.0)):.1f}" height="4.5" fill="#111" opacity="0.9"/>')
+                svg_lines.append(f'<text x="{fr.x + 2:.1f}" y="{fr.y + 4.2:.1f}" font-size="2.4" fill="#fff" font-family="sans-serif">{html.escape(str(label))}</text>')
             svg_lines.append('</g>')
 
         svg_lines.append('</svg>')

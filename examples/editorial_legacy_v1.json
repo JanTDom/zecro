@@ -1,0 +1,12 @@
+{
+  "issue_date": "2026-10-13",
+  "page_zone": "front_page",
+  "stories": [
+    {
+      "id": "legacy-1",
+      "rank": "lead",
+      "headline": "Stary materiał",
+      "body": "Treść"
+    }
+  ]
+}

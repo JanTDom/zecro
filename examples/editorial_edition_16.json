@@ -1,0 +1,379 @@
+{
+  "schema_version": 2,
+  "edition": {
+    "schema_version": 2,
+    "date": "2026-10-12",
+    "pages": 16,
+    "imposition": 8,
+    "centerfold": [
+      8,
+      9
+    ],
+    "page_plan": [
+      {
+        "no": 1,
+        "type": "front",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": false,
+        "fixed": [
+          {
+            "id": "masthead",
+            "role": "masthead",
+            "locked": true,
+            "frame": null
+          }
+        ],
+        "ads": [
+          {
+            "id": "ad-front-ear",
+            "format": "front-ear-right",
+            "position": null,
+            "status": "booked",
+            "advertiser": null,
+            "advertiser_category": null,
+            "asset": null,
+            "asset_ref": null,
+            "is_advertorial": false,
+            "advertorial_label": null,
+            "locked": true,
+            "page": null
+          }
+        ],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 2,
+        "type": "inner-left",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [
+          {
+            "id": "ad-half",
+            "format": "1/2-horizontal",
+            "position": null,
+            "status": "tentative",
+            "advertiser": null,
+            "advertiser_category": null,
+            "asset": null,
+            "asset_ref": null,
+            "is_advertorial": false,
+            "advertorial_label": null,
+            "locked": true,
+            "page": null
+          }
+        ],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 3,
+        "type": "inner-right",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": true,
+        "fixed": [],
+        "ads": [],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 4,
+        "type": "inner-left",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 5,
+        "type": "inner-right",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 6,
+        "type": "inner-left",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 7,
+        "type": "inner-right",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 8,
+        "type": "spread-left",
+        "section": null,
+        "spread_id": "centerfold",
+        "spread_kind": "centerfold",
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 9,
+        "type": "spread-right",
+        "section": null,
+        "spread_id": "centerfold",
+        "spread_kind": "centerfold",
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 10,
+        "type": "inner-left",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 11,
+        "type": "inner-right",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 12,
+        "type": "inner-left",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 13,
+        "type": "inner-right",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 14,
+        "type": "inner-left",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 15,
+        "type": "inner-right",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      },
+      {
+        "no": 16,
+        "type": "back",
+        "section": null,
+        "spread_id": null,
+        "spread_kind": null,
+        "facing_full_page_ad": false,
+        "fixed": [],
+        "ads": [
+          {
+            "id": "ad-back",
+            "format": "full-page",
+            "position": null,
+            "status": "booked",
+            "advertiser": null,
+            "advertiser_category": null,
+            "asset": null,
+            "asset_ref": null,
+            "is_advertorial": false,
+            "advertorial_label": null,
+            "locked": true,
+            "page": null
+          }
+        ],
+        "story_refs": [],
+        "shorts_block_ref": null,
+        "editorial_area": null,
+        "status": "empty"
+      }
+    ],
+    "spreads": [
+      {
+        "id": "centerfold",
+        "left_page": 8,
+        "right_page": 9,
+        "kind": "centerfold",
+        "spine_zone_mm": 6.0,
+        "continuous_text_allowed": false
+      }
+    ],
+    "wrapper": null,
+    "insert": null
+  },
+  "stories": [
+    {
+      "id": "s-a",
+      "page": 8,
+      "rank": "A",
+      "topic_tags": [
+        "polityka"
+      ],
+      "cut_policy": [
+        "satellites",
+        "tail",
+        "digressions"
+      ],
+      "source_material": "Źródłowy materiał redakcyjny.",
+      "elements": [
+        {
+          "id": "s-a-head",
+          "role": "headline",
+          "source": "paste",
+          "text": "Dominanta rozkładówki",
+          "lock": false,
+          "length": {
+            "min": 10,
+            "target": 24,
+            "max": 60
+          },
+          "optional": false,
+          "status": "draft",
+          "verbatim": false,
+          "source_refs": []
+        },
+        {
+          "id": "s-a-body",
+          "role": "body",
+          "source": "paste",
+          "text": "Treść materiału źródłowego.",
+          "lock": true,
+          "length": {
+            "min": 20,
+            "target": 500,
+            "max": 900
+          },
+          "optional": false,
+          "status": "draft",
+          "verbatim": false,
+          "source_refs": []
+        }
+      ],
+      "protected": false
+    }
+  ],
+  "shorts_blocks": [
+    {
+      "page": 8,
+      "min_items": 2,
+      "max_items": 6,
+      "item_format": [
+        250,
+        400,
+        600
+      ],
+      "header": "W skrócie",
+      "style": "default",
+      "items": [
+        {
+          "id": "sh1",
+          "rank": 1,
+          "headline": "Krótka wiadomość",
+          "body": "Treść z depeszy.",
+          "photo": null,
+          "source": null
+        }
+      ]
+    }
+  ],
+  "waiting_room": []
+}

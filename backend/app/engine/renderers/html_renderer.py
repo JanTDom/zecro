@@ -28,6 +28,7 @@ class HTMLRenderer:
         text_col = self.dna.palette.text if self.dna else "#1a1a1a"
 
         html_elements = []
+        advertorial_labels = sg.metadata.get("advertorial_labels") or {}
 
         for elem in sorted(sg.elements, key=lambda e: e.z):
             fr = elem.frame
@@ -71,38 +72,46 @@ class HTMLRenderer:
                 else:
                     content_html = f'<div style="width: 100%; height: 100%; background: #e0ded8; display: flex; align-items: center; justify-content: center; color: #777; font-family: sans-serif; font-size: 10pt; {clip_css} {wrap_css}">Photo: {elem.id}</div>'
 
-                html_elements.append(f'<div id="{elem.id}" class="element photo-element" style="{pos_style}">{content_html}</div>')
+                label = advertorial_labels.get(elem.id) if isinstance(advertorial_labels, dict) else None
+                badge = f'<span class="advertorial-label">{html.escape(str(label))}</span>' if label else ''
+                html_elements.append(f'<div id="{elem.id}" class="element photo-element" style="{pos_style}">{badge}{content_html}</div>')
 
             elif elem.role == "logo":
                 font_fam = (st.font_family if st else None) or "Playfair Display, Georgia, serif"
                 font_pt = (st.font_size_pt if st else None) or 36.0
                 color_val = (st.color if st else None) or "#111"
                 logo_content = (f'<img src="{html.escape(elem.image_url)}" alt="{html.escape(elem.text_content or "Winieta")}" style="max-width:100%; max-height:100%; object-fit:contain"/>' if elem.image_url else html.escape(elem.text_content or ""))
+                label = advertorial_labels.get(elem.id) if isinstance(advertorial_labels, dict) else None
+                badge = f'<span class="advertorial-label">{html.escape(str(label))}</span>' if label else ''
                 html_elements.append(
                     f'<div id="{elem.id}" class="element masthead" style="{pos_style} '
                     f'font-family: {font_fam}; font-size: {font_pt:.1f}pt; font-weight: bold; '
                     f'text-align: center; color: {color_val}; letter-spacing: 1px; '
                     f'border-bottom: 2px solid #111; display: flex; align-items: center; justify-content: center;">'
-                    f'{logo_content}'
+                    f'{badge}{logo_content}'
                     f'</div>'
                 )
 
             elif elem.role == "folio":
+                label = advertorial_labels.get(elem.id) if isinstance(advertorial_labels, dict) else None
+                badge = f'<span class="advertorial-label">{html.escape(str(label))}</span>' if label else ''
                 html_elements.append(
                     f'<div id="{elem.id}" class="element folio-bar" style="{pos_style} '
                     f'font-family: Inter, sans-serif; font-size: 7.5pt; font-weight: bold; text-transform: uppercase; '
                     f'border-top: 1px solid #111; border-bottom: 1px solid #111; display: flex; align-items: center; '
                     f'justify-content: space-between; padding: 0 2mm; color: #333;">'
-                    f'<span>{html.escape(elem.text_content or "")}</span>'
+                    f'{badge}<span>{html.escape(elem.text_content or "")}</span>'
                     f'</div>'
                 )
 
             elif elem.role in {"pullquote", "infobox", "brief_column", "teaser_band", "jump_line", "column"}:
                 bg = (st.bg_color if st else None) or ("#f2ede4" if elem.role in {"infobox", "brief_column"} else "transparent")
                 border = "border-left: 1.5mm solid #900;" if elem.role == "pullquote" else "border: 0.3mm solid #222;"
+                label = advertorial_labels.get(elem.id) if isinstance(advertorial_labels, dict) else None
+                badge = f'<span class="advertorial-label">{html.escape(str(label))}</span>' if label else ''
                 html_elements.append(
                     f'<div id="{elem.id}" class="element module {elem.role}" style="{pos_style} background: {bg}; {border} '
-                    f'padding: 2mm; box-sizing: border-box; overflow: hidden; white-space: pre-wrap;">{html.escape(elem.text_content or "")}</div>'
+                    f'padding: 2mm; box-sizing: border-box; overflow: hidden; white-space: pre-wrap;">{badge}{html.escape(elem.text_content or "")}</div>'
                 )
 
             else:
@@ -124,12 +133,14 @@ class HTMLRenderer:
                     indent = "0" if idx == 0 else "1.5em"
                     p_nodes.append(f"<p style='margin: 0 0 1.5em 0; text-indent: {indent};'>{html.escape(p)}</p>")
                 inner_text_html = "".join(p_nodes)
+                label = advertorial_labels.get(elem.id) if isinstance(advertorial_labels, dict) else None
+                badge = f'<span class="advertorial-label">{html.escape(str(label))}</span>' if label else ''
 
                 html_elements.append(
                     f'<div id="{elem.id}" class="element text-block {elem.role}" style="{pos_style} '
                     f'font-family: {font_fam}; font-size: {font_pt:.1f}pt; line-height: {line_h_pt:.1f}pt; '
                     f'{weight}; {case} {align} {col} {col_css} overflow: hidden; box-sizing: border-box;">'
-                    f'{inner_text_html}'
+                    f'{badge}{inner_text_html}'
                     f'</div>'
                 )
 
@@ -181,6 +192,10 @@ class HTMLRenderer:
         }}
         .element p:last-child {{
             margin-bottom: 0;
+        }}
+        .advertorial-label {{
+            display: inline-block; background: #111; color: #fff; padding: 0.6mm 1.2mm;
+            font: 600 6pt/1.1 sans-serif; letter-spacing: .04em; text-transform: uppercase;
         }}
     </style>
 </head>
