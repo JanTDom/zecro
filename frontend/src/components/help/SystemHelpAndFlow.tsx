@@ -182,7 +182,7 @@ export const SystemHelpAndFlow: React.FC = () => {
               {/* Etykieta pętli zwrotnej */}
               <rect x="610" y="52" width="240" height="26" rx="6" fill="#180c10" stroke="#ef4444" strokeWidth="1" />
               <text x="730" y="69" fill="#f87171" fontSize="10.5" fontFamily="monospace" textAnchor="middle" fontWeight="bold">
-                Błąd geometrii ➔ ponowne ułożenie
+                Błąd geometrii: ponowne ułożenie
               </text>
             </svg>
 
