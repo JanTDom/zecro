@@ -3,7 +3,7 @@ import { apiUrl } from '../../api/client';
 import { useProject } from '../../context/ProjectContext';
 import { Button } from '../common/Button';
 import { isTechnicalProject } from '../../projectVisibility';
-import { Check, ChevronDown, FileText, LayoutDashboard, LogOut, Menu, Plus, Sparkles, X } from 'lucide-react';
+import { Check, ChevronDown, FileText, HelpCircle, LayoutDashboard, LogOut, Menu, Plus, Sparkles, X } from 'lucide-react';
 
 interface NavbarProps {
   onOpenNewProject: () => void;
@@ -30,6 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenNewProject }) => {
 
   const mobileNav = [
     { id: 'dashboard' as const, label: 'Zacznij tutaj', icon: LayoutDashboard },
+    { id: 'help' as const, label: 'Jak to działa', icon: HelpCircle },
     { id: 'generate' as const, label: 'Materiały i strona', icon: Sparkles },
     { id: 'gallery' as const, label: 'Warianty', icon: FileText },
     { id: 'projects' as const, label: 'Moje gazety', icon: Plus },
@@ -58,8 +59,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenNewProject }) => {
             </div>
           )}
         </div>
-        <div className="hidden sm:flex items-center gap-2 text-[12px] text-ink-500">
-          <button onClick={() => setActiveTab('dashboard')} className="font-semibold text-ink-200">Zacznij tutaj</button>
+        <div className="hidden sm:flex items-center gap-3 text-[12px] text-ink-500">
+          <button onClick={() => setActiveTab('dashboard')} className="font-semibold text-ink-200 hover:text-ink-100">Zacznij tutaj</button>
+          <button onClick={() => setActiveTab('help')} className="flex items-center gap-1.5 font-semibold text-editorial-crimson hover:text-editorial-crimson/80 bg-red-50/80 px-2.5 py-1 rounded-md border border-editorial-crimson/20">
+            <HelpCircle className="w-3.5 h-3.5" />
+            Jak to działa
+          </button>
         </div>
       </div>
 

@@ -14,6 +14,7 @@ import { AccessGate } from './components/auth/AccessGate';
 import { IntegrationsSettings } from './components/settings/IntegrationsSettings';
 import { PagePlanner } from './components/plan/PagePlanner';
 import { EditionFlatplan } from './components/edition/EditionFlatplan';
+import { SystemHelpAndFlow } from './components/help/SystemHelpAndFlow';
 
 interface MainContentProps {
   onOpenNewProject: () => void;
@@ -27,6 +28,9 @@ const MainContent: React.FC<MainContentProps> = ({ onOpenNewProject, onOpenExpor
   switch (activeTab) {
     case 'dashboard':
       content = <ProjectDashboard onOpenNewProject={onOpenNewProject} />;
+      break;
+    case 'help':
+      content = <SystemHelpAndFlow />;
       break;
     case 'corpus':
       content = <CorpusManager />;
