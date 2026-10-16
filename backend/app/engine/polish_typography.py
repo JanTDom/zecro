@@ -47,7 +47,7 @@ def polish_microtypography(text: str, html_mode: bool = False) -> str:
     text = re.sub(r' {2,}', ' ', text)
 
     # 6. Hanging single-letter conjunctions and prepositions (sierotki: a, i, o, u, w, z)
-    single_letters = r'[aiouowzAIOUOWZ]'
+    single_letters = r'[aiouwzAIOUWZ]'
     text = re.sub(r'(^|[\s\(\[\{])(' + single_letters + r')\s+', r'\1\2' + nbsp, text)
 
     # 7. Common short prepositions

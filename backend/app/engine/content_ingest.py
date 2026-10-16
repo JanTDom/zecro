@@ -7,10 +7,12 @@ redacting professional Polish editorial newspaper copy (kicker, headline, deck, 
 from __future__ import annotations
 
 import io
+import ipaddress
 import mimetypes
 import os
 import re
 import shutil
+import socket
 import urllib.parse
 import uuid
 from pathlib import Path
@@ -37,23 +39,77 @@ USER_AGENT = (
 )
 
 
+def validate_safe_url(url: str) -> str:
+    """Validate that the URL uses HTTP/HTTPS and does not resolve to private/local/metadata IPs."""
+    url = url.strip()
+    if "://" in url:
+        scheme = url.split("://", 1)[0].lower()
+        if scheme not in ("http", "https"):
+            raise ValueError("Dozwolone są wyłącznie protokoły HTTP i HTTPS.")
+    else:
+        url = "https://" + url
+
+    parsed = urllib.parse.urlsplit(url)
+    if parsed.scheme.lower() not in ("http", "https"):
+        raise ValueError("Dozwolone są wyłącznie protokoły HTTP i HTTPS.")
+
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("Nieprawidłowy adres URL: brak nazwy hosta.")
+
+    if hostname.lower() in ("localhost", "127.0.0.1", "::1", "metadata.google.internal"):
+        raise ValueError("Niedozwolony adres URL (dostęp lokalny zablokowany).")
+
+    if parsed.port and parsed.port not in (80, 443, 8080, 8443):
+        raise ValueError(f"Port {parsed.port} jest niedozwolony.")
+
+    try:
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        addr_info = socket.getaddrinfo(hostname, port)
+        for res in addr_info:
+            ip_str = res[4][0]
+            ip = ipaddress.ip_address(ip_str)
+            if (
+                ip.is_private
+                or ip.is_loopback
+                or ip.is_link_local
+                or ip.is_reserved
+                or ip.is_multicast
+                or ip.is_unspecified
+            ):
+                raise ValueError("Niedozwolony adres URL: wskazuje na sieć wewnętrzną lub prywatną.")
+    except socket.gaierror as e:
+        raise ValueError(f"Nie udało się rozwiązać nazwy hosta {hostname}: {e}")
+
+    return url
+
+
 def download_and_extract_url(url: str) -> dict[str, Any]:
     """Fetch an internet article URL, extracting its title, lead, body text, and main photo URL."""
-    url = url.strip()
-    if not re.match(r"^https?://", url, re.I):
-        url = "https://" + url
+    url = validate_safe_url(url)
 
     headers = {
         "User-Agent": USER_AGENT,
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         "Accept-Language": "pl,en-US;q=0.7,en;q=0.3",
     }
-    resp = requests.get(url, headers=headers, timeout=12)
+    resp = requests.get(url, headers=headers, timeout=12, stream=True)
     resp.raise_for_status()
+
+    # Stream max 5MB
+    content_chunks = []
+    total_bytes = 0
+    max_bytes = 5 * 1024 * 1024
+    for chunk in resp.iter_content(chunk_size=65536):
+        content_chunks.append(chunk)
+        total_bytes += len(chunk)
+        if total_bytes > max_bytes:
+            break
+    raw_content = b"".join(content_chunks)
 
     # Determine charset if specified
     encoding = resp.encoding if resp.encoding and resp.encoding.lower() != "iso-8859-1" else resp.apparent_encoding or "utf-8"
-    html_content = resp.content.decode(encoding, errors="replace")
+    html_content = raw_content.decode(encoding, errors="replace")
 
     domain = urllib.parse.urlparse(url).netloc.removeprefix("www.")
 
@@ -176,6 +232,16 @@ def extract_document_file(file_path: Path, filename: str) -> dict[str, Any]:
     image_ext: str = ".jpg"
 
     if ext == ".docx":
+        import zipfile
+        try:
+            with zipfile.ZipFile(file_path) as z:
+                total_uncompressed = sum(info.file_size for info in z.infolist())
+                if total_uncompressed > 50 * 1024 * 1024:
+                    raise ValueError("Plik DOCX przekracza bezpieczny limit rozmiaru po rozpakowaniu (50 MB).")
+        except Exception as e:
+            if "bezpieczny limit" in str(e):
+                raise
+
         try:
             import docx
             doc = docx.Document(file_path)
@@ -197,7 +263,6 @@ def extract_document_file(file_path: Path, filename: str) -> dict[str, Any]:
                     break
         except Exception:
             # Fallback zip extract for docx
-            import zipfile
             import xml.etree.ElementTree as ET
             with zipfile.ZipFile(file_path) as z:
                 if "word/document.xml" in z.namelist():
@@ -266,9 +331,17 @@ def process_editorial_photo(
 
     if isinstance(image_source, str) and (image_source.startswith("http://") or image_source.startswith("https://")):
         try:
-            resp = requests.get(image_source, headers={"User-Agent": USER_AGENT}, timeout=15)
+            safe_img_url = validate_safe_url(image_source)
+            resp = requests.get(safe_img_url, headers={"User-Agent": USER_AGENT}, timeout=15, stream=True)
             resp.raise_for_status()
-            data = resp.content
+            chunks = []
+            total_b = 0
+            for chunk in resp.iter_content(chunk_size=65536):
+                chunks.append(chunk)
+                total_b += len(chunk)
+                if total_b > 15 * 1024 * 1024:
+                    break
+            data = b"".join(chunks)
             # Detect extension
             content_type = resp.headers.get("Content-Type", "")
             ext = mimetypes.guess_extension(content_type.split(";")[0]) or ".jpg"

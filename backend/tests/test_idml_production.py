@@ -136,3 +136,54 @@ def test_cutout_path_and_local_link_are_packaged(tmp_path: Path):
         for name in names:
             if name.endswith(".xml"):
                 ET.fromstring(package.read(name))
+
+
+def test_skew_y_deg_item_transform_is_emitted(tmp_path: Path):
+    import math
+    scene = SceneGraph(
+        page=PageMeta(trim=[264.6, 390.0]),
+        elements=[
+            Element(
+                id="sheared-headline",
+                role="headline",
+                text_content="TYTUŁ POCHYLONY W OKNIE",
+                frame=Frame(x=20, y=50, w=150, h=40, skew_y_deg=8.8),
+                style=ElementStyle(font_size_pt=36),
+            )
+        ],
+    )
+    with _render(scene, tmp_path / "sheared.idml") as package:
+        spread = ET.fromstring(package.read("Spreads/Spread_u_spread_0.xml"))
+        tf = spread.find(".//TextFrame[@Self='u_tf_sheared-headline']")
+        assert tf is not None
+        transform = tf.attrib["ItemTransform"]
+        parts = [float(v) for v in transform.split()]
+        assert len(parts) == 6
+        assert parts[0] == 1.0
+        assert parts[2] == 0.0
+        assert parts[3] == 1.0
+        expected_t = math.tan(math.radians(8.8))
+        assert abs(parts[1] - (-expected_t)) < 1e-4
+
+
+def test_drop_cap_is_emitted_in_idml_story(tmp_path: Path):
+    scene = SceneGraph(
+        page=PageMeta(trim=[210.0, 297.0]),
+        elements=[
+            Element(
+                id="story-body",
+                role="body",
+                text_content="Początek artykułu magazynowego z efektownym inicjałem wpuszczanym.",
+                frame=Frame(x=15, y=50, w=90, h=120),
+                style=ElementStyle(font_size_pt=10, drop_cap=True, drop_cap_lines=3),
+            )
+        ],
+    )
+    with _render(scene, tmp_path / "dropcap.idml") as package:
+        story = ET.fromstring(package.read("Stories/Story_u_story_story-body.xml"))
+        psr = story.find(".//ParagraphStyleRange")
+        assert psr is not None
+        assert psr.attrib.get("DropCapLines") == "3"
+        assert psr.attrib.get("DropCapCharacters") == "1"
+
+

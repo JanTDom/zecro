@@ -156,8 +156,13 @@ class HTMLRenderer:
                 justify = {"center": "center", "bottom": "flex-end"}.get((st.valign if st else None) or "top", "flex-start")
                 border = (f"outline: {st.border_width_mm:.2f}mm solid {st.border_color}; outline-offset: -{st.border_width_mm:.2f}mm; "
                           if st and st.border_width_mm and st.border_color and is_rect(elem.shape) else "")
+                dc_lines = (st.drop_cap_lines or 3) if (st and getattr(st, "drop_cap", False)) else 0
+                drop_cap_css = (
+                    f"<style>#{elem.id} p:first-of-type::first-letter {{ float: left; font-size: {font_pt * dc_lines * 0.92:.1f}pt; "
+                    f"line-height: 0.8; margin-right: 2mm; margin-top: 1mm; font-weight: bold; font-family: inherit; }}</style>"
+                ) if dc_lines >= 2 else ""
                 html_elements.append(
-                    f'<div id="{elem.id}" class="element text-block {elem.role}" style="{pos_style} {shape_css}{pad}{border}'
+                    f'{drop_cap_css}<div id="{elem.id}" class="element text-block {elem.role}" style="{pos_style} {shape_css}{pad}{border}'
                     f'display: flex; flex-direction: column; justify-content: {justify}; '
                     f'font-family: {font_fam}; font-size: {font_pt:.1f}pt; line-height: {line_h_pt:.1f}pt; '
                     f'font-weight: {weight}; {case} {align} {col} {outline}{shadow}{preserve_breaks}'

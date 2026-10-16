@@ -219,8 +219,16 @@ def compose_framed_cover(material, *, kit_name: str = "wukadka", genes: Optional
     from .layered_cover import Silhouette
     hero_sil = Silhouette(hero_el.mask_ref, hero_el.frame, hero_el.crop_box) if hero_el is not None else None
     tan = math.tan(math.radians(SHEAR_DEG))
-    k = n0()
     emph = {_norm(w) for w in lead.headline_emphasis}
+    if not emph:
+        lead_words = [w for w in lead.headline.split() if len(_norm(w)) >= 2]
+        priority_keywords = {"nie", "tak", "złodzieje", "oszust", "szok", "atak", "dramat", "sensacja", "prawda", "tajemnica", "koniec", "kto", "jak", "dlaczego"}
+        picked = [w for w in lead_words if _norm(w) in priority_keywords]
+        if not picked and lead_words:
+            sorted_by_len = sorted(lead_words, key=lambda w: len(_norm(w)), reverse=True)
+            picked = [sorted_by_len[0]] if sorted_by_len else []
+        emph = {_norm(w) for w in picked[:2]}
+    k = n0()
     for s in slots:
         if s.kind == "plate":
             (x0, yl), (x1, _), _, (_, ylb) = s.poly

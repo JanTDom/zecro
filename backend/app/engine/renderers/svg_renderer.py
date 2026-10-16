@@ -161,20 +161,26 @@ class SVGRenderer:
                 else:
                     st = elem.style
                     size_mm = ((st.font_size_pt if st else None) or 32.0) * 0.3528
-                    family = html.escape((st.font_family if st else None) or (self.dna.typography.fonts.get("headline", "Playfair Display") if self.dna else "Playfair Display"), quote=True)
-                    align = (st.align if st else None) or "center"
-                    anchor = {"left": "start", "center": "middle", "right": "end"}.get(align, "middle")
+                    align = (st.align if st else None) or "left"
+                    anchor = {"left": "start", "center": "middle", "right": "end"}.get(align, "start")
                     xx = fr.x + (0 if align == "left" else fr.w / 2 if align == "center" else fr.w)
                     text = elem.text_content or (self.dna.name if self.dna else "GAZETA")
                     rows = text.split("\n")
                     lead_mm = ((st.line_height_pt if st else None) or 36.0) * 0.3528
                     first = fr.y + fr.h / 2 + size_mm * .36 - lead_mm * (len(rows) - 1) / 2
                     color = (st.color if st else None) or (self.dna.palette.primary if self.dna else "#111")
+                    weight = html.escape((st.font_weight if st and st.font_weight else None) or "900", quote=True)
+                    if st and st.font_family:
+                        family_attr = f'{html.escape(st.font_family, quote=True)}, sans-serif'
+                    else:
+                        head_font = self.dna.typography.fonts.get("headline", "Playfair Display") if self.dna else "Playfair Display"
+                        family_attr = f'{html.escape(head_font, quote=True)}, Georgia, serif'
+
                     for row_index, row_text in enumerate(rows):
                         svg_lines.append(
                             f'<text x="{xx:.1f}" y="{first + row_index * lead_mm:.1f}" font-size="{size_mm:.1f}" '
-                            f'font-weight="900" '
-                            f'font-family="{family}, Georgia, serif" text-anchor="{anchor}" '
+                            f'font-weight="{weight}" '
+                            f'font-family="{family_attr}" text-anchor="{anchor}" '
                             f'letter-spacing="0.5" '
                             f'fill="{html.escape(color, quote=True)}">{html.escape(row_text)}</text>'
                         )

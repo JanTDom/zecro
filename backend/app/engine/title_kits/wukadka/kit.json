@@ -32,7 +32,7 @@
     "paper": "#ffffff"
   },
   "fonts": {
-    "_source": "Kroje i stopnie odczytane z PDF okładek NR20–NR22 (fonty osadzone), tracking z IDML NR22 4–5 (InDesign, 1/1000 em). Rodzina Upgrade nie ma jej w bibliotece kroju — do czasu wgrania używany jest zamiennik oznaczony 'substitute_for'.",
+    "_source": "Kroje i stopnie odczytane z PDF okładek NR20–NR22 (fonty osadzone), tracking z IDML NR22 4–5 (InDesign, 1/1000 em). Gotham XNarrow Black/Bold, Nimbus Sans D Black Condensed, Utopia Bold oraz Antenna są zainstalowane w bibliotece. Rodzina Upgrade używa zamienników Avenir Next/Myriad Pro.",
     "display": {
       "family": "Gotham XNarrow",
       "weight": "900",

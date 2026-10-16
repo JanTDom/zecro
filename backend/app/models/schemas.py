@@ -202,6 +202,8 @@ class ElementStyle(BaseModel):
     inset_mm: Optional[List[float]] = None
     valign: Optional[Literal["top", "center", "bottom"]] = "top"
     columns: Optional[int] = 1
+    drop_cap: Optional[bool] = False
+    drop_cap_lines: Optional[int] = Field(default=None, ge=2, le=5)
 
 class TextWrap(BaseModel):
     mode: Literal["none", "bounding_box", "contour", "jump"] = "none"

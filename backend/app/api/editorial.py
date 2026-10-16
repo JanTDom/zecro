@@ -776,6 +776,8 @@ async def ingest_file_endpoint(
     temp_path = settings.UPLOADS_DIR / f"temp_doc_{uuid4()}{ext}"
     try:
         content = await file.read()
+        if len(content) > 20 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="Plik przekracza dopuszczalny limit rozmiaru (20 MB).")
         temp_path.write_bytes(content)
 
         extracted = extract_document_file(temp_path, file.filename or "dokument")

@@ -137,8 +137,12 @@ class IDMLRenderer:
             if st and st.tracking_em:
                 caps += f' Tracking="{st.tracking_em * 1000:.0f}"'  # InDesign: 1/1000 em
             color = self._swatch(st.color if st else None)
+            drop_cap_attr = ""
+            if st and getattr(st, "drop_cap", False):
+                dc_lines = getattr(st, "drop_cap_lines", None) or 3
+                drop_cap_attr = f' DropCapLines="{dc_lines}" DropCapCharacters="1"'
             ranges.append(f"""
-    <ParagraphStyleRange AppliedParagraphStyle="{style_name}" Justification="{align}" Hyphenation="{hyph}" HyphenateWordsLongerThan="5" HyphenateAfterFirst="2" HyphenateBeforeLast="3" HyphenationZone="0">
+    <ParagraphStyleRange AppliedParagraphStyle="{style_name}" Justification="{align}" Hyphenation="{hyph}"{drop_cap_attr} HyphenateWordsLongerThan="5" HyphenateAfterFirst="2" HyphenateBeforeLast="3" HyphenationZone="0">
       <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/$ID/[No character style]" AppliedLanguage="$ID/Polish" PointSize="{size:.2f}" FontStyle="{saxutils.escape(fstyle)}" FillColor="{color}"{caps}>
         <Properties><AppliedFont type="string">{saxutils.escape(family)}</AppliedFont><Leading type="unit">{leading:.2f}</Leading></Properties>
         {content_xml}
@@ -271,16 +275,39 @@ class IDMLRenderer:
             left_pt = x_pt
             bottom_pt = y_pt + h_pt
             right_pt = x_pt + w_pt
-            # Rotation is part of the scene graph: preview, PDF and IDML all
-            # rotate about the frame centre (y-down affine, same as SVG).
-            item_transform = "1 0 0 1 0 0"
-            if abs(float(elem.frame.rotation_deg or 0.0)) > 0.05:
+            # Transformation: rotation and shear (skew_y_deg) about frame.
+            # InDesign uses standard 2D affine transformation matrices: [a, b, c, d, tx, ty].
+            rot = float(getattr(elem.frame, "rotation_deg", 0.0) or 0.0)
+            skew = float(getattr(elem.frame, "skew_y_deg", 0.0) or 0.0)
+            has_rot = abs(rot) > 0.05
+            has_skew = abs(skew) > 0.01
+
+            if not has_rot and not has_skew:
+                item_transform = "1 0 0 1 0 0"
+            else:
                 import math as _math
-                _r = _math.radians(float(elem.frame.rotation_deg))
-                _a, _b, _c, _d = _math.cos(_r), _math.sin(_r), -_math.sin(_r), _math.cos(_r)
-                _cx, _cy = (left_pt + right_pt) / 2, (top_pt + bottom_pt) / 2
-                item_transform = (f"{_a:.6f} {_b:.6f} {_c:.6f} {_d:.6f} "
-                                  f"{_cx - _a * _cx - _c * _cy:.3f} {_cy - _b * _cx - _d * _cy:.3f}")
+                t_skew = _math.tan(_math.radians(skew)) if has_skew else 0.0
+                if not has_rot:
+                    _a, _b, _c, _d = 1.0, -t_skew, 0.0, 1.0
+                    _tx, _ty = 0.0, t_skew * left_pt
+                else:
+                    _r = _math.radians(rot)
+                    _cos, _sin = _math.cos(_r), _math.sin(_r)
+                    _cx, _cy = (left_pt + right_pt) / 2, (top_pt + bottom_pt) / 2
+                    _rot_tx = _cx - _cos * _cx + _sin * _cy
+                    _rot_ty = _cy - _sin * _cx - _cos * _cy
+                    if not has_skew:
+                        _a, _b, _c, _d = _cos, _sin, -_sin, _cos
+                        _tx, _ty = _rot_tx, _rot_ty
+                    else:
+                        _a = _cos + _sin * t_skew
+                        _b = _sin - _cos * t_skew
+                        _c = -_sin
+                        _d = _cos
+                        _tx = _rot_tx - _sin * (t_skew * left_pt)
+                        _ty = _rot_ty + _cos * (t_skew * left_pt)
+
+                item_transform = f"{_a:.6f} {_b:.6f} {_c:.6f} {_d:.6f} {_tx:.3f} {_ty:.3f}"
 
             if elem.role == "photo" or (elem.role == "logo" and elem.image_url):
                 # Keep local files in Links/ so the IDML remains portable. A

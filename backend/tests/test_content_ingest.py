@@ -38,3 +38,18 @@ def test_extract_txt_document(tmp_path):
     extracted = extract_document_file(doc_path, "artykul.txt")
     assert "Tytuł artykułu" in extracted["raw_title"]
     assert "Treść pierwszego akapitu" in extracted["raw_body"]
+
+
+def test_ssrf_protection_rejects_private_and_local_urls():
+    from backend.app.engine.content_ingest import validate_safe_url
+    with pytest.raises(ValueError, match="Niedozwolony adres URL"):
+        validate_safe_url("http://localhost:8000/secret")
+    with pytest.raises(ValueError, match="Niedozwolony adres URL"):
+        validate_safe_url("http://127.0.0.1:80/admin")
+    with pytest.raises(ValueError, match="Dozwolone są wyłącznie protokoły"):
+        validate_safe_url("file:///etc/passwd")
+
+    # API endpoint also returns 422 on unsafe URL
+    res = client.post("/editorial/ingest-url", json={"url": "http://127.0.0.1:8000/internal"})
+    assert res.status_code == 422
+
