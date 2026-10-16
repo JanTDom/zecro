@@ -84,11 +84,12 @@ def _gemini_segment(source_path: Path, output_path: Path) -> SegmentationResult:
                 raw = item.get("mask") or []
                 if len(raw) < 8 or len(raw) > 256 or any(len(point) != 2 for point in raw):
                     continue
-                if any(not all(isinstance(v, (int, float)) and 0 <= v <= 1000 for v in point) for point in raw):
-                    continue
-                ring = [[float(x) / 10, float(y) / 10] for x, y in raw]
+                # Support both 0..1 unit scale and 0..1000 coordinate scale
+                is_unit_scale = all(isinstance(v, (int, float)) and 0.0 <= v <= 1.05 for point in raw for v in point)
+                scale_factor = 100.0 if is_unit_scale else 0.1
+                ring = [[float(point[0]) * scale_factor, float(point[1]) * scale_factor] for point in raw]
                 area = _polygon_area(ring)
-                if not 350 <= area <= 8500:
+                if not 100 <= area <= 9600:
                     continue
                 valid.append((area, ring))
             if not valid:
@@ -194,20 +195,38 @@ def _session(model: str):
     return _SESSIONS[model]
 
 
-def segment_image(source_path: str | Path, output_path: str | Path, *, model: str | None = None, target_w_mm: float = 100.0, target_h_mm: float = 100.0, alpha_matting: bool = False) -> SegmentationResult:
+def segment_image(
+    source_path: str | Path,
+    output_path: str | Path,
+    *,
+    model: str | None = None,
+    provider: str | None = None,
+    target_w_mm: float = 100.0,
+    target_h_mm: float = 100.0,
+    alpha_matting: bool = False,
+) -> SegmentationResult:
     source_path, output_path = Path(source_path), Path(output_path)
     import os
+
+    env_provider = os.getenv("ZECRO_SEGMENTATION_PROVIDER", "gemini").lower()
+    active_provider = (provider or env_provider or "").lower()
+
+    # 1. If Gemini provider is requested or configured as default, run Gemini
+    if active_provider in ["gemini", "google"]:
+        gemini_res = _gemini_segment(source_path, output_path)
+        if gemini_res.status == "ready":
+            return gemini_res
+
+    # 2. Remote microservice if configured
     remote_url = os.getenv("ZECRO_SEGMENTATION_SERVICE_URL")
     if remote_url:
         remote_res = _remote_service_segment(source_path, output_path, remote_url, os.getenv("ZECRO_SEGMENTATION_API_KEY"))
         if remote_res.status == "ready":
             return remote_res
 
+    # 3. Local rembg (if available and functioning)
     try:
         from rembg import remove
-    except Exception as exc:
-        return _gemini_segment(source_path, output_path)
-    try:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with source_path.open("rb") as source:
             model = model or default_model()
@@ -219,9 +238,11 @@ def segment_image(source_path: str | Path, output_path: str | Path, *, model: st
         # Contours are stored in normalised image space (0..100) so the
         # layout can apply any crop later without re-segmenting.
         rings = extract_alpha_rings(str(output_path), 100.0, 100.0)
-        if not rings:
-            return SegmentationResult(status="unavailable", reason="segmentation produced no usable alpha contour", mask_path=str(output_path), quality=quality, provider=f"rembg:{model}")
-        return SegmentationResult(status="ready", mask_path=str(output_path), contour=rings[0]["outer"], holes=rings[0]["holes"], quality=quality, provider=f"rembg:{model}")
-    except Exception as exc:
-        return SegmentationResult(status="failed", reason=str(exc))
+        if rings:
+            return SegmentationResult(status="ready", mask_path=str(output_path), contour=rings[0]["outer"], holes=rings[0]["holes"], quality=quality, provider=f"rembg:{model}")
+    except Exception:
+        pass
+
+    # 4. Fallback to Gemini
+    return _gemini_segment(source_path, output_path)
 

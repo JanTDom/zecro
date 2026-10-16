@@ -567,15 +567,18 @@ export const api = {
   async forceRecalibrateTaste(projectId: string): Promise<Data> {
     return request(`/projects/${projectId}/pairs/calibrate`, { method: 'POST' });
   },
-  async cutoutPhoto(projectId: string, fileOrUrl: { file?: File; imageUrl?: string; assetId?: string }): Promise<Data> {
+  async cutoutPhoto(projectId: string, fileOrUrl: { file?: File; imageUrl?: string; assetId?: string; provider?: string }): Promise<Data> {
+    const provider = fileOrUrl.provider || 'gemini';
     if (fileOrUrl.file) {
       const form = new FormData();
       form.append('file', fileOrUrl.file);
+      form.append('provider', provider);
       return request(`/projects/${projectId}/cutout`, { method: 'POST', body: form });
     }
     return request(`/projects/${projectId}/cutout`, json('POST', {
       image_url: fileOrUrl.imageUrl,
       asset_id: fileOrUrl.assetId,
+      provider,
     }));
   },
   async getTasteMetrics(projectId: string): Promise<TasteModelMetrics> { return tasteFromApi(await request(`/projects/${projectId}/taste-model`)); },

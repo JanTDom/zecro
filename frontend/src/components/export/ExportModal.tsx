@@ -63,6 +63,65 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
     }
   };
 
+  const handleInstantBrowserPrint = () => {
+    if (!selectedCandidate || !activeProject) return;
+    const pageW = selectedCandidate.sceneGraph.pageFormat.widthMm;
+    const pageH = selectedCandidate.sceneGraph.pageFormat.heightMm;
+    const svgContent = selectedCandidate.thumbnailSvg;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      addToast({
+        type: 'error',
+        title: 'Zablokowane okno podglądu',
+        message: 'Zezwól przeglądarce na otwieranie nowych okien.',
+      });
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${activeProject.name} - Wariant ${selectedCandidate.candidateNumber}</title>
+          <style>
+            @page {
+              size: ${pageW}mm ${pageH}mm;
+              margin: 0;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              width: ${pageW}mm;
+              height: ${pageH}mm;
+              overflow: hidden;
+              background: #ffffff;
+            }
+            svg {
+              width: ${pageW}mm;
+              height: ${pageH}mm;
+              display: block;
+            }
+            @media print {
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body>
+          ${svgContent || ''}
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+              }, 200);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -191,18 +250,29 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-ink-800">
-          <Button variant="ghost" onClick={onClose}>
-            Zamknij
-          </Button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-ink-800">
           <Button
-            variant="editorial"
-            isLoading={isExporting}
-            leftIcon={<Download className="w-4 h-4" />}
-            onClick={handleExport}
+            variant="outline"
+            leftIcon={<Printer className="w-4 h-4 text-editorial-ochre" />}
+            onClick={handleInstantBrowserPrint}
+            className="border-editorial-ochre/40 text-editorial-ochre hover:bg-editorial-ochre/10"
           >
-            Przygotuj plik {format.toUpperCase()}
+            Błyskawiczny PDF z przeglądarki
           </Button>
+
+          <div className="flex items-center justify-end gap-3">
+            <Button variant="ghost" onClick={onClose}>
+              Zamknij
+            </Button>
+            <Button
+              variant="editorial"
+              isLoading={isExporting}
+              leftIcon={<Download className="w-4 h-4" />}
+              onClick={handleExport}
+            >
+              Generuj plik serwerowy ({format.toUpperCase()})
+            </Button>
+          </div>
         </div>
       </div>
     </Modal>

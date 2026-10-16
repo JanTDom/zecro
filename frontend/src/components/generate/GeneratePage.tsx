@@ -1070,7 +1070,7 @@ export const GeneratePage: React.FC = () => {
                           }
                         }}
                       >
-                        Wytnij tło zdjęcia (AI Auto-Cutout)
+                        Wytnij tło zdjęcia (Google Gemini AI)
                       </Button>
                     )}
 

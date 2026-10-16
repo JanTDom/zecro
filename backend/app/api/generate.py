@@ -1115,6 +1115,7 @@ def force_recalibrate_taste(project_id: str):
 class CutoutUrlRequest(BaseModel):
     image_url: Optional[str] = None
     asset_id: Optional[str] = None
+    provider: Optional[str] = "gemini"
 
 
 @router.post("/projects/{project_id}/cutout")
@@ -1122,6 +1123,7 @@ class CutoutUrlRequest(BaseModel):
 async def execute_photo_cutout(
     project_id: Optional[str] = None,
     file: Optional[UploadFile] = File(None),
+    provider: Optional[str] = Form("gemini"),
     request_data: Optional[CutoutUrlRequest] = None
 ):
     """Automatyczne szparowanie zdjęcia (auto-cutout) z ekstrakcją konturu alfa, punktu ogniskowego i jakości krawędzi."""
@@ -1156,8 +1158,9 @@ async def execute_photo_cutout(
     if not img_path or not img_path.exists():
         raise HTTPException(status_code=400, detail="Brak poprawnego pliku graficznego lub adresu URL do szparowania")
 
+    chosen_provider = (request_data and request_data.provider) or provider or "gemini"
     mask_target = settings.UPLOADS_DIR / f"mask_{asset_id}.png"
-    seg_res = segment_image(img_path, mask_target, target_w_mm=120.0, target_h_mm=160.0)
+    seg_res = segment_image(img_path, mask_target, provider=chosen_provider, target_w_mm=120.0, target_h_mm=160.0)
 
     contour = seg_res.contour
     mask_ref = None
