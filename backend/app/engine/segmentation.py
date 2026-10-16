@@ -115,6 +115,73 @@ def _gemini_segment(source_path: Path, output_path: Path) -> SegmentationResult:
         return SegmentationResult(status="unavailable", reason=f"Gemini segmentation unavailable: {str(exc)[:240]}", provider="gemini")
 
 
+def _remote_service_segment(
+    source_path: Path,
+    output_path: Path,
+    service_url: str,
+    api_key: str | None = None,
+    timeout_s: float = 30.0,
+) -> SegmentationResult:
+    """Delegate background removal to an external microservice worker."""
+    import urllib.request
+    import urllib.error
+    import mimetypes
+
+    try:
+        data = source_path.read_bytes()
+        boundary = f"----WebKitFormBoundary{hashlib.md5(data[:64] or b'zecro').hexdigest()}"
+        filename = source_path.name
+        content_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+
+        body = (
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+            f"Content-Type: {content_type}\r\n\r\n"
+        ).encode("utf-8") + data + f"\r\n--{boundary}--\r\n".encode("utf-8")
+
+        headers = {
+            "Content-Type": f"multipart/form-data; boundary={boundary}",
+            "User-Agent": "ZecroLayoutEngine/1.0",
+        }
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+
+        req = urllib.request.Request(
+            service_url,
+            data=body,
+            headers=headers,
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+            resp_body = resp.read()
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_bytes(resp_body)
+            quality = mask_quality(str(output_path))
+            rings = extract_alpha_rings(str(output_path), 100.0, 100.0)
+            if not rings:
+                return SegmentationResult(
+                    status="unavailable",
+                    reason="Remote segmentation produced no usable alpha contour",
+                    mask_path=str(output_path),
+                    quality=quality,
+                    provider="remote_service",
+                )
+            return SegmentationResult(
+                status="ready",
+                mask_path=str(output_path),
+                contour=rings[0]["outer"],
+                holes=rings[0]["holes"],
+                quality=quality,
+                provider="remote_service",
+            )
+    except Exception as exc:
+        return SegmentationResult(
+            status="unavailable",
+            reason=f"Remote segmentation service failed: {str(exc)[:200]}",
+            provider="remote_service",
+        )
+
+
 def default_model() -> str:
     import os
     return os.getenv("ZECRO_SEGMENTATION_MODEL", "birefnet-general-lite")
@@ -129,6 +196,13 @@ def _session(model: str):
 
 def segment_image(source_path: str | Path, output_path: str | Path, *, model: str | None = None, target_w_mm: float = 100.0, target_h_mm: float = 100.0, alpha_matting: bool = False) -> SegmentationResult:
     source_path, output_path = Path(source_path), Path(output_path)
+    import os
+    remote_url = os.getenv("ZECRO_SEGMENTATION_SERVICE_URL")
+    if remote_url:
+        remote_res = _remote_service_segment(source_path, output_path, remote_url, os.getenv("ZECRO_SEGMENTATION_API_KEY"))
+        if remote_res.status == "ready":
+            return remote_res
+
     try:
         from rembg import remove
     except Exception as exc:
@@ -150,3 +224,4 @@ def segment_image(source_path: str | Path, output_path: str | Path, *, model: st
         return SegmentationResult(status="ready", mask_path=str(output_path), contour=rings[0]["outer"], holes=rings[0]["holes"], quality=quality, provider=f"rembg:{model}")
     except Exception as exc:
         return SegmentationResult(status="failed", reason=str(exc))
+

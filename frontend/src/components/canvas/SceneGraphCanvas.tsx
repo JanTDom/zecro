@@ -128,6 +128,40 @@ export const SceneGraphCanvas: React.FC = () => {
 
   const handlePointerUp = () => { dragRef.current = null; };
 
+  // Keyboard micro-nudge for the selected element (1 mm step, or 5 mm with Shift)
+  React.useEffect(() => {
+    if (!selectedElementId) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+        event.preventDefault();
+        const step = event.shiftKey ? 5.0 : 1.0;
+        const currentElem = elements.find((e) => e.id === selectedElementId);
+        if (!currentElem) return;
+
+        let dx = 0;
+        let dy = 0;
+        if (event.key === 'ArrowUp') dy = -step;
+        if (event.key === 'ArrowDown') dy = step;
+        if (event.key === 'ArrowLeft') dx = -step;
+        if (event.key === 'ArrowRight') dx = step;
+
+        const newX = Math.max(0, Math.min(pageFormat.widthMm - currentElem.frame.width, currentElem.frame.x + dx));
+        const newY = Math.max(0, Math.min(pageFormat.heightMm - currentElem.frame.height, currentElem.frame.y + dy));
+
+        handleUpdateFrame(selectedElementId, { x: newX, y: newY });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedElementId, elements, pageFormat]);
+
   const handleSaveAndTrain = async () => {
     if (!activeProject || !selectedCandidate) return;
     setIsLoggingDelta(true);

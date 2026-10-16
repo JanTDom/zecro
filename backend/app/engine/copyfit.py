@@ -296,3 +296,83 @@ def _widow_orphan_counts(
         cursor += count
     return widows, orphans
 
+
+@dataclass(frozen=True)
+class JumpSplitResult:
+    lead_text: str
+    continuation_text: str
+    jump_out_line: str
+    jump_in_line: str
+    split_index: int
+    target_page: int | str
+    source_page: int | str
+    ratio: float
+
+
+def split_article_with_jump(
+    text: str,
+    target_characters: int,
+    target_page: int | str = 4,
+    source_page: int | str = 1,
+    *,
+    jump_out_template: str = "Dokończenie na s. {page}",
+    jump_in_template: str = "Dokończenie ze s. {page}",
+    polish_non_breaking: bool = True,
+) -> JumpSplitResult:
+    """Split an overset editorial story across pages with authentic jump lines.
+
+    The cut prioritises paragraph boundaries, then sentence ends (. ! ?),
+    preventing mid-sentence breaks.
+    """
+    clean_text = (text or "").strip()
+    if not clean_text:
+        return JumpSplitResult("", "", "", "", 0, target_page, source_page, 0.0)
+
+    total_len = len(clean_text)
+    if total_len <= target_characters or target_characters <= 0:
+        return JumpSplitResult(clean_text, "", "", "", total_len, target_page, source_page, 1.0)
+
+    # Search for boundary before target_characters with a reasonable tolerance window
+    target_pos = min(target_characters, total_len)
+    window_start = max(0, int(target_pos * 0.70))
+
+    # 1. Search for paragraph boundary in window
+    para_break = clean_text.rfind("\n\n", window_start, target_pos)
+    if para_break != -1 and para_break >= window_start:
+        cut_idx = para_break
+    else:
+        # 2. Search for sentence boundary (. ! ?) in window
+        sentence_matches = list(re.finditer(r'([.!?])\s+', clean_text[window_start:target_pos]))
+        if sentence_matches:
+            last_match = sentence_matches[-1]
+            cut_idx = window_start + last_match.end()
+        else:
+            # 3. Fall back to word space
+            space_break = clean_text.rfind(" ", window_start, target_pos)
+            cut_idx = space_break if space_break != -1 else target_pos
+
+    first_part = clean_text[:cut_idx].strip()
+    second_part = clean_text[cut_idx:].strip()
+
+    jump_out = jump_out_template.format(page=target_page)
+    jump_in = jump_in_template.format(page=source_page)
+
+    lead_text = f"{first_part}\n\n[{jump_out.upper()}]"
+    continuation_text = f"[{jump_in.upper()}]\n\n{second_part}"
+
+    if polish_non_breaking:
+        from .polish_typography import polish_microtypography
+        lead_text = polish_microtypography(lead_text)
+        continuation_text = polish_microtypography(continuation_text)
+
+    return JumpSplitResult(
+        lead_text=lead_text,
+        continuation_text=continuation_text,
+        jump_out_line=jump_out,
+        jump_in_line=jump_in,
+        split_index=cut_idx,
+        target_page=target_page,
+        source_page=source_page,
+        ratio=round(cut_idx / max(1, total_len), 4),
+    )
+

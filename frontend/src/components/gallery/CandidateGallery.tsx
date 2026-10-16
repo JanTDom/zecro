@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useProject } from '../../context/ProjectContext';
+import { api } from '../../api/client';
 import { Candidate } from '../../types/generation';
 import { styleReviewState } from '../../styleReview';
 import { Card } from '../common/Card';
@@ -60,9 +61,53 @@ interface CandidateGalleryProps {
 const warianty = (count: number) => `${count} ${count === 4 ? 'warianty' : 'wariantów'}`;
 
 export const CandidateGallery: React.FC<CandidateGalleryProps> = ({ onOpenExport }) => {
-  const { currentRun, selectedCandidate, setSelectedCandidate, setActiveTab, addToast } = useProject();
+  const { activeProject, currentRun, selectedCandidate, setSelectedCandidate, setActiveTab, addToast, reloadTasteMetrics } = useProject();
   const [filterSort, setFilterSort] = useState<'taste' | 'critic' | 'novelty' | 'energy'>('critic');
   const [filterPassedOnly, setFilterPassedOnly] = useState<boolean>(false);
+  const [selectedForEditionId, setSelectedForEditionId] = useState<string | null>(null);
+  const [isSubmittingPreference, setIsSubmittingPreference] = useState<string | null>(null);
+
+  const handleSelectForEdition = async (candidate: Candidate) => {
+    if (!activeProject) return;
+    try {
+      setIsSubmittingPreference(candidate.id);
+      await api.submitPreference({
+        id: '',
+        projectId: activeProject.id,
+        type: 'direct_favorite',
+        candidateAId: candidate.id,
+        winnerCandidateId: candidate.id,
+        timestamp: new Date().toISOString(),
+      });
+      const otherCandidates = (currentRun?.candidates || []).filter(c => c.id !== candidate.id);
+      for (const other of otherCandidates.slice(0, 3)) {
+        await api.submitPreference({
+          id: '',
+          projectId: activeProject.id,
+          type: 'pairwise_choice',
+          candidateAId: candidate.id,
+          candidateBId: other.id,
+          winnerCandidateId: candidate.id,
+          timestamp: new Date().toISOString(),
+        });
+      }
+      setSelectedForEditionId(candidate.id);
+      await reloadTasteMetrics();
+      addToast({
+        type: 'success',
+        title: 'Zapisano wybór do wydania',
+        message: 'Model preferencji AI uwzględnił Twoją decyzję w przyszłych propozycjach.',
+      });
+    } catch (err) {
+      addToast({
+        type: 'error',
+        title: 'Błąd zapisu preferencji',
+        message: err instanceof Error ? err.message : 'Nie udało się zapisać wyboru.',
+      });
+    } finally {
+      setIsSubmittingPreference(null);
+    }
+  };
 
   if (!currentRun || currentRun.candidates.length === 0) {
     return (
@@ -201,13 +246,20 @@ export const CandidateGallery: React.FC<CandidateGalleryProps> = ({ onOpenExport
                     ))}
                   </div>
 
-                  <Badge
-                    variant={candidate.passHardGates ? 'success' : 'danger'}
-                    size="sm"
-                    icon={candidate.passHardGates ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
-                  >
-                    {candidate.passHardGates ? 'Skład poprawny' : 'Błąd składu'}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    {selectedForEditionId === candidate.id && (
+                      <Badge variant="success" size="sm" icon={<CheckCircle2 className="w-3 h-3" />}>
+                        Wybrany do wydania
+                      </Badge>
+                    )}
+                    <Badge
+                      variant={candidate.passHardGates ? 'success' : 'danger'}
+                      size="sm"
+                      icon={candidate.passHardGates ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+                    >
+                      {candidate.passHardGates ? 'Skład poprawny' : 'Błąd składu'}
+                    </Badge>
+                  </div>
                 </div>
 
                 {/* SVG Thumbnail Miniature */}
@@ -309,30 +361,43 @@ export const CandidateGallery: React.FC<CandidateGalleryProps> = ({ onOpenExport
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-4 mt-4 border-t border-ink-800">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-4 mt-4 border-t border-ink-800">
                 <Button
-                  variant="ghost"
+                  variant={selectedForEditionId === candidate.id ? "editorial" : "outline"}
                   size="sm"
-                  leftIcon={<Inspect className="w-3.5 h-3.5" />}
-                  onClick={() => {
-                    setSelectedCandidate(candidate);
-                    setActiveTab('canvas');
-                  }}
+                  leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                  isLoading={isSubmittingPreference === candidate.id}
+                  onClick={() => handleSelectForEdition(candidate)}
+                  className={selectedForEditionId === candidate.id ? "shadow-md" : "border-emerald-600/40 text-emerald-400 hover:bg-emerald-950/30"}
                 >
-                  Otwórz
+                  {selectedForEditionId === candidate.id ? 'Wybrany do wydania' : 'Wybierz do wydania'}
                 </Button>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  leftIcon={<Download className="w-3.5 h-3.5" />}
-                  onClick={() => {
-                    setSelectedCandidate(candidate);
-                    onOpenExport();
-                  }}
-                >
-                  Pobierz
-                </Button>
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    leftIcon={<Inspect className="w-3.5 h-3.5" />}
+                    onClick={() => {
+                      setSelectedCandidate(candidate);
+                      setActiveTab('canvas');
+                    }}
+                  >
+                    Otwórz
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<Download className="w-3.5 h-3.5" />}
+                    onClick={() => {
+                      setSelectedCandidate(candidate);
+                      onOpenExport();
+                    }}
+                  >
+                    Pobierz
+                  </Button>
+                </div>
               </div>
             </Card>
           );
