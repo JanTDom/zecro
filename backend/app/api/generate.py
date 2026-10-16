@@ -2,7 +2,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, status, File, UploadFile
+from fastapi import APIRouter, HTTPException, status, File, UploadFile, Form
 from pydantic import BaseModel
 from ..models.schemas import ArtDirectionPlan, GenerationRequest, GenerationRun, Candidate, PageInputMaterial, SceneGraph, Story
 from ..models.database import db
