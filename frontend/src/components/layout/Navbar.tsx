@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenNewProject }) => {
 
   const mobileNav = [
     { id: 'dashboard' as const, label: 'Zacznij tutaj', icon: LayoutDashboard },
-    { id: 'help' as const, label: 'Jak to działa', icon: HelpCircle },
+    { id: 'help' as const, label: 'Dział Pomoc', icon: HelpCircle },
     { id: 'generate' as const, label: 'Materiały i strona', icon: Sparkles },
     { id: 'gallery' as const, label: 'Warianty', icon: FileText },
     { id: 'projects' as const, label: 'Moje gazety', icon: Plus },
@@ -61,9 +61,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenNewProject }) => {
         </div>
         <div className="hidden sm:flex items-center gap-3 text-[12px] text-ink-500">
           <button onClick={() => setActiveTab('dashboard')} className="font-semibold text-ink-200 hover:text-ink-100">Zacznij tutaj</button>
-          <button onClick={() => setActiveTab('help')} className="flex items-center gap-1.5 font-semibold text-editorial-crimson hover:text-editorial-crimson/80 bg-red-50/80 px-2.5 py-1 rounded-md border border-editorial-crimson/20">
+          <button 
+            onClick={() => setActiveTab('help')} 
+            className="flex items-center gap-1.5 font-semibold text-editorial-crimson hover:text-editorial-crimson/80 bg-blue-50/80 px-2.5 py-1 rounded-md border border-editorial-crimson/20"
+          >
             <HelpCircle className="w-3.5 h-3.5" />
-            Jak to działa
+            Dział Pomoc
           </button>
         </div>
       </div>
