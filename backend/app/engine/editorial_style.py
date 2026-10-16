@@ -4,7 +4,7 @@ from __future__ import annotations
 
 STYLE_POINTS = {
     "gazeta poważna i opiniotwórcza": (0.10, 0.20, 0.25),
-    "gazeta lokalna": (0.32, 0.24, 0.45),
+    "gazeta środka": (0.35, 0.30, 0.48),
     "gazeta popularna codzienna": (0.58, 0.40, 0.55),
     "gazeta bulwarowa": (0.90, 0.75, 0.82),
     "magazyn redakcyjny": (0.45, 0.60, 0.72),

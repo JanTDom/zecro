@@ -463,7 +463,8 @@ class Database:
             blend = dna.get("style_blend") or {}
             from ..engine.editorial_style import STYLE_POINTS
             style_ids = {
-                "gazeta poważna i opiniotwórcza": "analysis", "gazeta lokalna": "local",
+                "gazeta poważna i opiniotwórcza": "analysis", "gazeta środka": "midmarket",
+                "gazeta lokalna": "midmarket",
                 "gazeta popularna codzienna": "everyday", "gazeta bulwarowa": "tabloid",
                 "magazyn redakcyjny": "magazine", "gazeta programowa i poradnikowa": "guide",
                 "gazeta biznesowa i gospodarcza": "business", "gazeta sportowa": "sports",

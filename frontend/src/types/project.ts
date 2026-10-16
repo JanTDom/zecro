@@ -1,5 +1,5 @@
 export type NewspaperFormat = 'broadsheet' | 'berliner' | 'tabloid' | 'compact' | 'custom';
-export type EditorialCharacter = 'analysis' | 'local' | 'everyday' | 'tabloid' | 'magazine' | 'guide' | 'business' | 'sports' | 'science' | 'culture' | 'serious' | 'popular';
+export type EditorialCharacter = 'analysis' | 'midmarket' | 'local' | 'everyday' | 'tabloid' | 'magazine' | 'guide' | 'business' | 'sports' | 'science' | 'culture' | 'serious' | 'popular';
 
 export interface PageDimensions {
   widthMm: number;

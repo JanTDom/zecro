@@ -260,7 +260,7 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClos
             rows={2}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Np. spokojna gazeta lokalna z dużymi zdjęciami i krótkimi tekstami"
+            placeholder="Np. nowoczesna gazeta środka z infografikami i wyrazistymi tytułami"
             className="w-full px-3 py-2 bg-ink-950 border border-ink-700 rounded-lg text-xs text-ink-100 placeholder:text-ink-600 focus:outline-hidden focus:border-editorial-crimson resize-none"
           />
         </div></details>
