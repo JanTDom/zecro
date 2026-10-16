@@ -1,0 +1,245 @@
+{
+ "version": 2,
+ "defects": [
+  {
+   "id": "D01",
+   "name": "element pływający",
+   "severity": "blocker",
+   "rule": "U1",
+   "gate": "module_anchor",
+   "desc": "Element nie jest przypięty do żadnego modułu, krawędzi siatki, ramy ani spadu."
+  },
+  {
+   "id": "D02",
+   "name": "dwie dominanty",
+   "severity": "major",
+   "rule": "U2",
+   "gate": null,
+   "desc": "Dwa elementy o podobnej sile konkurują o pierwsze spojrzenie."
+  },
+  {
+   "id": "D03",
+   "name": "brak dominanty",
+   "severity": "major",
+   "rule": "U2",
+   "gate": null,
+   "desc": "Nic nie wygrywa; strona jak tablica ogłoszeń z równych kafli."
+  },
+  {
+   "id": "D04",
+   "name": "tekst na tekście",
+   "severity": "blocker",
+   "rule": "U8",
+   "gate": "text_on_text",
+   "desc": "Glify jednego tekstu nachodzą na glify drugiego."
+  },
+  {
+   "id": "D05",
+   "name": "drobny tekst na zdjęciu",
+   "severity": "blocker",
+   "rule": "U8",
+   "gate": "small_text_on_photo",
+   "desc": "Lead, tekst lub podpis bez apli leży na zdjęciu."
+  },
+  {
+   "id": "D06",
+   "name": "tekst lub element na twarzy",
+   "severity": "blocker",
+   "rule": "U6",
+   "gate": "face_covered",
+   "desc": "Cokolwiek zasłania twarz."
+  },
+  {
+   "id": "D07",
+   "name": "za mała twarz",
+   "severity": "major",
+   "rule": "U6",
+   "gate": "face_too_small",
+   "desc": "Twarz w zapowiedzi < 12 mm, w module wiodącym głowa < 1/4 modułu."
+  },
+  {
+   "id": "D08",
+   "name": "poszarpana krawędź wycięcia",
+   "severity": "blocker",
+   "rule": "U7",
+   "gate": "cutout_quality",
+   "desc": "Zęby, schodki pikseli, biała obwódka (halo), ucięte włosy na krawędzi wycięcia."
+  },
+  {
+   "id": "D09",
+   "name": "prosta krawędź cięcia w polu",
+   "severity": "blocker",
+   "rule": "U7",
+   "gate": "cutout_cut_edge",
+   "desc": "Wycięta postać kończy się prostą linią (krawędź kadru źródłowego), która nie leży na krawędzi modułu ani spadzie."
+  },
+  {
+   "id": "D10",
+   "name": "wiersz na krawędzi",
+   "severity": "blocker",
+   "rule": "U14",
+   "gate": "straddled_edge",
+   "desc": "Krawędź ramy, apli lub zdjęcia przechodzi przez litery wiersza."
+  },
+  {
+   "id": "D11",
+   "name": "przypadkowy styk",
+   "severity": "major",
+   "rule": "U9",
+   "gate": null,
+   "desc": "Elementy dotykają się lub prawie dotykają (0–2 mm) bez zamiaru."
+  },
+  {
+   "id": "D12",
+   "name": "martwe pole",
+   "severity": "major",
+   "rule": "U9",
+   "gate": null,
+   "desc": "Pusta przestrzeń, której nie posiada żaden moduł."
+  },
+  {
+   "id": "D13",
+   "name": "złe łamanie tytułu",
+   "severity": "major",
+   "rule": "U5",
+   "gate": null,
+   "desc": "Wiersz kończy się przyimkiem/spójnikiem, rozdziela frazę albo ma przeniesienie."
+  },
+  {
+   "id": "D14",
+   "name": "złe przeniesienia w leadzie",
+   "severity": "minor",
+   "rule": "U5",
+   "gate": null,
+   "desc": "Przeniesienie w pierwszym/ostatnim wierszu, więcej niż dwa z rzędu, przeniesienie nazwy własnej."
+  },
+  {
+   "id": "D15",
+   "name": "szparowanie spoza tytułu",
+   "severity": "major",
+   "rule": "U12",
+   "gate": null,
+   "desc": "Litery rozstrzelone lub ściśnięte inaczej niż w tradycji tytułu."
+  },
+  {
+   "id": "D16",
+   "name": "za słaby kontrast",
+   "severity": "blocker",
+   "rule": "U10",
+   "gate": "contrast",
+   "desc": "Tekst nieczytelny na tle (poniżej WCAG)."
+  },
+  {
+   "id": "D17",
+   "name": "winieta zasłonięta ponad miarę",
+   "severity": "blocker",
+   "rule": "U11",
+   "gate": "logo_coverage",
+   "desc": "Logo zasłonięte bardziej niż pozwala tradycja tytułu."
+  },
+  {
+   "id": "D18",
+   "name": "kadr tnie przez twarz lub stawy",
+   "severity": "major",
+   "rule": "U6",
+   "gate": null,
+   "desc": "Kadr tnie przez czoło, brodę, nadgarstek, kolano; twarz bez powietrza w kierunku spojrzenia."
+  },
+  {
+   "id": "D19",
+   "name": "spojrzenie poza stronę",
+   "severity": "minor",
+   "rule": "U3",
+   "gate": null,
+   "desc": "Postać patrzy poza stronę lub odwrócona od swojego tytułu."
+  },
+  {
+   "id": "D20",
+   "name": "tekst oderwany od zdjęcia",
+   "severity": "major",
+   "rule": "U3",
+   "gate": null,
+   "desc": "Tytuł/zapowiedź stoi daleko od swojego zdjęcia albo bliżej cudzego."
+  },
+  {
+   "id": "D21",
+   "name": "zbyt wiele akcentów",
+   "severity": "minor",
+   "rule": "U4",
+   "gate": null,
+   "desc": "Wyróżnienia kolorem w więcej niż 1–3 słowach tytułu; akcent bez znaczenia."
+  },
+  {
+   "id": "D22",
+   "name": "obcy gatunek",
+   "severity": "major",
+   "rule": "2",
+   "gate": null,
+   "desc": "Strona nie wygląda jak strona tego typu pisma (np. tabloid jak biuletyn, broadsheet jak plakat)."
+  },
+  {
+   "id": "D23",
+   "name": "słabe zdjęcie powiększone",
+   "severity": "major",
+   "rule": "U6",
+   "gate": "low_ppi",
+   "desc": "Zdjęcie o niskiej rozdzielczości/ostrości dostało za duży moduł (pikselizacja)."
+  },
+  {
+   "id": "D24",
+   "name": "brak odsyłacza",
+   "severity": "minor",
+   "rule": "U13",
+   "gate": null,
+   "desc": "Zapowiedź bez numeru strony."
+  },
+  {
+   "id": "D25",
+   "name": "nieczytelny breakout",
+   "severity": "major",
+   "rule": "U14",
+   "gate": null,
+   "desc": "Element wychodzi poza krawędź modułu o kilka mm — wygląda na pomyłkę, nie na zabieg."
+  },
+  {
+   "id": "D26",
+   "name": "postać na gołym papierze",
+   "severity": "blocker",
+   "rule": "U17",
+   "gate": "figure_on_paper",
+   "desc": "Wycięta postać stoi na bieli bez gruntu (zdjęcia, apli, koloru); kończyny ucięte brzegiem oryginału wiszą w polu."
+  },
+  {
+   "id": "D27",
+   "name": "niczyje białe pole",
+   "severity": "major",
+   "rule": "U15",
+   "gate": "unowned_white",
+   "desc": "Biel strony, która nie należy do żadnego modułu, większa niż ~12 cm²."
+  },
+  {
+   "id": "D28",
+   "name": "dziura w pudełku",
+   "severity": "major",
+   "rule": "U16",
+   "gate": "box_empty",
+   "desc": "Pudełko (apla z treścią) ma pusty fragment > 20 % — treść go nie wypełnia."
+  },
+  {
+   "id": "D29",
+   "name": "rozminięte krawędzie",
+   "severity": "major",
+   "rule": "U18",
+   "gate": "near_miss_edges",
+   "desc": "Krawędzie plam/zdjęć rozmijają się o 0,3–2,5 mm (schodek, pasek papieru)."
+  },
+  {
+   "id": "D30",
+   "name": "klin papieru",
+   "severity": "major",
+   "rule": "U18",
+   "gate": "tapered_gaps",
+   "desc": "Między dwoma elementami otwiera się klin papieru (szerokość rośnie na długości ≥ 25 mm), np. pionowa krawędź zdjęcia przy pochylonej belce. Zdjęcie ma sięgać pod belkę; czego nie sięgnie, zamyka grunt ramy — nigdy papier."
+  }
+ ]
+}

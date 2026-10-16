@@ -7,6 +7,10 @@ if not os.getenv("ZECRO_ALLOW_REMOTE_TESTS"):
     os.environ["ZECRO_LOAD_ENV_FILES"] = "false"
     for _var in ("POSTGRES_URL", "DATABASE_URL", "POSTGRES_PRISMA_URL", "SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_URL"):
         os.environ.pop(_var, None)
+    # The YourQuantum adapter can make a paid external request.  Unit tests
+    # must stay offline unless the caller explicitly opts into remote tests.
+    for _var in ("YOURQUANTUM_API_URL", "YOURQUANTUM_API_KEY", "YOURQUANTUM_TIMEOUT_S"):
+        os.environ.pop(_var, None)
 from pathlib import Path
 import pytest
 

@@ -271,6 +271,7 @@ class Database:
                 loser_candidate_id TEXT,
                 delta_features_json TEXT,
                 timestamp TEXT NOT NULL,
+                review_duration_sec REAL,
                 notes TEXT,
                 FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
             );
@@ -284,6 +285,9 @@ class Database:
                 sample_count INTEGER DEFAULT 0,
                 human_preference_win_rate REAL DEFAULT 0.0,
                 time_to_approve_avg_iterations REAL DEFAULT 0.0,
+                held_out_win_rate REAL DEFAULT 0.0,
+                evaluated_sample_count INTEGER DEFAULT 0,
+                feedback_count INTEGER DEFAULT 0,
                 updated_at TEXT NOT NULL,
                 FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
             );
@@ -390,6 +394,33 @@ class Database:
                 project_id TEXT, created_at TEXT NOT NULL
             );
             """)
+            # Small forward migrations keep existing local and remote
+            # installations compatible with the auditable preference metrics.
+            additions = {
+                "preference_signals": {"review_duration_sec": "REAL"},
+                "taste_models": {
+                    "held_out_win_rate": "REAL DEFAULT 0.0",
+                    "evaluated_sample_count": "INTEGER DEFAULT 0",
+                    "feedback_count": "INTEGER DEFAULT 0",
+                },
+            }
+            for table_name, columns in additions.items():
+                if self.is_postgres:
+                    existing = {
+                        row["column_name"] for row in cursor.execute(
+                            "SELECT column_name FROM information_schema.columns WHERE table_name = ?",
+                            (table_name,),
+                        ).fetchall()
+                    }
+                else:
+                    existing = {
+                        row["name"] for row in cursor.execute(
+                            f"PRAGMA table_info({table_name})"
+                        ).fetchall()
+                    }
+                for column_name, definition in columns.items():
+                    if column_name not in existing:
+                        cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {definition}")
             conn.commit()
 
     # --- Project Operations ---
@@ -411,17 +442,59 @@ class Database:
     def get_project(self, project_id: str) -> Optional[Project]:
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
+            cursor.execute("SELECT p.*, d.dna_json FROM projects p LEFT JOIN title_dna d ON d.project_id = p.id WHERE p.id = ?", (project_id,))
             row = cursor.fetchone()
             if not row:
                 return None
-            return Project(**dict(row))
+            return self._project_from_joined_row(row)
 
     def list_projects(self) -> List[Project]:
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM projects ORDER BY created_at DESC")
-            return [Project(**dict(row)) for row in cursor.fetchall()]
+            cursor.execute("SELECT p.*, d.dna_json FROM projects p LEFT JOIN title_dna d ON d.project_id = p.id ORDER BY p.created_at DESC")
+            return [self._project_from_joined_row(row) for row in cursor.fetchall()]
+
+    @staticmethod
+    def _project_from_joined_row(row) -> Project:
+        data = dict(row)
+        dna_json = data.pop("dna_json", None)
+        if dna_json:
+            dna = json.loads(dna_json)
+            blend = dna.get("style_blend") or {}
+            from ..engine.editorial_style import STYLE_POINTS
+            style_ids = {
+                "gazeta poważna i opiniotwórcza": "analysis", "gazeta lokalna": "local",
+                "gazeta popularna codzienna": "everyday", "gazeta bulwarowa": "tabloid",
+                "magazyn redakcyjny": "magazine", "gazeta programowa i poradnikowa": "guide",
+                "gazeta biznesowa i gospodarcza": "business", "gazeta sportowa": "sports",
+                "gazeta naukowa i technologiczna": "science", "magazyn kultury i stylu życia": "culture",
+            }
+            point = tuple(float(blend.get(key, -1)) for key in ("opinion_to_tabloid", "classical_to_avantgarde", "dense_to_photo"))
+            for label, known in STYLE_POINTS.items():
+                if all(abs(value - expected) < .012 for value, expected in zip(point, known)):
+                    data["editorial_character"] = style_ids[label]
+                    break
+            fmt = dna.get("format") or {}
+            grid = dna.get("grid") or {}
+            width, height = float(fmt.get("trim_w_mm", 0)), float(fmt.get("trim_h_mm", 0))
+            presets = {
+                "broadsheet": ((375, 560), (350, 500)),
+                "berliner": ((315, 470),),
+                "tabloid": ((280, 400), (280, 390)),
+                "compact": ((290, 410),),
+            }
+            data["format_name"] = next(
+                (name for name, sizes in presets.items() if any(
+                    abs(width - size[0]) < 1 and abs(height - size[1]) < 1 for size in sizes
+                )), "custom"
+            )
+            data["dimensions"] = {
+                "widthMm": width, "heightMm": height, "bleedMm": fmt.get("bleed_mm", 3),
+                "marginTopMm": fmt.get("margin_top_mm", 15), "marginBottomMm": fmt.get("margin_bottom_mm", 15),
+                "marginLeftMm": fmt.get("margin_left_mm", 12), "marginRightMm": fmt.get("margin_right_mm", 12),
+                "columnsCount": grid.get("columns", 5), "gutterMm": grid.get("gutter_mm", 4.5),
+            }
+        return Project(**data)
 
     def delete_project(self, project_id: str) -> bool:
         with self.get_connection() as conn:
@@ -527,7 +600,8 @@ class Database:
         for page in pages:
             if not isinstance(page, dict) or not page.get("path"):
                 raise ValueError("Each global corpus page requires a source path")
-            source_path = str(Path(page["path"]).expanduser().resolve())
+            source = Path(page["path"]).expanduser()
+            source_path = str((source if source.is_absolute() else Path(root) / source).resolve())
             features = dict(page)
             features["path"] = source_path
             rows.append((root, source_path, str(page.get("title_id") or ""), str(page.get("category") or ""), str(page.get("archetype_id") or page.get("archetype") or ""), str(page.get("zone") or page.get("page_zone") or "inside"), json.dumps(features, ensure_ascii=False)))
@@ -666,7 +740,12 @@ class Database:
     def save_font(self, rec: Dict[str, Any]) -> Dict[str, Any]:
         rec = dict(rec); rec.setdefault("id", str(uuid.uuid4())); rec.setdefault("created_at", datetime.now(timezone.utc).isoformat())
         cols = ["id","family","subfamily","full_name","postscript_name","weight","italic","width","storage_ref","font_number","format","sha256","fs_type","embedding","polish","missing_chars","has_kerning","glyph_count","source","license_note","is_variable","project_id","created_at"]
-        vals = [json.dumps(rec.get(c), ensure_ascii=False) if c == "missing_chars" else rec.get(c) for c in cols]
+        vals = [
+            json.dumps(rec.get(c), ensure_ascii=False) if c == "missing_chars"
+            else int(bool(rec.get(c))) if c in {"italic", "has_kerning", "is_variable"}
+            else rec.get(c)
+            for c in cols
+        ]
         with self.get_connection() as conn:
             conn.execute(f"INSERT INTO fonts({','.join(cols)}) VALUES ({','.join('?'*len(cols))}) ON CONFLICT(sha256) DO UPDATE SET family=excluded.family, subfamily=excluded.subfamily, polish=excluded.polish, missing_chars=excluded.missing_chars, source=excluded.source", vals)
             conn.commit()
@@ -901,13 +980,13 @@ class Database:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO preference_signals (id, project_id, signal_type, winner_candidate_id, loser_candidate_id, delta_features_json, timestamp, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO preference_signals (id, project_id, signal_type, winner_candidate_id, loser_candidate_id, delta_features_json, timestamp, review_duration_sec, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 sig.id, sig.project_id, sig.signal_type,
                 sig.winner_candidate_id, sig.loser_candidate_id,
                 json.dumps(sig.delta_features or {}),
-                sig.timestamp, sig.notes
+                sig.timestamp, sig.review_duration_sec, sig.notes
             ))
             # Mark candidate as selected if it's a selection signal
             cursor.execute("UPDATE candidates SET selected = 1 WHERE id = ?", (sig.winner_candidate_id,))
@@ -929,21 +1008,27 @@ class Database:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO taste_models (project_id, version, feature_weights_json, sample_count, human_preference_win_rate, time_to_approve_avg_iterations, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+                INSERT INTO taste_models (project_id, version, feature_weights_json, sample_count, human_preference_win_rate, time_to_approve_avg_iterations, held_out_win_rate, evaluated_sample_count, feedback_count, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
                 ON CONFLICT(project_id) DO UPDATE SET
                     version = taste_models.version + 1,
                     feature_weights_json = excluded.feature_weights_json,
                     sample_count = excluded.sample_count,
                     human_preference_win_rate = excluded.human_preference_win_rate,
                     time_to_approve_avg_iterations = excluded.time_to_approve_avg_iterations,
+                    held_out_win_rate = excluded.held_out_win_rate,
+                    evaluated_sample_count = excluded.evaluated_sample_count,
+                    feedback_count = excluded.feedback_count,
                     updated_at = excluded.updated_at
             """, (
                 model.project_id, model.version,
                 json.dumps(model.feature_weights),
                 model.sample_count,
                 model.human_preference_win_rate,
-                model.time_to_approve_avg_iterations
+                model.time_to_approve_avg_iterations,
+                model.held_out_win_rate,
+                model.evaluated_sample_count,
+                model.feedback_count
             ))
             conn.commit()
         return model

@@ -26,7 +26,7 @@ const MainContent: React.FC<MainContentProps> = ({ onOpenNewProject, onOpenExpor
   let content: React.ReactNode;
   switch (activeTab) {
     case 'dashboard':
-      content = <ProjectDashboard />;
+      content = <ProjectDashboard onOpenNewProject={onOpenNewProject} />;
       break;
     case 'corpus':
       content = <CorpusManager />;
@@ -62,7 +62,7 @@ const MainContent: React.FC<MainContentProps> = ({ onOpenNewProject, onOpenExpor
       content = <ProjectsList onOpenNewProject={onOpenNewProject} />;
       break;
     default:
-      content = <ProjectDashboard />;
+      content = <ProjectDashboard onOpenNewProject={onOpenNewProject} />;
       break;
   }
   return <>{content}</>;
@@ -71,6 +71,11 @@ const MainContent: React.FC<MainContentProps> = ({ onOpenNewProject, onOpenExpor
 export function App() {
   const [isNewProjectOpen, setIsNewProjectOpen] = React.useState(false);
   const [isExportOpen, setIsExportOpen] = React.useState(false);
+  React.useEffect(() => {
+    const open = () => setIsExportOpen(true);
+    window.addEventListener('zecro-open-export', open);
+    return () => window.removeEventListener('zecro-open-export', open);
+  }, []);
 
   return (
     <AccessGate>

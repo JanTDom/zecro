@@ -54,6 +54,9 @@ def _resolve_root(value: Optional[str]) -> Path:
 
 def _saved_global_index(*, include_pages: bool = False) -> Optional[Dict[str, Any]]:
     """Read SQLite first; lazily seed it from the immutable local snapshot."""
+    if settings.require_remote_db or db.is_remote:
+        from ..engine.corpus_knowledge import ensure_bundled_index
+        ensure_bundled_index(db)
     saved = db.get_global_corpus_index(include_pages=include_pages)
     if saved:
         return saved
@@ -84,8 +87,11 @@ def list_archetypes() -> List[Dict[str, Any]]:
             profile = saved.get(key)
             if not profile:
                 continue
-            dna = profile.get("title_dna", profile.get("dna", {}))
-            output.append({"id": key, "name": profile.get("name", dna.get("name", key)), "dna": dna, "stats": profile.get("stats", {}), "mean_vector": profile.get("mean_vector", []), "aliases": [alias for alias, target in ARCHETYPE_ALIASES.items() if target == key]})
+            # The index snapshot records measured corpus statistics. Rebuild
+            # editable TitleDNA from those measurements so a later grammar
+            # upgrade is not silently overwritten by yesterday's snapshot.
+            dna = create_archetype_dnas({key: profile.get("stats", {})})[key]
+            output.append({"id": key, "name": dna.name, "dna": dna.model_dump(mode="json"), "stats": profile.get("stats", {}), "mean_vector": profile.get("mean_vector", []), "aliases": [alias for alias, target in ARCHETYPE_ALIASES.items() if target == key]})
         if output:
             return output
     return get_archetype_profiles()
@@ -114,11 +120,8 @@ def apply_archetype(project_id: str, archetype_id: str) -> TitleDNA:
     saved_index = _saved_global_index(include_pages=False)
     saved = saved_index.get("archetypes", {}) if saved_index else {}
     profile = saved.get(canonical, {}) if saved else {}
-    dna_data = profile.get("title_dna", profile.get("dna")) if isinstance(profile, dict) else None
-    dna = TitleDNA(**dna_data) if isinstance(dna_data, dict) else create_archetype_dnas()[canonical]
-    dna.archetype = canonical
-    if isinstance(profile, dict) and profile.get("stats"):
-        dna.corpus_stats = dict(profile["stats"])
+    measured = profile.get("stats", {}) if isinstance(profile, dict) else {}
+    dna = create_archetype_dnas({canonical: measured})[canonical]
     dna.name = f"{project.name} — {dna.name}"
     return db.save_title_dna(project_id, dna)
 
@@ -128,9 +131,8 @@ def rebuild_corpus_index(body: CorpusIndexRequest = CorpusIndexRequest()) -> Dic
     """Scan the canonical corpus and return page features plus five aggregates."""
     root = _resolve_root(body.root)
     persist = Path(body.persist_path).expanduser().resolve() if body.persist_path else root / "FEATURE_INDEX.json"
-    # A checked-in FEATURE_INDEX is already a measured, immutable snapshot of
-    # the 1041-page corpus.  Reuse it for the default root so API startup stays
-    # fast; callers can point at another root or persist path to force a scan.
+    # The checked-in FEATURE_INDEX is the audited subset with measured
+    # provenance. Reuse it for startup; an explicit rebuild can rescan media.
     cached = root / "FEATURE_INDEX.json"
     if not body.persist_path and cached.exists():
         try:

@@ -24,6 +24,7 @@ class AIDirector:
     preference_model: Optional[Any] = None
     vision_provider: Optional[Any] = None
     writer_provider: Optional[Any] = None
+    task_statuses: Optional[Mapping[str, str]] = None
 
     def contract(self) -> dict[str, Any]:
         evidence = dict(self.knowledge.get("evidence") or {})
@@ -52,11 +53,11 @@ class AIDirector:
                     "output": "ranked_candidates_with_reason",
                 },
                 "visual_critic": {
-                    "status": "ready" if self.vision_provider and getattr(self.vision_provider, "info", None) and getattr(self.vision_provider.info, "provider", "") != "disabled" else "unconfigured",
+                    "status": (self.task_statuses or {}).get("visual_critic") or ("ready" if self.vision_provider and getattr(self.vision_provider, "info", None) and getattr(self.vision_provider.info, "provider", "") != "disabled" else "unconfigured"),
                     "output": "render_review_with_observations",
                 },
                 "copy_editor": {
-                    "status": "ready" if self.writer_provider else "source_bound_fallback",
+                    "status": (self.task_statuses or {}).get("copy_fit") or ("ready" if self.writer_provider else "source_bound_fallback"),
                     "output": "frame_bound_variants_with_provenance",
                 },
             },
@@ -99,13 +100,13 @@ class AIDirector:
                 "hard_gate": "PASS" if passed else "FAIL",
                 "violations": violations,
                 "soft_score_source": "learned_preference_model" if self.preference_model and getattr(self.preference_model, "sample_count", 0) else "measured_heuristics",
-                "visual_review": "available" if self.vision_provider else "unconfigured",
+                "visual_review": "available" if (self.task_statuses or {}).get("visual_critic") == "ready" or self.vision_provider else "unconfigured",
             },
             "approval": "eligible_for_editor_review" if passed else "blocked_by_hard_gate",
             "unknowns": [item for item in [
                 "semantic roles in raster corpus are unverified",
                 "human preference model is sparse" if not self.preference_model or not getattr(self.preference_model, "sample_count", 0) else "",
-                "visual model review is not configured" if not self.vision_provider else "",
+                "visual model review is not configured" if not self.vision_provider and (self.task_statuses or {}).get("visual_critic") != "ready" else "",
             ] if item],
         }
 

@@ -26,6 +26,7 @@ export const ComparePage: React.FC = () => {
   const [candIndexB, setCandIndexB] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [comparisonCountSession, setComparisonCountSession] = useState<number>(0);
+  const [pairStartedAt, setPairStartedAt] = useState<number>(() => Date.now());
 
   const candidates = currentRun?.candidates || [];
 
@@ -33,12 +34,28 @@ export const ComparePage: React.FC = () => {
   const candA: Candidate | undefined = candidates[candIndexA % (candidates.length || 1)];
   const candB: Candidate | undefined = candidates[candIndexB % (candidates.length || 1)];
 
+  const chooseUncertainPair = (excludeA = candIndexA, excludeB = candIndexB): [number, number] => {
+    if (candidates.length < 2) return [0, 1];
+    let best: [number, number] = [(excludeA + 1) % candidates.length, (excludeA + 2) % candidates.length];
+    let bestDistance = Number.POSITIVE_INFINITY;
+    for (let a = 0; a < candidates.length; a += 1) {
+      for (let b = a + 1; b < candidates.length; b += 1) {
+        if ((a === excludeA && b === excludeB) || (a === excludeB && b === excludeA)) continue;
+        const distance = Math.abs((candidates[a].tasteScore || 0) - (candidates[b].tasteScore || 0));
+        if (distance < bestDistance) { bestDistance = distance; best = [a, b]; }
+      }
+    }
+    return best;
+  };
+
   const handleNextPair = () => {
     if (candidates.length < 2) return;
-    const nextA = (candIndexA + 1) % candidates.length;
-    const nextB = (nextA + 1) % candidates.length;
+    // Active learning: ask about the pair the current model finds hardest to
+    // distinguish, rather than walking through the gallery in a fixed order.
+    const [nextA, nextB] = chooseUncertainPair();
     setCandIndexA(nextA);
     setCandIndexB(nextB);
+    setPairStartedAt(Date.now());
   };
 
   const handleVote = async (winnerId: string, loserId: string) => {
@@ -53,6 +70,7 @@ export const ComparePage: React.FC = () => {
         candidateAId: candA.id,
         candidateBId: candB.id,
         winnerCandidateId: winnerId,
+        reviewDurationSec: Math.round((Date.now() - pairStartedAt) / 100) / 10,
         timestamp: new Date().toISOString(),
       };
 
@@ -73,8 +91,8 @@ export const ComparePage: React.FC = () => {
 
       addToast({
         type: 'success',
-        title: 'Taste Signal Logged',
-        message: `Updated preference vector. Taste alignment win-rate: ${(result.updatedMetrics.preferenceWinRate * 100).toFixed(0)}%.`,
+        title: 'Zapisano wybór',
+        message: `Dopasowanie do Twoich wyborów: ${(result.updatedMetrics.preferenceWinRate * 100).toFixed(0)}%.`,
       });
 
       handleNextPair();
@@ -107,7 +125,7 @@ export const ComparePage: React.FC = () => {
         <GitCompare className="w-12 h-12 mx-auto text-ink-600" />
         <h3 className="text-xl font-headline font-bold text-ink-100">Potrzebne są co najmniej 2 warianty</h3>
         <p className="text-xs text-ink-400">
-          Run the layout generator to synthesize variants, then return here to train the Art Director taste model.
+          Najpierw przygotuj stronę z własnych materiałów. Gdy pojawią się warianty, porównasz je tutaj.
         </p>
       </div>
     );
@@ -120,17 +138,17 @@ export const ComparePage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] uppercase font-mono tracking-widest text-emerald-400 font-bold">
-              Pętla preferencji dyrektora artystycznego
+              Wybierz styl, który Ci odpowiada
             </span>
             <Badge variant="success" size="sm">
-              Session Votes: {comparisonCountSession}
+              Wybory w tej sesji: {comparisonCountSession}
             </Badge>
           </div>
           <h1 className="text-3xl font-headline font-black text-ink-100 tracking-tight">
             Porównanie wariantów A/B
           </h1>
           <p className="text-sm text-ink-400 mt-1 max-w-2xl">
-            Porównaj dwie makiety i wybierz lepszą, aby zapisać sygnał preferencji projektu. Keyboard: Press <kbd className="px-1.5 py-0.5 bg-ink-800 text-ink-100 rounded font-mono text-xs">1</kbd> for Left, <kbd className="px-1.5 py-0.5 bg-ink-800 text-ink-100 rounded font-mono text-xs">2</kbd> for Right, <kbd className="px-1.5 py-0.5 bg-ink-800 text-ink-100 rounded font-mono text-xs">S</kbd> to Skip.
+            Obejrzyj obie strony i wybierz tę, która bardziej Ci się podoba. Dzięki temu kolejne propozycje lepiej trafią w Twój gust. Skróty: <kbd className="px-1.5 py-0.5 bg-ink-800 text-ink-100 rounded font-mono text-xs">1</kbd> wybiera lewą, <kbd className="px-1.5 py-0.5 bg-ink-800 text-ink-100 rounded font-mono text-xs">2</kbd> prawą, a <kbd className="px-1.5 py-0.5 bg-ink-800 text-ink-100 rounded font-mono text-xs">S</kbd> pomija parę.
           </p>
         </div>
 
@@ -139,10 +157,15 @@ export const ComparePage: React.FC = () => {
           <div className="flex items-center gap-3 bg-ink-900 border border-ink-800 px-4 py-2 rounded-xl">
             <TrendingUp className="w-5 h-5 text-emerald-400" />
             <div>
-              <span className="text-[10px] font-mono uppercase text-ink-400 block">Taste Win-Rate</span>
+              <span className="text-[10px] font-mono uppercase text-ink-400 block">Dopasowanie do Twoich wyborów</span>
               <strong className="text-sm font-mono text-emerald-300 font-bold">
-                {(tasteMetrics.preferenceWinRate * 100).toFixed(0)}% zgodność z wyborem
+                {(tasteMetrics.preferenceWinRate * 100).toFixed(0)}% zgodność na treningu
               </strong>
+              <span className="block text-[10px] text-ink-500 mt-1">
+                {tasteMetrics.evaluatedSampleCount > 0
+                  ? `${(tasteMetrics.heldOutWinRate * 100).toFixed(0)}% na nowych parach · ${tasteMetrics.evaluatedSampleCount} testowych`
+                  : 'Brak odłożonych par testowych — zbierz jeszcze kilka wyborów.'}
+              </span>
             </div>
           </div>
         )}
@@ -158,14 +181,14 @@ export const ComparePage: React.FC = () => {
               <div className="flex items-center justify-between pb-3 border-b border-ink-800">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-ink-800 text-ink-100">
-                    OPTION A [Press 1]
+                    WARIANT A [klawisz 1]
                   </span>
                   <Badge variant="accent" size="sm">
-                    Variant #{candA.candidateNumber}
+                    Wariant {candA.candidateNumber}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2 font-mono text-xs">
-                  <span className="text-ink-400">Critic:</span>
+                  <span className="text-ink-400">Ocena układu:</span>
                   <strong className="text-editorial-ochre">{(candA.criticScore * 100).toFixed(0)}%</strong>
                 </div>
               </div>
@@ -181,11 +204,11 @@ export const ComparePage: React.FC = () => {
               {/* Feature Pills */}
               <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                 <div className="p-2 bg-ink-950 rounded border border-ink-800 flex justify-between">
-                  <span className="text-ink-400">Tension Budget:</span>
+                  <span className="text-ink-400">Śmiałość układu:</span>
                   <strong className="text-ink-200">{candA.tensionEnergyConsumed} pts</strong>
                 </div>
                 <div className="p-2 bg-ink-950 rounded border border-ink-800 flex justify-between">
-                  <span className="text-ink-400">Anti-Copying:</span>
+                  <span className="text-ink-400">Oryginalność:</span>
                   <strong className="text-blue-300">{candA.noveltyDistance.toFixed(2)}</strong>
                 </div>
               </div>
@@ -200,7 +223,7 @@ export const ComparePage: React.FC = () => {
               leftIcon={<ThumbsUp className="w-4 h-4" />}
               onClick={() => handleVote(candA.id, candB?.id || '')}
             >
-              Choose Option A
+              Wybieram wariant A
             </Button>
           </Card>
         )}
@@ -213,14 +236,14 @@ export const ComparePage: React.FC = () => {
               <div className="flex items-center justify-between pb-3 border-b border-ink-800">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-ink-800 text-ink-100">
-                    OPTION B [Press 2]
+                    WARIANT B [klawisz 2]
                   </span>
                   <Badge variant="accent" size="sm">
-                    Variant #{candB.candidateNumber}
+                    Wariant {candB.candidateNumber}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2 font-mono text-xs">
-                  <span className="text-ink-400">Critic:</span>
+                  <span className="text-ink-400">Ocena układu:</span>
                   <strong className="text-editorial-ochre">{(candB.criticScore * 100).toFixed(0)}%</strong>
                 </div>
               </div>
@@ -236,11 +259,11 @@ export const ComparePage: React.FC = () => {
               {/* Feature Pills */}
               <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                 <div className="p-2 bg-ink-950 rounded border border-ink-800 flex justify-between">
-                  <span className="text-ink-400">Tension Budget:</span>
+                  <span className="text-ink-400">Śmiałość układu:</span>
                   <strong className="text-ink-200">{candB.tensionEnergyConsumed} pts</strong>
                 </div>
                 <div className="p-2 bg-ink-950 rounded border border-ink-800 flex justify-between">
-                  <span className="text-ink-400">Anti-Copying:</span>
+                  <span className="text-ink-400">Oryginalność:</span>
                   <strong className="text-blue-300">{candB.noveltyDistance.toFixed(2)}</strong>
                 </div>
               </div>
@@ -255,7 +278,7 @@ export const ComparePage: React.FC = () => {
               leftIcon={<ThumbsUp className="w-4 h-4" />}
               onClick={() => handleVote(candB.id, candA?.id || '')}
             >
-              Choose Option B
+              Wybieram wariant B
             </Button>
           </Card>
         )}
@@ -269,7 +292,7 @@ export const ComparePage: React.FC = () => {
           leftIcon={<Shuffle className="w-3.5 h-3.5" />}
           onClick={handleNextPair}
         >
-          Skip This Pair [Space]
+          Pomiń tę parę [spacja]
         </Button>
       </div>
     </div>

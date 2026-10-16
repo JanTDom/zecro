@@ -58,7 +58,9 @@ def _style(story: Story) -> str:
 
 
 def fit_to_frame(story: Story, role: str, frame: dict[str, float], *, target_words: Optional[int] = None,
-                 target_lines: Optional[int] = None, project_id: Optional[str] = None, ai: bool = True) -> EditorialDraft:
+                 target_lines: Optional[int] = None, project_id: Optional[str] = None, ai: bool = True,
+                 title_style: Optional[str] = None, timeout_s: Optional[float] = None,
+                 max_retries: Optional[int] = None) -> EditorialDraft:
     source = str(getattr(story, role, "") or story.body or "")
     plan = TextPlan(story_ref=story.id, issue_ref=story.issue_ref, role=role, target_words=target_words or len(source.split()),
                     target_lines=target_lines or 0, width_mm=float(frame.get("width_mm", frame.get("w", 80))),
@@ -68,8 +70,9 @@ def fit_to_frame(story: Story, role: str, frame: dict[str, float], *, target_wor
         try:
             full_source = "\n\n".join(filter(None, [story.headline, story.lead, story.body])) if role != "body" else source
             res = run_task("copy_fit", "editorial_writer", {"role": role, "source": source, "context": full_source[:6000],
-                           "target_words": target_words, "target_lines": target_lines, "frame": frame, "title_style": _style(story),
-                           "locked_passages": story.locked_passages}, S.FitDraft, project_id=project_id)
+                           "target_words": target_words, "target_lines": target_lines, "frame": frame, "title_style": title_style or _style(story),
+                           "locked_passages": story.locked_passages}, S.FitDraft, project_id=project_id,
+                           timeout_s=timeout_s, max_retries=max_retries)
             draft = _finish(res.data["text"], role, full_source, {**res.provenance, "need_more_source": res.data["need_more_source"],
                             "notes": res.data["notes"]}, plan, story.locked_passages, True, project_id)
             return draft

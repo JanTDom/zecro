@@ -8,7 +8,10 @@ from __future__ import annotations
 
 from collections import Counter
 from copy import deepcopy
+from functools import lru_cache
+import json
 import math
+from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 try:
@@ -18,6 +21,37 @@ except ImportError:  # pragma: no cover
 
 
 STRUCTURE_VERSION = "1.0"
+
+
+@lru_cache(maxsize=1)
+def _bundled_index() -> dict[str, Any] | None:
+    from ..config import settings
+    path = Path(settings.base_dir) / "corpus" / "FEATURE_INDEX.json"
+    if not path.is_file():
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return payload if isinstance(payload, dict) and payload.get("pages") else None
+
+
+def ensure_bundled_index(database: Any) -> bool:
+    """Upgrade a persisted production corpus when the bundled audit changes."""
+    from ..config import settings
+    if not all(hasattr(database, name) for name in ("get_global_corpus_index", "save_global_corpus_index")):
+        return False
+    bundled = _bundled_index()
+    if not bundled:
+        return False
+    saved = database.get_global_corpus_index(include_pages=False)
+    bundled_version = str(bundled.get("version") or "0")
+    saved_version = str(saved.get("version") or "0") if saved else "0"
+    if saved_version > bundled_version:
+        return False
+    if saved and saved_version == bundled_version and saved.get("source_digest") == bundled.get("source_digest"):
+        return False
+    deployment_index = dict(bundled)
+    deployment_index["root"] = str(Path(settings.base_dir) / "corpus")
+    database.save_global_corpus_index(deployment_index)
+    return True
 
 
 def _number(value: Any, default: float = 0.0) -> float:
@@ -121,6 +155,28 @@ def extract_spatial_structure(array: Any) -> dict[str, Any]:
             "ink_density": round(density, 4), "midtone_ratio": round(midtone, 4),
             "confidence": 0.55 if kind != "mixed-region" else 0.35,
         })
+    # Preserve coarse topology in addition to coverage.  These relations are
+    # intentionally geometric hypotheses (above/beside/overlap), never claims
+    # about story roles.  They let the strategy layer distinguish a split hero
+    # from a stacked page with similar ink percentages.
+    relations = []
+    for left_index, left in enumerate(regions):
+        lf = left["frame"]
+        for right_index, right in enumerate(regions):
+            if right_index <= left_index:
+                continue
+            rf = right["frame"]
+            overlap_x = min(lf["x"] + lf["w"], rf["x"] + rf["w"]) - max(lf["x"], rf["x"])
+            overlap_y = min(lf["y"] + lf["h"], rf["y"] + rf["h"]) - max(lf["y"], rf["y"])
+            if overlap_x > 0.04 and overlap_y > 0.04:
+                relation = "overlap"
+            elif overlap_x > 0.04:
+                relation = "stacked"
+            elif overlap_y > 0.04:
+                relation = "side_by_side"
+            else:
+                relation = "diagonal"
+            relations.append({"source": left["id"], "target": right["id"], "relation": relation})
     spatial = []
     for row in range(12):
         for col in range(8):
@@ -139,6 +195,7 @@ def extract_spatial_structure(array: Any) -> dict[str, Any]:
         "ink_centroid": [round(float(xs.mean()) / w, 4), round(float(ys.mean()) / h, 4)],
         "occupied_lower_half_ratio": round(float(ink[h // 2:].mean()), 4),
         "dominant_region": largest,
+        "relations": relations[:48],
         "horizontal_separators": [[round(a / h, 4), round(b / h, 4)] for a, b in horizontal if a > h * 0.03 and b < h * 0.97],
         "vertical_separators": [[round(a / w, 4), round(b / w, 4)] for a, b in vertical if a > w * 0.03 and b < w * 0.97],
     }
@@ -192,6 +249,8 @@ def load_corpus_knowledge(database: Any, project_id: str | None = None, *, remot
 
     if remote_only is None:
         remote_only = bool(settings.require_remote_db or getattr(database, "is_postgres", False))
+    if remote_only:
+        ensure_bundled_index(database)
     persisted = database.list_global_corpus_features()
     source = "database" if persisted else "unavailable"
     if not persisted and not remote_only:

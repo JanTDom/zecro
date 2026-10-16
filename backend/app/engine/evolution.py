@@ -14,11 +14,13 @@ from .image_ops import extract_alpha_contour, photo_cutout_geometry
 from .zone_solver import compose_page
 
 class LayoutGenome:
-    def __init__(self, dna: TitleDNA, style_blend: Optional[Any] = None, corpus_guidance: Optional[Dict[str, Any]] = None):
+    def __init__(self, dna: TitleDNA, style_blend: Optional[Any] = None, corpus_guidance: Optional[Dict[str, Any]] = None,
+                 preferred_transgressions: Optional[List[str]] = None):
         cols = dna.grid.columns
         style_blend = style_blend or dna.style_blend
         self.style_blend = style_blend
         self.corpus_guidance = dict(corpus_guidance or {})
+        self.preferred_transgressions = set(preferred_transgressions or [])
         measured_photo = float(self.corpus_guidance.get("photo_coverage_pct_mean", 50.0)) / 100.0
         measured_energy = float(self.corpus_guidance.get("energy_budget", dna.page_energy_budget))
         photo_bias = max(0.0, min(1.0, 0.70 * float(getattr(style_blend, "dense_to_photo", 0.5)) + 0.30 * measured_photo))
@@ -54,6 +56,13 @@ class LayoutGenome:
             0.7 + photo_bias * 1.4,
             0.6 + avantgarde_bias * 1.2,
         ]
+        # This experimental morphology scored below the visual acceptance
+        # target on a rendered proof. Keep it available for explicit local
+        # evaluation, but do not offer it as an automatic production variant
+        # until a title-specific visual calibration validates it.
+        if dna.archetype == "tabloid" and self.corpus_guidance.get("type_led_validated") is True:
+            architecture_choices.append("type-led")
+            architecture_weights.append(0.55 + tabloid_bias * 1.4)
         # Corpus strategy shares bias exploration without turning a measured
         # page into a template.  ``stacked`` stays deliberately exploratory:
         # it is a generated hypothesis rather than a copied corpus class.
@@ -63,12 +72,34 @@ class LayoutGenome:
             "dominant-right": ("dominant-hero",),
             "stacked": (),
             "photo-top": ("visual-opener",),
+            "type-led": ("dominant-hero",),
             "modular-grid": ("modular-rhythm",),
         }
         for index, mode in enumerate(architecture_choices):
             observed_share = sum(float(strategy_distribution.get(key, 0.0) or 0.0) for key in architecture_strategy_map[mode])
             architecture_weights[index] *= 0.72 + observed_share * 2.1
+            if mode in (self.corpus_guidance.get("visual_feedback") or {}).get("rejected_modes", []):
+                architecture_weights[index] *= .35
         self.layout_mode: str = random.choices(architecture_choices, weights=architecture_weights, k=1)[0]
+        cover = dna.cover_grammar or {}
+        self.type_led_photo_share = round(max(.34, min(.48,
+            float(cover.get("type_led_photo_width_share", .41)) + random.uniform(-.055, .055))), 3)
+        self.type_led_strap_y = round(random.uniform(.45, .58), 3)
+        self.type_led_skyline_split = round(max(.45, min(.62,
+            float(cover.get("type_led_skyline_split", .54)) + random.uniform(-.07, .07))), 3)
+        self.type_led_bottom_split = round(max(.38, min(.60,
+            float(cover.get("type_led_bottom_split", .43)) + random.uniform(-.05, .08))), 3)
+        # Cover morphology is a topological gene for popular covers.  The
+        # catalogue is Title DNA data; feasibility is decided by the composer
+        # from the material and the photo editor's observations.
+        self.cover_morphology: str = random.choice(self._morphology_choices(dna))
+        self.poster_headline_treatment = (
+            random.choices(["banner", "overlay"], weights=[.45, .55])[0]
+            if self.corpus_guidance.get("poster_overlay_validated") is True else "banner"
+        )
+        feedback = self.corpus_guidance.get("visual_feedback") or {}
+        if feedback.get("dead_zones"):
+            self.type_led_photo_share = round(max(.42, self.type_led_photo_share), 3)
 
         if random.random() < photo_bias:
             placement_choices = ["top_hero", "inline_side", "bottom_anchor", "cutout_overlap"]
@@ -91,6 +122,10 @@ class LayoutGenome:
         self.photo_treatment: str = random.choices(treatment_choices, weights=treatment_weights, k=1)[0]
         self.photo_wrap_mode: str = "contour" if self.photo_treatment == "cutout" else "bounding_box"
 
+        # An optional YourQuantum policy only selects discrete effects.  It
+        # never supplies coordinates or bypasses the local grammar/critic.
+        self._apply_preferred_transgressions(dna)
+
         min_body_cols, max_body_cols = 2, max(2, min(4, cols))
         target_body_cols = int(round(float(self.corpus_guidance.get("columns_mean", cols)) * 0.55))
         target_body_cols = max(min_body_cols, min(max_body_cols, target_body_cols))
@@ -105,6 +140,35 @@ class LayoutGenome:
             self.transgressions.append("diagonal-break")
         if self.photo_treatment == "cutout":
             self.transgressions.append("cutout-wrap")
+
+    @staticmethod
+    def _morphology_choices(dna: TitleDNA) -> List[str]:
+        family = (dna.cover_grammar or {}).get("family")
+        from .magazine_morphologies import CATALOG as MAGAZINE_CATALOG, is_magazine
+        if is_magazine(dna):
+            return ["classic_editorial_cover", *MAGAZINE_CATALOG, "opening_spread"]
+        if not (dna.archetype == "tabloid" or family == "popular_collage"):
+            return ["asymmetric_hero_rail"]
+        from .tabloid_morphologies import morphology_catalog
+        return ["asymmetric_hero_rail", *morphology_catalog(dna)]
+
+    def _apply_preferred_transgressions(self, dna: TitleDNA) -> None:
+        if not self.preferred_transgressions:
+            return
+        if "extreme-scale" in self.preferred_transgressions:
+            self.hl_scale_mult = 1.35
+        elif self.hl_scale_mult > 1.2:
+            self.hl_scale_mult = 1.15
+        if "diagonal-break" in self.preferred_transgressions and dna.page_energy_budget >= 0.5:
+            self.hl_rotation_deg = random.choice([-3.5, 3.5])
+        else:
+            self.hl_rotation_deg = 0.0
+        if "cutout-wrap" in self.preferred_transgressions and dna.photo_rules.allow_cutout:
+            self.photo_treatment = "cutout"
+            self.photo_wrap_mode = "contour"
+        elif self.photo_treatment == "cutout" and "cutout-wrap" not in self.preferred_transgressions:
+            self.photo_treatment = "crop"
+            self.photo_wrap_mode = "bounding_box"
 
     def mutate(self, dna: TitleDNA, mutation_rate: float = 0.3):
         cols = dna.grid.columns
@@ -122,13 +186,20 @@ class LayoutGenome:
             self.hl_rotation_deg = random.choice([0.0, -4.0, 4.0]) if dna.page_energy_budget >= 0.7 and avantgarde_bias > 0.2 else 0.0
 
         if random.random() < mutation_rate:
-            self.layout_mode = random.choice([
-                "dominant-left", "dominant-right", "stacked", "photo-top", "modular-grid"
-            ])
+            modes = ["dominant-left", "dominant-right", "stacked", "photo-top", "modular-grid"]
+            if dna.archetype == "tabloid" and self.corpus_guidance.get("type_led_validated") is True:
+                modes.append("type-led")
+            self.layout_mode = random.choice(modes)
 
         if random.random() < mutation_rate:
             self.photo_treatment = "cutout" if (dna.photo_rules.allow_cutout and random.random() < 0.5) else "crop"
             self.photo_wrap_mode = "contour" if self.photo_treatment == "cutout" else "bounding_box"
+
+        if random.random() < mutation_rate:
+            self.cover_morphology = random.choice(self._morphology_choices(dna))
+
+        if self.corpus_guidance.get("poster_overlay_validated") is True and random.random() < mutation_rate:
+            self.poster_headline_treatment = "overlay" if self.poster_headline_treatment == "banner" else "banner"
 
         if random.random() < mutation_rate:
             self.photo_placement = random.choice(["top_hero", "inline_side", "bottom_anchor", "cutout_overlap"] if photo_bias > 0.2 else ["inline_side", "bottom_anchor", "top_hero"])
@@ -137,29 +208,68 @@ class LayoutGenome:
             self.photo_col_span = random.randint(2, min(4, cols))
             self.photo_col_start = random.randint(0, max(0, cols - self.photo_col_span))
 
+        for attr, low, high, step in (
+            ("type_led_photo_share", .34, .48, .045),
+            ("type_led_strap_y", .45, .58, .06),
+            ("type_led_skyline_split", .45, .62, .06),
+            ("type_led_bottom_split", .38, .60, .06),
+        ):
+            if random.random() < mutation_rate:
+                setattr(self, attr, round(max(low, min(high, getattr(self, attr) + random.uniform(-step, step))), 3))
+
+        # Keep the remote policy stable across mutation.  The remaining
+        # geometry genes continue to explore locally.
+        self._apply_preferred_transgressions(dna)
+
     def crossover(self, other: "LayoutGenome", dna: TitleDNA) -> "LayoutGenome":
-        child = LayoutGenome(dna, self.style_blend, self.corpus_guidance)
+        child = LayoutGenome(dna, self.style_blend, self.corpus_guidance, self.preferred_transgressions)
         child.hl_col_start = self.hl_col_start if random.random() < 0.5 else other.hl_col_start
         child.hl_col_span = self.hl_col_span if random.random() < 0.5 else other.hl_col_span
         child.hl_scale_mult = self.hl_scale_mult if random.random() < 0.5 else other.hl_scale_mult
         child.hl_rotation_deg = self.hl_rotation_deg if random.random() < 0.5 else other.hl_rotation_deg
         child.layout_mode = self.layout_mode if random.random() < 0.5 else other.layout_mode
+        child.poster_headline_treatment = self.poster_headline_treatment if random.random() < .5 else other.poster_headline_treatment
+        child.cover_morphology = self.cover_morphology if random.random() < .5 else other.cover_morphology
+        for attr in ("type_led_photo_share", "type_led_strap_y", "type_led_skyline_split", "type_led_bottom_split"):
+            setattr(child, attr, getattr(self if random.random() < .5 else other, attr))
         child.photo_placement = self.photo_placement if random.random() < 0.5 else other.photo_placement
         child.photo_col_span = self.photo_col_span if random.random() < 0.5 else other.photo_col_span
         child.photo_col_start = self.photo_col_start if random.random() < 0.5 else other.photo_col_start
         child.photo_treatment = self.photo_treatment if random.random() < 0.5 else other.photo_treatment
         child.photo_wrap_mode = self.photo_wrap_mode if random.random() < 0.5 else other.photo_wrap_mode
         child.body_columns = self.body_columns if random.random() < 0.5 else other.body_columns
+        child._apply_preferred_transgressions(dna)
         return child
 
 
+def _architecture_key(sg: SceneGraph) -> str:
+    meta = sg.metadata or {}
+    mode = str(meta.get("layout_mode", ""))
+    morph = meta.get("cover_morphology")
+    return f"{mode}:{morph}" if morph else mode
+
+
 class EvolutionaryLayoutGenerator:
-    def __init__(self, dna: TitleDNA, corpus_features: Optional[List[Dict[str, Any]]] = None, preference_weights: Optional[Dict[str, float]] = None, corpus_guidance: Optional[Dict[str, Any]] = None):
+    def __init__(self, dna: TitleDNA, corpus_features: Optional[List[Dict[str, Any]]] = None, preference_weights: Optional[Dict[str, float]] = None, corpus_guidance: Optional[Dict[str, Any]] = None, novelty_priority: float = 1.0, preferred_transgressions: Optional[List[str]] = None):
         self.dna = dna
         self.grammar = LayoutGrammar(dna)
-        self.critic = LayoutCritic(dna, corpus_features, preference_weights, corpus_guidance)
+        self.critic = LayoutCritic(dna, corpus_features, preference_weights, corpus_guidance, novelty_priority)
         self.solver = GridSolver(dna)
         self.corpus_guidance = dict(corpus_guidance or {})
+        self.preferred_transgressions = list(preferred_transgressions or [])
+        self.last_run_stats: Dict[str, Any] = {}
+
+    @staticmethod
+    def _genome_key(genome: LayoutGenome) -> Tuple[Any, ...]:
+        """Stable cache key for an unchanged genome between generations."""
+        fields = (
+            "hl_col_start", "hl_col_span", "hl_scale_mult", "hl_rotation_deg",
+            "layout_mode", "photo_placement", "photo_col_span", "photo_col_start",
+            "photo_height_ratio", "photo_treatment", "photo_wrap_mode", "body_columns",
+            "type_led_photo_share", "type_led_strap_y", "type_led_skyline_split", "type_led_bottom_split",
+            "poster_headline_treatment", "cover_morphology",
+        )
+        return tuple(getattr(genome, field, None) for field in fields)
 
     def decode_genome_to_scene_graph(self, genome: LayoutGenome, material: PageInputMaterial) -> SceneGraph:
         """
@@ -168,12 +278,25 @@ class EvolutionaryLayoutGenerator:
         # All page zones use the same modular composer.  Front pages now
         # receive an explicit architecture gene; the old hand-built branch
         # only changed widths and rotations, which produced cosmetic clones.
-        return compose_page(self.dna, material, {
+        genes = {
             "variation": genome.hl_scale_mult / 1.35,
             "photo_ratio": genome.photo_height_ratio,
             "layout_mode": genome.layout_mode,
             "photo_placement": genome.photo_placement,
-        })
+            "photo_treatment": genome.photo_treatment,
+            "poster_headline_treatment": genome.poster_headline_treatment,
+            "cover_morphology": getattr(genome, "cover_morphology", "asymmetric_hero_rail"),
+            "type_led_photo_share": genome.type_led_photo_share,
+            "type_led_strap_y": genome.type_led_strap_y,
+            "type_led_skyline_split": genome.type_led_skyline_split,
+            "type_led_bottom_split": genome.type_led_bottom_split,
+        }
+        scene = compose_page(self.dna, material, genes)
+        scene.metadata["generation_genes"] = genes
+        if "topology" not in scene.metadata:
+            from .tabloid_morphologies import topology_signature
+            scene.metadata["topology"] = topology_signature(scene)
+        return scene
 
         cols = self.dna.grid.columns
         fmt = self.dna.format
@@ -636,17 +759,27 @@ class EvolutionaryLayoutGenerator:
             random.seed(seed)
         # 1. Initialize population.  The blend is a bias for exploration; it
         # never bypasses the grammar or critic gate.
-        population: List[LayoutGenome] = [LayoutGenome(self.dna, material.style_blend, self.corpus_guidance) for _ in range(population_size)]
+        population: List[LayoutGenome] = [LayoutGenome(self.dna, material.style_blend, self.corpus_guidance, self.preferred_transgressions) for _ in range(population_size)]
 
         evaluated_population = []
+        evaluation_cache: Dict[Tuple[Any, ...], Tuple[SceneGraph, Any]] = {}
+        archive: List[Tuple[LayoutGenome, SceneGraph, Any, int]] = []
+        best_score = -1.0
+        stagnant_generations = 0
 
         for gen in range(generations):
             evaluated_population = []
             for genome in population:
-                sg = self.decode_genome_to_scene_graph(genome, material)
-                if not allow_transgressions:
-                    sg = self._disable_transgressions(sg)
-                crit_result = self.critic.evaluate(sg)
+                key = self._genome_key(genome) + (bool(allow_transgressions),)
+                cached = evaluation_cache.get(key)
+                if cached is None:
+                    sg = self.decode_genome_to_scene_graph(genome, material)
+                    if not allow_transgressions:
+                        sg = self._disable_transgressions(sg)
+                    crit_result = self.critic.evaluate(sg)
+                    evaluation_cache[key] = (sg, crit_result)
+                else:
+                    sg, crit_result = cached
 
                 # Keep the genome/scene pair intact when a hard gate fails.
                 # Replacing every invalid individual with GridSolver's same
@@ -656,6 +789,8 @@ class EvolutionaryLayoutGenerator:
                 # are naturally selected out; a baseline solver page is used
                 # only as an emergency if no valid genome can be found.
                 evaluated_population.append((genome, sg, crit_result))
+                if crit_result.hard_gate.passed:
+                    archive.append((copy.deepcopy(genome), sg, crit_result, gen))
 
             # Sort by total fitness score descending
             evaluated_population.sort(
@@ -665,6 +800,13 @@ class EvolutionaryLayoutGenerator:
 
             # Selection: top 50% elites
             elites = evaluated_population[:population_size // 2]
+
+            generation_best = max((item[2].total_fitness for item in evaluated_population), default=0.0)
+            if generation_best > best_score + 0.001:
+                best_score = generation_best
+                stagnant_generations = 0
+            else:
+                stagnant_generations += 1
 
             # Reproduction: Crossover & Mutation for next generation
             next_gen: List[LayoutGenome] = [copy.deepcopy(e[0]) for e in elites]
@@ -678,25 +820,63 @@ class EvolutionaryLayoutGenerator:
 
             population = next_gen
 
+            # Preserve the archive before stopping: an earlier generation may
+            # contain the most original architecture even after convergence.
+            if gen >= 2 and stagnant_generations >= 3 and len(archive) >= max(num_candidates * 2, population_size):
+                break
+
         # Diversity selection for final output set
         # Select candidates that maximize both fitness and pairwise layout diversity
         selected_candidates: List[Tuple[SceneGraph, Any]] = []
         used_feature_vectors: List[List[float]] = []
         used_architectures: set[str] = set()
 
-        valid_population = [item for item in evaluated_population if item[2].hard_gate.passed]
+        # Select from every valid generation, not only the final population.
+        valid_population = [(genome, sg, crit) for genome, sg, crit, _ in archive]
+        valid_population.extend(
+            item for item in evaluated_population
+            if item[2].hard_gate.passed and not any(item[1] is old_sg for _, old_sg, _, _ in archive)
+        )
         # Preserve the editorial architecture frontier before filling the
         # requested count with near-neighbours.  Evolution can converge on a
         # high-scoring stacked page, but a gallery of six stacked pages is not
         # six variants.  If a mode disappeared from the final generation,
         # probe it explicitly through the same critic gate.
         architecture_modes = ["dominant-left", "dominant-right", "stacked", "photo-top", "modular-grid"]
+        if self.dna.archetype == "tabloid":
+            architecture_modes.append("type-led")
+        from .magazine_morphologies import is_magazine as _is_magazine
+        if _is_magazine(self.dna) or getattr(material, "tv_schedule", None):
+            architecture_modes = []  # these grammars vary by morphology, not by layout_mode
         present_modes = {str((sg.metadata or {}).get("layout_mode", "")) for _, sg, crit in valid_population}
+        # Popular covers: every feasible morphology is a distinct topology and
+        # is probed through the same hard gate when evolution missed it.
+        from .magazine_morphologies import feasible as magazine_feasible, is_magazine
+        if (self.dna.archetype == "tabloid" or (self.dna.cover_grammar or {}).get("family") == "popular_collage"
+                or is_magazine(self.dna)):
+            from .tabloid_morphologies import feasible_morphologies
+            present_morphs = {str((sg.metadata or {}).get("cover_morphology", "")) for _, sg, _ in valid_population}
+            if is_magazine(self.dna):
+                candidates_to_probe = (["opening_spread"] if material.page_zone == "spread"
+                                       else list(magazine_feasible(self.dna, material)))
+            else:
+                candidates_to_probe = list(feasible_morphologies(self.dna, material))
+            for morph in candidates_to_probe:
+                if morph in present_morphs:
+                    continue
+                probe = LayoutGenome(self.dna, material.style_blend, self.corpus_guidance, self.preferred_transgressions)
+                probe.layout_mode, probe.cover_morphology = "photo-top", morph
+                probe_sg = self.decode_genome_to_scene_graph(probe, material)
+                if not allow_transgressions:
+                    probe_sg = self._disable_transgressions(probe_sg)
+                probe_crit = self.critic.evaluate(probe_sg)
+                if probe_crit.hard_gate.passed:
+                    valid_population.append((probe, probe_sg, probe_crit))
         for mode in architecture_modes:
             if mode in present_modes:
                 continue
             for _ in range(8):
-                probe = LayoutGenome(self.dna, material.style_blend, self.corpus_guidance)
+                probe = LayoutGenome(self.dna, material.style_blend, self.corpus_guidance, self.preferred_transgressions)
                 probe.layout_mode = mode
                 probe_sg = self.decode_genome_to_scene_graph(probe, material)
                 if not allow_transgressions:
@@ -711,23 +891,24 @@ class EvolutionaryLayoutGenerator:
         # ordered by the critic score and are used only after coverage exists.
         mode_winners = {}
         for item in valid_population:
-            mode = str((item[1].metadata or {}).get("layout_mode", ""))
+            mode = _architecture_key(item[1])
             if mode not in mode_winners or item[2].total_fitness > mode_winners[mode][2].total_fitness:
                 mode_winners[mode] = item
-        ordered_population = list(mode_winners.values())
+        # Niches (architecture / cover morphology) are offered best-first.
+        ordered_population = sorted(mode_winners.values(), key=lambda item: item[2].total_fitness, reverse=True)
         ordered_population.extend(item for item in valid_population if item not in ordered_population)
 
         for genome, sg, crit in ordered_population:
             if len(selected_candidates) >= num_candidates:
                 break
 
-            fv = self.critic.extract_layout_feature_vector(sg)
+            fv = self.critic.extract_strategy_feature_vector(sg)
 
             # Ensure diversity from already selected candidates.  Architecture
             # is a first-class editorial difference: two pages with the same
             # headline/photo ratio but a different reading path are not
             # duplicates, and each requested run should expose those plans.
-            architecture = str((sg.metadata or {}).get("layout_mode", ""))
+            architecture = _architecture_key(sg)
             is_diverse = True
             for ufv in used_feature_vectors:
                 dist = math.sqrt(sum((a - b) ** 2 for a, b in zip(fv, ufv)))
@@ -769,17 +950,17 @@ class EvolutionaryLayoutGenerator:
         max_attempts = max(20, num_candidates * 12)
         while len(selected_candidates) < num_candidates and attempts < max_attempts:
             attempts += 1
-            fallback_genome = LayoutGenome(self.dna, material.style_blend, self.corpus_guidance)
+            fallback_genome = LayoutGenome(self.dna, material.style_blend, self.corpus_guidance, self.preferred_transgressions)
             fallback_sg = self.decode_genome_to_scene_graph(fallback_genome, material)
             if not allow_transgressions:
                 fallback_sg = self._disable_transgressions(fallback_sg)
             crit = self.critic.evaluate(fallback_sg)
             if not crit.hard_gate.passed:
                 continue
-            fv = self.critic.extract_layout_feature_vector(fallback_sg)
+            fv = self.critic.extract_strategy_feature_vector(fallback_sg)
             architecture = str((fallback_sg.metadata or {}).get("layout_mode", ""))
             if architecture in used_architectures and any(
-                fv == self.critic.extract_layout_feature_vector(existing)
+                fv == self.critic.extract_strategy_feature_vector(existing)
                 for existing, _ in selected_candidates
             ):
                 continue
@@ -797,4 +978,13 @@ class EvolutionaryLayoutGenerator:
             if baseline_crit.hard_gate.passed:
                 selected_candidates.append((baseline, baseline_crit))
 
+        self.last_run_stats = {
+            "requested_generations": generations,
+            "completed_generations": gen + 1 if generations else 0,
+            "population_size": population_size,
+            "evaluated_unique_genomes": len(evaluation_cache),
+            "evaluation_cache_hits": max(0, (generations * population_size) - len(evaluation_cache)),
+            "valid_archive_size": len(archive),
+            "early_stopped": (gen + 1) < generations if generations else False,
+        }
         return selected_candidates[:num_candidates]

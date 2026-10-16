@@ -2,7 +2,10 @@ import os
 import tempfile
 import zipfile
 import pytest
+from PIL import Image, ImageDraw
+from pypdf import PdfReader
 from backend.app.models.schemas import PageInputMaterial, StoryInput, StoryImageInput
+from backend.app.models.schemas import Element, Frame, PageMeta, SceneGraph
 from backend.app.engine.grammar import create_default_broadsheet_dna
 from backend.app.engine.solver import GridSolver
 from backend.app.engine.renderers.svg_renderer import SVGRenderer
@@ -71,6 +74,29 @@ def test_pdf_renderer(sample_scene_graph):
     finally:
         if os.path.exists(pdf_path):
             os.remove(pdf_path)
+
+
+def test_pdf_cutout_keeps_alpha_soft_mask(tmp_path):
+    source = Image.new("RGBA", (240, 240), (225, 30, 30, 0))
+    ImageDraw.Draw(source).ellipse((30, 10, 220, 235), fill=(225, 30, 30, 255))
+    image_path = tmp_path / "person.png"
+    source.save(image_path)
+    dna = create_default_broadsheet_dna()
+    scene = SceneGraph(
+        page=PageMeta(trim=[210, 297], bleed_mm=3, safe_margin_mm=10,
+                      grid={"cols": 4, "gutter_mm": 4, "baseline_mm": 4},
+                      title_dna_ref=dna.id),
+        elements=[Element(id="person", role="photo", importance=.8,
+                          content_ref="person.image", image_url=str(image_path),
+                          mask_ref=str(image_path), treatment="cutout",
+                          contour_points=[[5, 25], [9, 6], [32, 1], [58, 4],
+                                          [76, 18], [80, 75], [50, 80], [10, 70]],
+                          frame=Frame(x=20, y=20, w=80, h=80))],
+    )
+    out = tmp_path / "cutout.pdf"
+    PDFRenderer(dna).render_to_file(scene, str(out))
+    xobjects = PdfReader(str(out)).pages[0]["/Resources"]["/XObject"]
+    assert any("/SMask" in obj.get_object() for obj in xobjects.values())
 
 def test_idml_renderer(sample_scene_graph):
     dna = create_default_broadsheet_dna()

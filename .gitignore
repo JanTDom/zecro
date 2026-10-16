@@ -33,6 +33,8 @@ Fonts/
 .tmp-chrome/
 .tmp-chrome-user-dir/
 .codex/
+.vercel/
+.playwright-cli/
 
 # Local QA renders
 output/_qa/

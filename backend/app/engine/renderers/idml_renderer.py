@@ -54,7 +54,7 @@ class IDMLRenderer:
                 following = f"u_tf_{frame_ids[index + 1]}" if index + 1 < len(frame_ids) else "n"
                 references[frame_id] = (story_id, previous, following)
         for elem in sg.elements:
-            if elem.role != "photo" and elem.id not in references:
+            if elem.role not in {"photo", "band"} and elem.id not in references:
                 story_id = f"u_story_{elem.id}"
                 groups.append((story_id, [elem]))
                 references[elem.id] = (story_id, "n", "n")
@@ -68,9 +68,12 @@ class IDMLRenderer:
         """(family, InDesign font style, face record) for a text element."""
         from ..fonts import resolve_face
         st = elem.style
-        weight = 700 if (st and str(st.font_weight) in ("bold", "600", "700", "800", "900")) else 400
+        from ..fonts import style_face_args
+        args = style_face_args(st) if st else {"weight": 400, "italic": False, "width": None}
+        weight = args["weight"]
         family = (st.font_family if st else None) or "serif"
-        face = resolve_face(family, weight=weight, text=elem.text_content or "")
+        face = resolve_face(family, weight=weight, italic=args["italic"], width=args["width"],
+                            text=elem.text_content or "")
         if face:
             style = face.get("subfamily") or ("Bold" if weight >= 700 else "Regular")
             self._used_fonts[(face["family"], style)] = face
@@ -79,6 +82,21 @@ class IDMLRenderer:
         style = "Bold" if weight >= 700 else "Regular"
         self._used_fonts[(name, style)] = None
         return name, style, None
+
+    def _shape_fill_xml(self, elem, left_pt, top_pt, w_pt, h_pt, item_transform, layer) -> str:
+        from ..shapes import is_rect, shape_polygon
+        st = elem.style
+        fill = self._swatch(st.bg_color) if st and st.bg_color else "Swatch/None"
+        stroke = (f' StrokeColor="{self._swatch(st.border_color)}" StrokeWeight="{float(st.border_width_mm) * MM_TO_PT:.2f}"'
+                  if st and st.border_width_mm and st.border_color else ' StrokeWeight="0"')
+        tag = "Rectangle" if is_rect(elem.shape) else "Polygon"
+        geometry = self._path_geometry(shape_polygon(elem.shape, left_pt, top_pt, w_pt, h_pt))
+        return f"""
+        <{tag} Self="u_fill_{elem.id}" ItemLayer="{layer}" ItemTransform="{item_transform}" FillColor="{fill}"{stroke}>
+          <Properties>
+{geometry}
+          </Properties>
+        </{tag}>"""
 
     def _swatch(self, hex_color: Optional[str]) -> str:
         if not hex_color or hex_color.lower() in {"#000", "#000000", "#111111", "#0f0f0f"}:
@@ -116,6 +134,8 @@ class IDMLRenderer:
             align = just.get((st.align if st else "left") or "left", "LeftAlign")
             hyph = "true" if size < 14 else "false"
             caps = ' Capitalization="AllCaps"' if st and st.case == "upper" else ""
+            if st and st.tracking_em:
+                caps += f' Tracking="{st.tracking_em * 1000:.0f}"'  # InDesign: 1/1000 em
             color = self._swatch(st.color if st else None)
             ranges.append(f"""
     <ParagraphStyleRange AppliedParagraphStyle="{style_name}" Justification="{align}" Hyphenation="{hyph}" HyphenateWordsLongerThan="5" HyphenateAfterFirst="2" HyphenateBeforeLast="3" HyphenationZone="0">
@@ -251,6 +271,16 @@ class IDMLRenderer:
             left_pt = x_pt
             bottom_pt = y_pt + h_pt
             right_pt = x_pt + w_pt
+            # Rotation is part of the scene graph: preview, PDF and IDML all
+            # rotate about the frame centre (y-down affine, same as SVG).
+            item_transform = "1 0 0 1 0 0"
+            if abs(float(elem.frame.rotation_deg or 0.0)) > 0.05:
+                import math as _math
+                _r = _math.radians(float(elem.frame.rotation_deg))
+                _a, _b, _c, _d = _math.cos(_r), _math.sin(_r), -_math.sin(_r), _math.cos(_r)
+                _cx, _cy = (left_pt + right_pt) / 2, (top_pt + bottom_pt) / 2
+                item_transform = (f"{_a:.6f} {_b:.6f} {_c:.6f} {_d:.6f} "
+                                  f"{_cx - _a * _cx - _c * _cy:.3f} {_cy - _b * _cx - _d * _cy:.3f}")
 
             if elem.role == "photo" or (elem.role == "logo" and elem.image_url):
                 # Keep local files in Links/ so the IDML remains portable. A
@@ -332,18 +362,22 @@ class IDMLRenderer:
 
                 is_cutout = elem.treatment == "cutout" and elem.contour_points and len(elem.contour_points) >= 3
                 to_page = lambda ring: [(left_pt + point[0] * MM_TO_PT, top_pt + point[1] * MM_TO_PT) for point in ring]
+                from ..shapes import is_rect as _is_rect, shape_polygon as _shape_polygon
+                shaped = not is_cutout and not _is_rect(elem.shape)
                 if is_cutout:
                     clipping_geometry = self._path_geometry(to_page(elem.contour_points), [to_page(r) for r in (elem.contour_holes or [])])
+                elif shaped:
+                    clipping_geometry = self._path_geometry(_shape_polygon(elem.shape, left_pt, top_pt, w_pt, h_pt))
                 else:
                     clipping_geometry = self._path_geometry([
                         (left_pt, top_pt), (right_pt, top_pt),
                         (right_pt, bottom_pt), (left_pt, bottom_pt),
                     ])
                 # Non-rectangular (compound) frames are Polygons in InDesign.
-                tag = "Polygon" if is_cutout else "Rectangle"
+                tag = "Polygon" if (is_cutout or shaped) else "Rectangle"
                 layer_attr = f' ItemLayer="{masthead_layer if elem.role == "logo" else image_layer}"'
                 rect_xml = f"""
-        <{tag} Self="u_photo_{elem.id}" ItemTransform="1 0 0 1 0 0" StrokeWeight="0" Locked="{'true' if elem.role == 'logo' else 'false'}"{layer_attr}>
+        <{tag} Self="u_photo_{elem.id}" ItemTransform="{item_transform}" StrokeWeight="0" Locked="{'true' if elem.role == 'logo' else 'false'}"{layer_attr}>
           <Properties>
 {clipping_geometry}
           </Properties>
@@ -351,6 +385,9 @@ class IDMLRenderer:
           {link_xml}
         </{tag}>"""
                 spread_elements_xml.append(rect_xml)
+
+            elif elem.role == "band":
+                spread_elements_xml.append(self._shape_fill_xml(elem, left_pt, top_pt, w_pt, h_pt, item_transform, image_layer))
 
             elif elem.role == "rule":
                 ymid = top_pt + h_pt / 2
@@ -373,8 +410,17 @@ class IDMLRenderer:
                 cols = int((elem.style.columns if elem.style else 1) or 1)
                 gutter_pt = float(self.dna.grid.gutter_mm if self.dna else 4.0) * MM_TO_PT
                 layer = masthead_layer if elem.role == "logo" else text_layer
+                if elem.style and elem.style.bg_color and elem.role != "logo":
+                    # Colour planes behind copy are real InDesign objects
+                    # (previously they were dropped from the IDML).
+                    spread_elements_xml.append(self._shape_fill_xml(elem, left_pt, top_pt, w_pt, h_pt, item_transform, text_layer))
+                from ..shapes import text_box as _text_box
+                _bx, _by, _bw, _bh = _text_box(elem)
+                inset = (f"{(_by - elem.frame.y) * MM_TO_PT:.2f} {(_bx - elem.frame.x) * MM_TO_PT:.2f} "
+                         f"{(elem.frame.y + elem.frame.h - _by - _bh) * MM_TO_PT:.2f} {(elem.frame.x + elem.frame.w - _bx - _bw) * MM_TO_PT:.2f}")
+                vj = {"center": "CenterAlign", "bottom": "BottomAlign"}.get((elem.style.valign if elem.style else None) or "top", "TopAlign")
                 tf_xml = f"""
-        <TextFrame Self="u_tf_{elem.id}" ParentStory="{story_id}" PreviousTextFrame="{previous_frame}" NextTextFrame="{next_frame}" ContentType="TextType" ItemLayer="{layer}" ItemTransform="1 0 0 1 0 0">
+        <TextFrame Self="u_tf_{elem.id}" ParentStory="{story_id}" PreviousTextFrame="{previous_frame}" NextTextFrame="{next_frame}" ContentType="TextType" ItemLayer="{layer}" ItemTransform="{item_transform}">
           <Properties>
             <PathGeometry>
               <GeometryPathType PathOpen="false">
@@ -387,7 +433,7 @@ class IDMLRenderer:
               </GeometryPathType>
             </PathGeometry>
           </Properties>
-          <TextFramePreference TextColumnCount="{cols}" TextColumnGutter="{gutter_pt:.2f}" UseFixedColumnWidth="false" FirstBaselineOffset="AscentOffset" VerticalJustification="TopAlign" InsetSpacing="0 0 0 0"/>
+          <TextFramePreference TextColumnCount="{cols}" TextColumnGutter="{gutter_pt:.2f}" UseFixedColumnWidth="false" FirstBaselineOffset="AscentOffset" VerticalJustification="{vj}" InsetSpacing="{inset}"/>
         </TextFrame>"""
                 spread_elements_xml.append(tf_xml)
 

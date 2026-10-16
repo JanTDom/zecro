@@ -54,7 +54,7 @@ export const SceneGraphCanvas: React.FC = () => {
   if (!selectedCandidate || !activeProject || !dna) {
     return (
       <div className="p-12 text-center text-ink-400">
-        No candidate layout selected for inspection. Please choose a variant from the gallery.
+        Nie wybrano strony do poprawiania. Otwórz wariant w galerii.
       </div>
     );
   }
@@ -123,15 +123,15 @@ export const SceneGraphCanvas: React.FC = () => {
       await reloadTasteMetrics();
       addToast({
         type: 'success',
-        title: 'Layout saved & taste signal logged',
-        message: `${deltas.length} spatial adjustment deltas recorded into taste preference loop.`,
+        title: 'Zmiany strony zapisane',
+        message: `Zapisano ${deltas.length} poprawek układu.`,
       });
       setDeltas([]);
     } catch (e) {
       addToast({
         type: 'error',
-        title: 'Delta Save Failed',
-        message: 'Could not log adjustments.',
+        title: 'Nie udało się zapisać zmian',
+        message: 'Spróbuj ponownie.',
       });
     } finally {
       setIsLoggingDelta(false);
@@ -145,14 +145,14 @@ export const SceneGraphCanvas: React.FC = () => {
         {/* Left: Candidate Info & Delta Counter */}
         <div className="flex items-center gap-3">
           <Badge variant="accent" size="sm">
-            Variant #{selectedCandidate.candidateNumber}
+            Wariant {selectedCandidate.candidateNumber}
           </Badge>
           <span className="text-xs font-mono text-ink-300">
-            {pageFormat.widthMm} × {pageFormat.heightMm} mm ({pageFormat.columns} cols)
+            {pageFormat.widthMm} × {pageFormat.heightMm} mm · {pageFormat.columns} kolumn
           </span>
           {deltas.length > 0 && (
             <Badge variant="warning" size="sm">
-              {deltas.length} Edits Pending
+              {deltas.length} niezapisanych zmian
             </Badge>
           )}
         </div>
@@ -165,7 +165,7 @@ export const SceneGraphCanvas: React.FC = () => {
               showGrid ? 'bg-ink-800 text-white font-bold' : 'text-ink-400 hover:text-white'
             }`}
           >
-            Grid
+            Siatka
           </button>
           <button
             onClick={() => setShowBoxes(!showBoxes)}
@@ -173,7 +173,7 @@ export const SceneGraphCanvas: React.FC = () => {
               showBoxes ? 'bg-ink-800 text-white font-bold' : 'text-ink-400 hover:text-white'
             }`}
           >
-            Boxes
+            Ramki
           </button>
           <button
             onClick={() => setShowContours(!showContours)}
@@ -181,7 +181,7 @@ export const SceneGraphCanvas: React.FC = () => {
               showContours ? 'bg-ink-800 text-white font-bold' : 'text-ink-400 hover:text-white'
             }`}
           >
-            Cutout Wrap
+            Obrys zdjęć
           </button>
           <button
             onClick={() => setShowReadingOrder(!showReadingOrder)}
@@ -189,7 +189,7 @@ export const SceneGraphCanvas: React.FC = () => {
               showReadingOrder ? 'bg-ink-800 text-white font-bold' : 'text-ink-400 hover:text-white'
             }`}
           >
-            Flow
+            Kolejność
           </button>
         </div>
 
@@ -219,7 +219,7 @@ export const SceneGraphCanvas: React.FC = () => {
             leftIcon={<Save className="w-3.5 h-3.5" />}
             onClick={handleSaveAndTrain}
           >
-            Record Edit Delta
+            Zapisz poprawki
           </Button>
         </div>
       </div>
@@ -319,13 +319,13 @@ export const SceneGraphCanvas: React.FC = () => {
                     <div className="w-full h-full relative overflow-hidden rounded">
                       <img
                         src={elem.content}
-                        alt="Photo"
+                        alt="Zdjęcie na stronie"
                         className="w-full h-full object-cover"
                       />
                       {elem.treatment?.isCutout && showContours && (
                         <div className="absolute inset-0 border-2 border-dashed border-purple-500 bg-purple-500/10 flex items-end p-1">
                           <span className="text-[8px] font-mono text-purple-900 bg-white/90 px-1 rounded uppercase font-bold">
-                            Cutout Silhouette Wrap (4mm)
+                            Tekst wokół wyciętego zdjęcia (4 mm)
                           </span>
                         </div>
                       )}
@@ -378,7 +378,7 @@ export const SceneGraphCanvas: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Inspect className="w-4 h-4 text-editorial-crimson" />
                 <h3 className="font-headline font-bold text-sm text-white">
-                  Element Scene Graph Inspector
+                  Ustawienia wybranego elementu
                 </h3>
               </div>
               {selectedElement && (
@@ -393,11 +393,11 @@ export const SceneGraphCanvas: React.FC = () => {
                 {/* Frame Coordinates (x, y, w, h in mm) */}
                 <div>
                   <span className="text-[10px] font-mono uppercase font-bold text-ink-400 block mb-2">
-                    Bounding Box Frame (mm)
+                    Położenie i rozmiar (mm)
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     <Slider
-                      label="X Offset"
+                      label="Od lewej"
                       value={Math.round(selectedElement.frame.x)}
                       min={0}
                       max={pageFormat.widthMm}
@@ -405,7 +405,7 @@ export const SceneGraphCanvas: React.FC = () => {
                       onChange={(v) => handleUpdateFrame(selectedElement.id, { x: v })}
                     />
                     <Slider
-                      label="Y Offset"
+                      label="Od góry"
                       value={Math.round(selectedElement.frame.y)}
                       min={0}
                       max={pageFormat.heightMm}
@@ -413,7 +413,7 @@ export const SceneGraphCanvas: React.FC = () => {
                       onChange={(v) => handleUpdateFrame(selectedElement.id, { y: v })}
                     />
                     <Slider
-                      label="Width"
+                      label="Szerokość"
                       value={Math.round(selectedElement.frame.width)}
                       min={10}
                       max={pageFormat.widthMm}
@@ -421,7 +421,7 @@ export const SceneGraphCanvas: React.FC = () => {
                       onChange={(v) => handleUpdateFrame(selectedElement.id, { width: v })}
                     />
                     <Slider
-                      label="Height"
+                      label="Wysokość"
                       value={Math.round(selectedElement.frame.height)}
                       min={5}
                       max={pageFormat.heightMm}
@@ -435,10 +435,10 @@ export const SceneGraphCanvas: React.FC = () => {
                 {selectedElement.style.fontSizePt && (
                   <div className="pt-3 border-t border-ink-800 space-y-3">
                     <span className="text-[10px] font-mono uppercase font-bold text-ink-400 block">
-                      Typography Override
+                      Rozmiar tekstu
                     </span>
                     <Slider
-                      label="Kegel Size"
+                      label="Wielkość pisma"
                       value={selectedElement.style.fontSizePt}
                       min={8}
                       max={60}
@@ -453,10 +453,10 @@ export const SceneGraphCanvas: React.FC = () => {
                 <div className="pt-3 border-t border-ink-800">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-mono uppercase font-bold text-ink-400">
-                      Applied Transgressions
+                      Efekty układu
                     </span>
                     <Badge variant="score" size="sm">
-                      +{selectedElement.tensionCost} pt tension
+                      +{selectedElement.tensionCost} pkt napięcia
                     </Badge>
                   </div>
                   <div className="space-y-1">

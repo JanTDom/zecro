@@ -432,6 +432,9 @@ export const INITIAL_TASTE_METRICS: Record<string, TasteModelMetrics> = {
     totalComparisons: 42,
     preferenceWinRate: 0.89,
     avgTimeToApproveSec: 18.4,
+    heldOutWinRate: 0.78,
+    evaluatedSampleCount: 9,
+    feedbackCount: 42,
     featureWeights: {
       tensionTolerance: 0.78,
       cutoutAffinity: 0.92,
@@ -453,6 +456,9 @@ export const INITIAL_TASTE_METRICS: Record<string, TasteModelMetrics> = {
     totalComparisons: 28,
     preferenceWinRate: 0.84,
     avgTimeToApproveSec: 24.1,
+    heldOutWinRate: 0.71,
+    evaluatedSampleCount: 6,
+    feedbackCount: 28,
     featureWeights: {
       tensionTolerance: 0.45,
       cutoutAffinity: 0.20,
@@ -472,6 +478,9 @@ export const INITIAL_TASTE_METRICS: Record<string, TasteModelMetrics> = {
     totalComparisons: 15,
     preferenceWinRate: 0.92,
     avgTimeToApproveSec: 14.8,
+    heldOutWinRate: 0.75,
+    evaluatedSampleCount: 4,
+    feedbackCount: 15,
     featureWeights: {
       tensionTolerance: 0.60,
       cutoutAffinity: 0.85,

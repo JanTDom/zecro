@@ -45,12 +45,17 @@ export interface PhotoMaterial {
   sourceFile?: File;
   cutoutContourPoints?: [number, number][];
   aspectRatio?: number; // width / height, when known from metadata
+  focalPoint?: [number, number]; // important subject position, normalized
+  focalStatus?: 'ready' | 'uncertain' | 'unavailable';
+  focalSubjectKind?: 'person' | 'object' | 'scene' | 'uncertain';
   placementHint: 'lead-hero' | 'top-banner' | 'sidebar' | 'floating-island' | 'bleed';
   allowTextWrap: boolean;
 }
 
 export interface IntakeData {
   projectId: string;
+  pageTopic?: import('../pageTopics').PageTopic;
+  editorialMood?: 'auto' | 'urgent' | 'human' | 'solemn' | 'celebratory' | 'analytical' | 'practical' | 'scandal' | 'entertainment';
   pageZone?: 'front_page' | 'spread' | 'back_page';
   styleBlend?: StyleBlend;
   seed?: number;
@@ -60,11 +65,17 @@ export interface IntakeData {
   leadStory: StoryMaterial;
   secondaryStories: StoryMaterial[];
   photos: PhotoMaterial[];
+  /** TV guide schedule rows (station, HH:MM, title …). */
+  tvSchedule?: { station: string; time: string; title: string; genre?: string; description?: string; highlight?: boolean }[];
   generationConfig: {
     candidateCount: number;
     tensionTarget: number; // 1 to 15
     explorationTemp: number; // 0.1 to 1.0
     allowCutouts: boolean;
     prioritizeNovelty: boolean;
+    visualReview?: boolean;
+    copyReview?: boolean;
+    acceptWeakPhotos?: boolean;
+    placeholderCopy?: boolean;
   };
 }

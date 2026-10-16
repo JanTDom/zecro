@@ -62,6 +62,35 @@ def test_taste_loop_pairwise_training():
     assert len(model.feature_weights) == 10
 
 
+def test_taste_loop_reports_measured_duration_and_held_out_accuracy():
+    dna = create_default_tabloid_dna()
+    generator = EvolutionaryLayoutGenerator(dna)
+    critic = LayoutCritic(dna)
+    material = PageInputMaterial(stories=[StoryInput(id="s1", headline="Headline", body="Body text " * 20, importance=1.0)])
+    candidates = generator.generate(material, num_candidates=2, population_size=12, generations=2, seed=7)
+    signals = [
+        PreferenceSignal(project_id="p", signal_type="pairwise_comparison", winner_candidate_id="a", loser_candidate_id="b", review_duration_sec=float(i + 1))
+        for i in range(4)
+    ]
+    model = TasteLoopTrainer("p").train_reward_model(
+        signals, {"a": candidates[0][0], "b": candidates[1][0]}, critic
+    )
+    assert model.sample_count == 4
+    assert model.feedback_count == 4
+    assert model.evaluated_sample_count == 1
+    assert model.time_to_approve_avg_iterations == 2.5
+
+
+def test_strategy_fingerprint_separates_architecture_from_geometry_fingerprint():
+    dna = create_default_tabloid_dna()
+    generator = EvolutionaryLayoutGenerator(dna)
+    material = PageInputMaterial(stories=[StoryInput(id="s1", headline="Headline", body="Body text " * 20, importance=1.0)])
+    candidates = generator.generate(material, num_candidates=5, population_size=18, generations=3, seed=12)
+    strategy_vectors = {tuple(generator.critic.extract_strategy_feature_vector(scene)) for scene, _ in candidates}
+    assert len(strategy_vectors) >= 2
+    assert generator.last_run_stats["evaluated_unique_genomes"] > 0
+
+
 def test_photo_and_headline_share_one_dominant_story_cluster_and_survive_selection():
     dna = create_default_tabloid_dna()
     generator = EvolutionaryLayoutGenerator(dna)

@@ -36,5 +36,6 @@ def test_generation_guidance_uses_zone_and_archetype_priors_with_fallback_metada
     assert front["photo_coverage_pct_mean"] == 38
 
     fallback = build_generation_guidance(pages, archetype="compact", zone="back_page")
-    assert fallback["sample_count"] == 2
-    assert fallback["used_fallback"] is True
+    assert fallback["sample_count"] == 0
+    assert fallback["used_fallback"] is False
+    assert fallback["evidence_gap"] == "no_matching_verified_pages"

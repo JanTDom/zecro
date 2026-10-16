@@ -1,49 +1,37 @@
 import React from 'react';
-
-const PBKDF2_ITERATIONS = 210_000;
-const PASSWORD_SALT = 'emVjcm8tcHJpdmF0ZS1wcmV2aWV3LTIwMjY=';
-const PASSWORD_DIGESTS = new Set([
-  'M6B/U/U/v+nKe9YhkgGuMsVY906vLkpYFJHNptdyR/4=',
-  'G6dCk/Z3s73Sz3wCHwPpYsr3gLpGItmk9HWURmDcOOY=',
-]);
-const ACCESS_STORAGE_KEY = 'zecro-private-preview-access';
-
-function encodeBase64(bytes: ArrayBuffer): string {
-  return btoa(String.fromCharCode(...new Uint8Array(bytes)));
-}
-async function deriveDigest(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
-  const bits = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      salt: Uint8Array.from(atob(PASSWORD_SALT), (character) => character.charCodeAt(0)),
-      iterations: PBKDF2_ITERATIONS,
-      hash: 'SHA-256',
-    },
-    key,
-    256,
-  );
-  return encodeBase64(bits);
-}
-
-function hasAccess(): boolean {
-  try {
-    return sessionStorage.getItem(ACCESS_STORAGE_KEY) === 'granted';
-  } catch {
-    return false;
-  }
-}
+import { apiUrl } from '../../api/client';
 
 interface AccessGateProps {
   children: React.ReactNode;
 }
 
 export function AccessGate({ children }: AccessGateProps) {
-  const [unlocked, setUnlocked] = React.useState(hasAccess);
+  const [unlocked, setUnlocked] = React.useState(false);
+  const [checkingSession, setCheckingSession] = React.useState(true);
   const [password, setPassword] = React.useState('');
   const [isChecking, setIsChecking] = React.useState(false);
   const [error, setError] = React.useState('');
+
+  React.useEffect(() => {
+    let active = true;
+    fetch(apiUrl('/auth/session'), { credentials: 'include' })
+      .then(async response => {
+        const result = await response.json().catch(() => null);
+        if (active) setUnlocked(response.ok && result?.authenticated === true);
+      })
+      .catch(() => { if (active) setError('Nie można połączyć się z serwerem. Spróbuj ponownie za chwilę.'); })
+      .finally(() => { if (active) setCheckingSession(false); });
+    return () => { active = false; };
+  }, []);
+
+  React.useEffect(() => {
+    const expire = (event: Event) => {
+      setUnlocked(false);
+      setError(event instanceof CustomEvent && event.detail === 'logout' ? 'Wylogowano.' : 'Sesja wygasła. Wpisz hasło ponownie.');
+    };
+    window.addEventListener('zecro-session-expired', expire);
+    return () => window.removeEventListener('zecro-session-expired', expire);
+  }, []);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -52,23 +40,28 @@ export function AccessGate({ children }: AccessGateProps) {
     setIsChecking(true);
     setError('');
     try {
-      const digest = await deriveDigest(password);
-      if (!PASSWORD_DIGESTS.has(digest)) {
-        setError('Hasło nie pasuje. Spróbuj ponownie.');
+      const response = await fetch(apiUrl('/auth/login'), {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        setError(typeof body?.detail === 'string' ? body.detail : 'Nie udało się zweryfikować hasła.');
         setPassword('');
         return;
       }
-      sessionStorage.setItem(ACCESS_STORAGE_KEY, 'granted');
       setUnlocked(true);
       setPassword('');
     } catch {
-      setError('Nie udało się zweryfikować dostępu. Odśwież stronę i spróbuj ponownie.');
+      setError('Nie udało się połączyć z serwerem. Odśwież stronę i spróbuj ponownie.');
     } finally {
       setIsChecking(false);
     }
   };
 
   if (unlocked) return <>{children}</>;
+
+  if (checkingSession) return <main className="access-gate" aria-live="polite"><p>Sprawdzam dostęp do studia…</p></main>;
 
   return (
     <main className="access-gate" aria-labelledby="access-gate-title">
@@ -79,15 +72,16 @@ export function AccessGate({ children }: AccessGateProps) {
           <img
             className="access-gate__logo"
             src="/zecro-logo.png"
-            alt="Zecro Generative Layout Engine"
+            alt="Zecro — tworzenie gazet"
           />
         </div>
-        <div className="access-gate__eyebrow">Private preview · zecro.pl</div>
-        <h1 id="access-gate-title">Generative Layout Engine</h1>
+        <div className="access-gate__eyebrow">Podgląd prywatny · zecro.pl</div>
+        <h1 id="access-gate-title">Studio tworzenia gazet</h1>
         <p className="access-gate__intro">
-          Studio jest dostępne w zamkniętym podglądzie. Wprowadź hasło, aby otworzyć workspace.
+          Wpisz hasło dostępu, aby otworzyć studio.
         </p>
         <form className="access-gate__form" onSubmit={onSubmit}>
+          <input type="text" name="username" autoComplete="username" value="zecro" readOnly tabIndex={-1} aria-hidden="true" style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
           <label htmlFor="access-password">Hasło dostępu</label>
           <div className="access-gate__input-wrap">
             <input
@@ -104,7 +98,7 @@ export function AccessGate({ children }: AccessGateProps) {
             <span className="access-gate__input-status" aria-hidden="true">↗</span>
           </div>
           <button type="submit" disabled={isChecking || password.length === 0}>
-            {isChecking ? 'Weryfikuję…' : 'Otwórz workspace'}
+            {isChecking ? 'Weryfikuję…' : 'Otwórz studio'}
             <span aria-hidden="true">→</span>
           </button>
           <p className="access-gate__hint" aria-live="polite">
@@ -113,7 +107,7 @@ export function AccessGate({ children }: AccessGateProps) {
         </form>
         <div className="access-gate__footer">
           <span>ZE / 01</span>
-          <span>Editorial intelligence system</span>
+          <span>Twoja gazeta od pomysłu do wydania</span>
         </div>
       </section>
     </main>

@@ -1,0 +1,11102 @@
+{
+ "summary": {
+  "pages": 14315,
+  "items": 3966,
+  "titles": 800,
+  "countries": 39,
+  "dropped_non_press_items": [
+   "tx_dv:2026-10-15",
+   "ca_lo:2026-10-15",
+   "can_cs:2026-10-15",
+   "epoch-manual-super-express-train-travel-game-2-tokyo-suburban-train",
+   "bra^pe_jdc:2026-10-11",
+   "TabloidReformataEdisi129Juli2010",
+   "est_slo:2026-10-15",
+   "epoch-manual-super-express-train-travel-game",
+   "mex_ehds:2026-10-15",
+   "brd-schwindel-org-fakt-nr-17-gg-art-23-wird-mit-wirkung-zum-18-07-1990-aufgehoben",
+   "2024-agosto-07",
+   "2024-agosto-02",
+   "ok_dok:2026-10-11",
+   "catalogueofvaluablemartindell",
+   "time-magazine-16-march-2020_202401",
+   "2024-agosto-24",
+   "fresh-fruits",
+   "net_hp:2026-10-15",
+   "time-magazine-september-11-2001-2001-09-14-red",
+   "TabloidReformataEdisi131September2010",
+   "ny_edlp:2026-10-15",
+   "SSAngoraDieAngoraZuchtenDesSSWirtschaftsVerwaltungshauptamtes194455S.Scan",
+   "sieci-neuronowe-anna-bartkowiak",
+   "GOZ-PDF-H01600",
+   "ny_edlp:2026-10-11",
+   "PodcastMegaGlosBledyTabelaMG01",
+   "GOZ-PDF-H01200",
+   "SS-Angora-Die-Angora-Zuchten",
+   "epoch-manual-super-express-game-of-shinkansen-and-japan-travel",
+   "jstor-1797844",
+   "Kompendium_Wiedzy_Secret_Service-01-1996",
+   "can_tp:2026-10-11",
+   "time-magazine-29th-april-6th-may-2019_202401",
+   "ny_dn:2026-10-11",
+   "can_tsun:2026-10-11",
+   "Kompendium_Wiedzy_Secret_Service-02-1997"
+  ],
+  "by_kind": {
+   "consumer_magazine": 960,
+   "daily_newspaper": 3662,
+   "free_commuter": 521,
+   "modern_daily_full": 1670,
+   "news_magazine": 736,
+   "pl_free_tabloid": 21,
+   "pl_magazine": 79,
+   "pl_newspaper": 553,
+   "pl_tv_guide": 1022,
+   "tabloid": 1139,
+   "tv_guide": 960,
+   "uk_tabloid": 658,
+   "us_local_newspaper": 1201,
+   "world_newspaper": 1133
+  }
+ },
+ "norms": {
+  "consumer_magazine|back": {
+   "w_mm": {
+    "n": 20,
+    "p10": 192.23,
+    "p25": 207.15,
+    "median": 212.95,
+    "p75": 231.8,
+    "p90": 264.24
+   },
+   "h_mm": {
+    "n": 20,
+    "p10": 255.02,
+    "p25": 266.575,
+    "median": 283.35,
+    "p75": 297.675,
+    "p90": 331.26
+   },
+   "columns": {
+    "n": 15,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 1.0,
+    "p90": 2.2
+   },
+   "body_pt": {
+    "n": 16,
+    "p10": 6.0,
+    "p25": 7.625,
+    "median": 8.5,
+    "p75": 9.125,
+    "p90": 17.5
+   },
+   "body_leading_pt": {
+    "n": 14,
+    "p10": 8.18,
+    "p25": 9.65,
+    "median": 12.05,
+    "p75": 14.338,
+    "p90": 17.865
+   },
+   "body_line_chars_median": {
+    "n": 15,
+    "p10": 15.5,
+    "p25": 19.0,
+    "median": 24.0,
+    "p75": 32.25,
+    "p90": 47.7
+   },
+   "headline_max_pt": {
+    "n": 13,
+    "p10": 17.2,
+    "p25": 18.0,
+    "median": 33.0,
+    "p75": 39.0,
+    "p90": 109.6
+   },
+   "headline_ratio": {
+    "n": 13,
+    "p10": 2.12,
+    "p25": 2.18,
+    "median": 4.11,
+    "p75": 5.18,
+    "p90": 8.16
+   },
+   "step2": {
+    "n": 10,
+    "p10": 0.512,
+    "p25": 0.595,
+    "median": 0.835,
+    "p75": 0.89,
+    "p90": 0.925
+   },
+   "step3": {
+    "n": 6,
+    "p10": 0.355,
+    "p25": 0.46,
+    "median": 0.725,
+    "p75": 0.818,
+    "p90": 0.885
+   },
+   "headline_blocks": {
+    "n": 16,
+    "p10": 0.0,
+    "p25": 1.0,
+    "median": 2.0,
+    "p75": 2.25,
+    "p90": 7.5
+   },
+   "largest_headline_width_share": {
+    "n": 13,
+    "p10": 0.192,
+    "p25": 0.243,
+    "median": 0.487,
+    "p75": 0.795,
+    "p90": 0.885
+   },
+   "largest_headline_y_share": {
+    "n": 13,
+    "p10": 0.032,
+    "p25": 0.05,
+    "median": 0.079,
+    "p75": 0.478,
+    "p90": 0.789
+   },
+   "text_area_share": {
+    "n": 16,
+    "p10": 0.025,
+    "p25": 0.047,
+    "median": 0.095,
+    "p75": 0.224,
+    "p90": 0.345
+   },
+   "graphic_share": {
+    "n": 20,
+    "p10": 0.419,
+    "p25": 0.512,
+    "median": 0.703,
+    "p75": 0.827,
+    "p90": 0.878
+   },
+   "largest_graphic_share": {
+    "n": 20,
+    "p10": 0.263,
+    "p25": 0.362,
+    "median": 0.702,
+    "p75": 0.826,
+    "p90": 0.855
+   },
+   "paper_share": {
+    "n": 20,
+    "p10": 0.063,
+    "p25": 0.09,
+    "median": 0.158,
+    "p75": 0.376,
+    "p90": 0.499
+   },
+   "saturated_share": {
+    "n": 20,
+    "p10": 0.04,
+    "p25": 0.108,
+    "median": 0.326,
+    "p75": 0.382,
+    "p90": 0.614
+   },
+   "dark_share": {
+    "n": 20,
+    "p10": 0.004,
+    "p25": 0.021,
+    "median": 0.108,
+    "p75": 0.192,
+    "p90": 0.391
+   },
+   "dominant_share": {
+    "n": 20,
+    "p10": 0.263,
+    "p25": 0.362,
+    "median": 0.702,
+    "p75": 0.826,
+    "p90": 0.855
+   },
+   "chars": {
+    "n": 20,
+    "p10": 0.0,
+    "p25": 55.25,
+    "median": 417.5,
+    "p75": 692.0,
+    "p90": 1159.2
+   },
+   "pages": 20,
+   "items": 20,
+   "titles": 20,
+   "formats": {
+    "small": 11,
+    "magazine": 9
+   },
+   "source_kinds": {
+    "ocr": 14,
+    "image_only": 4,
+    "born_digital": 2
+   },
+   "dominant_kind": {
+    "photo/graphic": 20
+   },
+   "top_body_fonts": [
+    "Frutiger",
+    "Fd218507"
+   ],
+   "top_head_fonts": [
+    "Zeroes",
+    "Fd2039173"
+   ]
+  },
+  "consumer_magazine|front": {
+   "w_mm": {
+    "n": 20,
+    "p10": 182.01,
+    "p25": 203.575,
+    "median": 212.95,
+    "p75": 238.025,
+    "p90": 264.24
+   },
+   "h_mm": {
+    "n": 20,
+    "p10": 194.78,
+    "p25": 264.75,
+    "median": 284.25,
+    "p75": 297.675,
+    "p90": 332.32
+   },
+   "columns": {
+    "n": 16,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.25,
+    "p90": 1.0
+   },
+   "body_pt": {
+    "n": 17,
+    "p10": 4.8,
+    "p25": 7.0,
+    "median": 9.5,
+    "p75": 12.5,
+    "p90": 14.4
+   },
+   "body_leading_pt": {
+    "n": 16,
+    "p10": 7.3,
+    "p25": 10.125,
+    "median": 12.8,
+    "p75": 16.0,
+    "p90": 17.55
+   },
+   "body_line_chars_median": {
+    "n": 13,
+    "p10": 23.0,
+    "p25": 24.5,
+    "median": 30.0,
+    "p75": 34.5,
+    "p90": 35.0
+   },
+   "headline_max_pt": {
+    "n": 14,
+    "p10": 32.3,
+    "p25": 44.0,
+    "median": 70.0,
+    "p75": 90.75,
+    "p90": 110.2
+   },
+   "headline_ratio": {
+    "n": 14,
+    "p10": 3.986,
+    "p25": 4.237,
+    "median": 5.305,
+    "p75": 8.508,
+    "p90": 16.969
+   },
+   "step2": {
+    "n": 14,
+    "p10": 0.377,
+    "p25": 0.603,
+    "median": 0.77,
+    "p75": 0.857,
+    "p90": 0.901
+   },
+   "step3": {
+    "n": 10,
+    "p10": 0.276,
+    "p25": 0.445,
+    "median": 0.615,
+    "p75": 0.785,
+    "p90": 0.817
+   },
+   "headline_blocks": {
+    "n": 17,
+    "p10": 0.0,
+    "p25": 2.0,
+    "median": 3.0,
+    "p75": 7.0,
+    "p90": 8.8
+   },
+   "largest_headline_width_share": {
+    "n": 14,
+    "p10": 0.239,
+    "p25": 0.302,
+    "median": 0.504,
+    "p75": 0.673,
+    "p90": 0.912
+   },
+   "largest_headline_y_share": {
+    "n": 14,
+    "p10": 0.093,
+    "p25": 0.18,
+    "median": 0.238,
+    "p75": 0.417,
+    "p90": 0.488
+   },
+   "text_area_share": {
+    "n": 17,
+    "p10": 0.045,
+    "p25": 0.124,
+    "median": 0.174,
+    "p75": 0.336,
+    "p90": 0.46
+   },
+   "graphic_share": {
+    "n": 20,
+    "p10": 0.41,
+    "p25": 0.548,
+    "median": 0.714,
+    "p75": 0.785,
+    "p90": 0.848
+   },
+   "largest_graphic_share": {
+    "n": 20,
+    "p10": 0.222,
+    "p25": 0.486,
+    "median": 0.699,
+    "p75": 0.757,
+    "p90": 0.856
+   },
+   "image_boxes": {
+    "n": 6,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 2.0,
+    "p75": 4.5,
+    "p90": 22.5
+   },
+   "paper_share": {
+    "n": 20,
+    "p10": 0.062,
+    "p25": 0.084,
+    "median": 0.171,
+    "p75": 0.317,
+    "p90": 0.443
+   },
+   "saturated_share": {
+    "n": 20,
+    "p10": 0.18,
+    "p25": 0.33,
+    "median": 0.394,
+    "p75": 0.462,
+    "p90": 0.603
+   },
+   "dark_share": {
+    "n": 20,
+    "p10": 0.061,
+    "p25": 0.083,
+    "median": 0.101,
+    "p75": 0.211,
+    "p90": 0.337
+   },
+   "dominant_share": {
+    "n": 20,
+    "p10": 0.222,
+    "p25": 0.528,
+    "median": 0.699,
+    "p75": 0.757,
+    "p90": 0.856
+   },
+   "font_families": {
+    "n": 6,
+    "p10": 1.5,
+    "p25": 2.0,
+    "median": 2.5,
+    "p75": 3.0,
+    "p90": 4.5
+   },
+   "vector_rules": {
+    "n": 6,
+    "p10": 4.0,
+    "p25": 13.5,
+    "median": 291.5,
+    "p75": 947.5,
+    "p90": 1350.5
+   },
+   "chars": {
+    "n": 20,
+    "p10": 0.0,
+    "p25": 76.75,
+    "median": 285.0,
+    "p75": 573.75,
+    "p90": 933.1
+   },
+   "pages": 20,
+   "items": 20,
+   "titles": 20,
+   "formats": {
+    "small": 11,
+    "magazine": 9
+   },
+   "source_kinds": {
+    "ocr": 11,
+    "born_digital": 6,
+    "image_only": 3
+   },
+   "dominant_kind": {
+    "photo/graphic": 19,
+    "headline": 1
+   },
+   "top_body_fonts": [
+    "DIN",
+    "Frutiger",
+    "DaxCondensed",
+    "KozGoPro",
+    "NewCaledonia",
+    "Fd316"
+   ],
+   "top_head_fonts": [
+    "DIN",
+    "Frutiger",
+    "Futura",
+    "KozGoPro",
+    "Interstate",
+    "Fd2024705"
+   ]
+  },
+  "consumer_magazine|inside": {
+   "w_mm": {
+    "n": 920,
+    "p10": 192.2,
+    "p25": 205.2,
+    "median": 212.95,
+    "p75": 232.025,
+    "p90": 264.24
+   },
+   "h_mm": {
+    "n": 920,
+    "p10": 197.6,
+    "p25": 266.7,
+    "median": 282.3,
+    "p75": 297.675,
+    "p90": 331.26
+   },
+   "columns": {
+    "n": 840,
+    "p10": 0.0,
+    "p25": 2.0,
+    "median": 3.0,
+    "p75": 4.0,
+    "p90": 5.0
+   },
+   "column_pitch_mm": {
+    "n": 637,
+    "p10": 21.56,
+    "p25": 33.9,
+    "median": 49.1,
+    "p75": 61.0,
+    "p90": 74.8
+   },
+   "gutter_mm": {
+    "n": 484,
+    "p10": 4.1,
+    "p25": 6.9,
+    "median": 8.3,
+    "p75": 12.925,
+    "p90": 31.37
+   },
+   "body_pt": {
+    "n": 886,
+    "p10": 4.5,
+    "p25": 6.0,
+    "median": 8.0,
+    "p75": 10.0,
+    "p90": 10.0
+   },
+   "body_leading_pt": {
+    "n": 853,
+    "p10": 6.1,
+    "p25": 8.35,
+    "median": 10.5,
+    "p75": 12.0,
+    "p90": 12.0
+   },
+   "body_line_chars_median": {
+    "n": 825,
+    "p10": 17.0,
+    "p25": 19.5,
+    "median": 29.0,
+    "p75": 35.0,
+    "p90": 45.0
+   },
+   "headline_max_pt": {
+    "n": 750,
+    "p10": 16.0,
+    "p25": 19.0,
+    "median": 28.0,
+    "p75": 47.0,
+    "p90": 66.1
+   },
+   "headline_ratio": {
+    "n": 750,
+    "p10": 1.9,
+    "p25": 2.68,
+    "median": 4.14,
+    "p75": 6.0,
+    "p90": 10.128
+   },
+   "step2": {
+    "n": 607,
+    "p10": 0.326,
+    "p25": 0.49,
+    "median": 0.71,
+    "p75": 0.88,
+    "p90": 0.95
+   },
+   "step3": {
+    "n": 431,
+    "p10": 0.25,
+    "p25": 0.38,
+    "median": 0.56,
+    "p75": 0.71,
+    "p90": 0.83
+   },
+   "headline_blocks": {
+    "n": 886,
+    "p10": 0.0,
+    "p25": 1.0,
+    "median": 2.0,
+    "p75": 5.0,
+    "p90": 10.0
+   },
+   "largest_headline_width_share": {
+    "n": 710,
+    "p10": 0.161,
+    "p25": 0.247,
+    "median": 0.402,
+    "p75": 0.592,
+    "p90": 0.811
+   },
+   "largest_headline_y_share": {
+    "n": 710,
+    "p10": 0.025,
+    "p25": 0.066,
+    "median": 0.119,
+    "p75": 0.462,
+    "p90": 0.694
+   },
+   "text_area_share": {
+    "n": 886,
+    "p10": 0.085,
+    "p25": 0.191,
+    "median": 0.287,
+    "p75": 0.372,
+    "p90": 0.427
+   },
+   "graphic_share": {
+    "n": 920,
+    "p10": 0.073,
+    "p25": 0.15,
+    "median": 0.291,
+    "p75": 0.538,
+    "p90": 0.802
+   },
+   "largest_graphic_share": {
+    "n": 920,
+    "p10": 0.037,
+    "p25": 0.069,
+    "median": 0.161,
+    "p75": 0.469,
+    "p90": 0.802
+   },
+   "image_boxes": {
+    "n": 389,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 2.0,
+    "p75": 4.0,
+    "p90": 7.0
+   },
+   "paper_share": {
+    "n": 920,
+    "p10": 0.079,
+    "p25": 0.257,
+    "median": 0.47,
+    "p75": 0.632,
+    "p90": 0.743
+   },
+   "saturated_share": {
+    "n": 920,
+    "p10": 0.006,
+    "p25": 0.024,
+    "median": 0.077,
+    "p75": 0.177,
+    "p90": 0.39
+   },
+   "dark_share": {
+    "n": 920,
+    "p10": 0.0,
+    "p25": 0.002,
+    "median": 0.019,
+    "p75": 0.058,
+    "p90": 0.145
+   },
+   "dominant_share": {
+    "n": 920,
+    "p10": 0.042,
+    "p25": 0.073,
+    "median": 0.165,
+    "p75": 0.469,
+    "p90": 0.802
+   },
+   "font_families": {
+    "n": 389,
+    "p10": 2.0,
+    "p25": 2.0,
+    "median": 4.0,
+    "p75": 5.0,
+    "p90": 6.0
+   },
+   "vector_rules": {
+    "n": 389,
+    "p10": 1.0,
+    "p25": 5.0,
+    "median": 10.0,
+    "p75": 42.0,
+    "p90": 191.0
+   },
+   "chars": {
+    "n": 920,
+    "p10": 378.0,
+    "p25": 1390.0,
+    "median": 3284.0,
+    "p75": 4405.0,
+    "p90": 5340.1
+   },
+   "pages": 920,
+   "items": 20,
+   "titles": 20,
+   "formats": {
+    "small": 506,
+    "magazine": 414
+   },
+   "source_kinds": {
+    "ocr": 497,
+    "born_digital": 389,
+    "image_only": 34
+   },
+   "dominant_kind": {
+    "photo/graphic": 867,
+    "headline": 53
+   },
+   "body_serif_share": 0.451,
+   "head_serif_share": 0.014,
+   "top_body_fonts": [
+    "Minion",
+    "Frutiger",
+    "OfficinaSansStd",
+    "TheSansLight",
+    "NewCaledonia",
+    "Syntax",
+    "Helvetica",
+    "CronosMM_408_11_"
+   ],
+   "top_head_fonts": [
+    "Formata",
+    "DINMittelschrift",
+    "DIN",
+    "Zeroes",
+    "Interstate",
+    "Syntax",
+    "HelveticaNeue",
+    "Helvetica"
+   ]
+  },
+  "daily_newspaper|front": {
+   "w_mm": {
+    "n": 3662,
+    "p10": 276.2,
+    "p25": 279.4,
+    "median": 279.4,
+    "p75": 279.4,
+    "p90": 298.4
+   },
+   "h_mm": {
+    "n": 3662,
+    "p10": 432.0,
+    "p25": 539.8,
+    "median": 539.8,
+    "p75": 552.4,
+    "p90": 571.5
+   },
+   "columns": {
+    "n": 881,
+    "p10": 2.0,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 5.0,
+    "p90": 6.0
+   },
+   "column_pitch_mm": {
+    "n": 802,
+    "p10": 34.91,
+    "p25": 49.5,
+    "median": 63.85,
+    "p75": 72.4,
+    "p90": 97.9
+   },
+   "gutter_mm": {
+    "n": 590,
+    "p10": 3.7,
+    "p25": 5.7,
+    "median": 6.6,
+    "p75": 25.9,
+    "p90": 71.71
+   },
+   "body_pt": {
+    "n": 3651,
+    "p10": 9.0,
+    "p25": 9.5,
+    "median": 9.5,
+    "p75": 9.5,
+    "p90": 10.0
+   },
+   "body_leading_pt": {
+    "n": 3628,
+    "p10": 10.0,
+    "p25": 10.5,
+    "median": 11.0,
+    "p75": 11.0,
+    "p90": 11.0
+   },
+   "body_line_chars_median": {
+    "n": 881,
+    "p10": 27.0,
+    "p25": 31.0,
+    "median": 36.0,
+    "p75": 37.0,
+    "p90": 44.0
+   },
+   "headline_max_pt": {
+    "n": 3649,
+    "p10": 42.0,
+    "p25": 47.0,
+    "median": 56.0,
+    "p75": 72.0,
+    "p90": 91.0
+   },
+   "headline_ratio": {
+    "n": 3649,
+    "p10": 4.32,
+    "p25": 4.95,
+    "median": 5.79,
+    "p75": 7.58,
+    "p90": 9.37
+   },
+   "step2": {
+    "n": 3622,
+    "p10": 0.46,
+    "p25": 0.6,
+    "median": 0.76,
+    "p75": 0.87,
+    "p90": 0.94
+   },
+   "step3": {
+    "n": 3540,
+    "p10": 0.35,
+    "p25": 0.46,
+    "median": 0.59,
+    "p75": 0.71,
+    "p90": 0.8
+   },
+   "headline_blocks": {
+    "n": 3651,
+    "p10": 4.0,
+    "p25": 6.0,
+    "median": 7.0,
+    "p75": 9.0,
+    "p90": 12.0
+   },
+   "largest_headline_width_share": {
+    "n": 3648,
+    "p10": 0.423,
+    "p25": 0.568,
+    "median": 0.66,
+    "p75": 0.724,
+    "p90": 0.898
+   },
+   "largest_headline_y_share": {
+    "n": 3648,
+    "p10": 0.121,
+    "p25": 0.195,
+    "median": 0.259,
+    "p75": 0.483,
+    "p90": 0.603
+   },
+   "text_area_share": {
+    "n": 3651,
+    "p10": 0.217,
+    "p25": 0.247,
+    "median": 0.286,
+    "p75": 0.342,
+    "p90": 0.432
+   },
+   "graphic_share": {
+    "n": 3662,
+    "p10": 0.217,
+    "p25": 0.249,
+    "median": 0.285,
+    "p75": 0.333,
+    "p90": 0.395
+   },
+   "largest_graphic_share": {
+    "n": 3662,
+    "p10": 0.103,
+    "p25": 0.128,
+    "median": 0.152,
+    "p75": 0.18,
+    "p90": 0.254
+   },
+   "image_boxes": {
+    "n": 3636,
+    "p10": 3.0,
+    "p25": 4.0,
+    "median": 5.0,
+    "p75": 7.0,
+    "p90": 11.0
+   },
+   "paper_share": {
+    "n": 3662,
+    "p10": 0.443,
+    "p25": 0.507,
+    "median": 0.55,
+    "p75": 0.58,
+    "p90": 0.606
+   },
+   "saturated_share": {
+    "n": 3662,
+    "p10": 0.054,
+    "p25": 0.081,
+    "median": 0.119,
+    "p75": 0.164,
+    "p90": 0.216
+   },
+   "dark_share": {
+    "n": 3662,
+    "p10": 0.033,
+    "p25": 0.05,
+    "median": 0.074,
+    "p75": 0.106,
+    "p90": 0.143
+   },
+   "dominant_share": {
+    "n": 3662,
+    "p10": 0.106,
+    "p25": 0.129,
+    "median": 0.153,
+    "p75": 0.182,
+    "p90": 0.258
+   },
+   "font_families": {
+    "n": 3636,
+    "p10": 2.0,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 6.0,
+    "p90": 8.0
+   },
+   "vector_rules": {
+    "n": 3636,
+    "p10": 16.0,
+    "p25": 129.75,
+    "median": 401.0,
+    "p75": 1097.0,
+    "p90": 3525.0
+   },
+   "chars": {
+    "n": 3662,
+    "p10": 2591.2,
+    "p25": 4062.25,
+    "median": 5101.0,
+    "p75": 6267.0,
+    "p90": 7727.7
+   },
+   "pages": 3662,
+   "items": 3662,
+   "titles": 516,
+   "formats": {
+    "broadsheet": 3195,
+    "tabloid": 263,
+    "berliner": 97,
+    "magazine": 64,
+    "small": 43
+   },
+   "source_kinds": {
+    "born_digital": 3636,
+    "ocr": 15,
+    "image_only": 11
+   },
+   "dominant_kind": {
+    "photo/graphic": 3501,
+    "headline": 161
+   },
+   "body_serif_share": 0.914,
+   "head_serif_share": 0.838,
+   "top_body_fonts": [
+    "UnifySerif",
+    "QuioscoTwoLF",
+    "MercuryTextG4",
+    "FarnhamText",
+    "ChronicleTextG2",
+    "ADTiemposText",
+    "NimrodMTStd",
+    "MCCLyonTextShortG2"
+   ],
+   "top_head_fonts": [
+    "UnifySerif",
+    "MercuryDisplay",
+    "Rocky",
+    "FarnhamDisplay",
+    "TiemposHeadline",
+    "RockyCond",
+    "AmplitudeCond",
+    "MCCMcClatchySerif"
+   ]
+  },
+  "free_commuter|back": {
+   "w_mm": {
+    "n": 19,
+    "p10": 215.9,
+    "p25": 260.85,
+    "median": 276.0,
+    "p75": 340.0,
+    "p90": 340.0
+   },
+   "h_mm": {
+    "n": 19,
+    "p10": 288.44,
+    "p25": 342.9,
+    "median": 393.0,
+    "p75": 501.3,
+    "p90": 544.0
+   },
+   "body_pt": {
+    "n": 10,
+    "p10": 5.5,
+    "p25": 6.375,
+    "median": 9.5,
+    "p75": 9.5,
+    "p90": 9.55
+   },
+   "body_leading_pt": {
+    "n": 9,
+    "p10": 7.0,
+    "p25": 8.1,
+    "median": 9.3,
+    "p75": 9.5,
+    "p90": 9.5
+   },
+   "headline_max_pt": {
+    "n": 10,
+    "p10": 50.6,
+    "p25": 56.0,
+    "median": 71.0,
+    "p75": 85.75,
+    "p90": 101.9
+   },
+   "headline_ratio": {
+    "n": 10,
+    "p10": 5.411,
+    "p25": 6.053,
+    "median": 7.98,
+    "p75": 9.16,
+    "p90": 16.594
+   },
+   "step2": {
+    "n": 10,
+    "p10": 0.51,
+    "p25": 0.73,
+    "median": 0.785,
+    "p75": 0.815,
+    "p90": 0.831
+   },
+   "step3": {
+    "n": 9,
+    "p10": 0.306,
+    "p25": 0.5,
+    "median": 0.65,
+    "p75": 0.74,
+    "p90": 0.758
+   },
+   "headline_blocks": {
+    "n": 10,
+    "p10": 3.6,
+    "p25": 6.25,
+    "median": 10.0,
+    "p75": 12.25,
+    "p90": 20.4
+   },
+   "largest_headline_width_share": {
+    "n": 9,
+    "p10": 0.213,
+    "p25": 0.3,
+    "median": 0.467,
+    "p75": 0.578,
+    "p90": 0.904
+   },
+   "largest_headline_y_share": {
+    "n": 9,
+    "p10": 0.165,
+    "p25": 0.213,
+    "median": 0.466,
+    "p75": 0.57,
+    "p90": 0.676
+   },
+   "text_area_share": {
+    "n": 10,
+    "p10": 0.133,
+    "p25": 0.152,
+    "median": 0.543,
+    "p75": 1.179,
+    "p90": 1.408
+   },
+   "graphic_share": {
+    "n": 19,
+    "p10": 0.138,
+    "p25": 0.27,
+    "median": 0.402,
+    "p75": 0.546,
+    "p90": 0.715
+   },
+   "largest_graphic_share": {
+    "n": 19,
+    "p10": 0.034,
+    "p25": 0.113,
+    "median": 0.228,
+    "p75": 0.534,
+    "p90": 0.715
+   },
+   "image_boxes": {
+    "n": 7,
+    "p10": 6.4,
+    "p25": 8.5,
+    "median": 9.0,
+    "p75": 11.0,
+    "p90": 15.6
+   },
+   "paper_share": {
+    "n": 19,
+    "p10": 0.256,
+    "p25": 0.305,
+    "median": 0.434,
+    "p75": 0.528,
+    "p90": 0.697
+   },
+   "saturated_share": {
+    "n": 19,
+    "p10": 0.061,
+    "p25": 0.108,
+    "median": 0.195,
+    "p75": 0.304,
+    "p90": 0.356
+   },
+   "dark_share": {
+    "n": 19,
+    "p10": 0.003,
+    "p25": 0.02,
+    "median": 0.039,
+    "p75": 0.052,
+    "p90": 0.113
+   },
+   "dominant_share": {
+    "n": 19,
+    "p10": 0.078,
+    "p25": 0.141,
+    "median": 0.307,
+    "p75": 0.534,
+    "p90": 0.715
+   },
+   "font_families": {
+    "n": 7,
+    "p10": 4.2,
+    "p25": 5.0,
+    "median": 5.0,
+    "p75": 6.5,
+    "p90": 7.0
+   },
+   "vector_rules": {
+    "n": 7,
+    "p10": 133.2,
+    "p25": 831.5,
+    "median": 1675.0,
+    "p75": 1769.5,
+    "p90": 1855.8
+   },
+   "chars": {
+    "n": 19,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 46.0,
+    "p75": 6683.0,
+    "p90": 15215.4
+   },
+   "pages": 19,
+   "items": 19,
+   "titles": 19,
+   "formats": {
+    "magazine": 6,
+    "tabloid": 5,
+    "broadsheet": 5,
+    "small": 2,
+    "berliner": 1
+   },
+   "source_kinds": {
+    "image_only": 9,
+    "born_digital": 7,
+    "ocr": 3
+   },
+   "dominant_kind": {
+    "photo/graphic": 16,
+    "headline": 3
+   },
+   "top_body_fonts": [
+    "VaarthaUni",
+    "Frutiger",
+    "Myriad"
+   ],
+   "top_head_fonts": [
+    "VaniUni",
+    "VaarthaUni",
+    "Futura",
+    "DIN",
+    "VarnaUni"
+   ]
+  },
+  "free_commuter|front": {
+   "w_mm": {
+    "n": 19,
+    "p10": 259.72,
+    "p25": 261.0,
+    "median": 279.4,
+    "p75": 340.0,
+    "p90": 340.0
+   },
+   "h_mm": {
+    "n": 19,
+    "p10": 332.46,
+    "p25": 350.0,
+    "median": 393.0,
+    "p75": 507.0,
+    "p90": 544.0
+   },
+   "body_pt": {
+    "n": 18,
+    "p10": 7.5,
+    "p25": 9.0,
+    "median": 9.5,
+    "p75": 11.375,
+    "p90": 13.6
+   },
+   "body_leading_pt": {
+    "n": 16,
+    "p10": 9.45,
+    "p25": 9.5,
+    "median": 13.25,
+    "p75": 14.0,
+    "p90": 15.0
+   },
+   "headline_max_pt": {
+    "n": 15,
+    "p10": 54.2,
+    "p25": 60.5,
+    "median": 74.0,
+    "p75": 82.5,
+    "p90": 87.6
+   },
+   "headline_ratio": {
+    "n": 15,
+    "p10": 4.794,
+    "p25": 5.48,
+    "median": 6.22,
+    "p75": 8.685,
+    "p90": 10.334
+   },
+   "step2": {
+    "n": 15,
+    "p10": 0.402,
+    "p25": 0.635,
+    "median": 0.78,
+    "p75": 0.86,
+    "p90": 0.91
+   },
+   "step3": {
+    "n": 14,
+    "p10": 0.363,
+    "p25": 0.408,
+    "median": 0.52,
+    "p75": 0.755,
+    "p90": 0.77
+   },
+   "headline_blocks": {
+    "n": 18,
+    "p10": 0.0,
+    "p25": 1.25,
+    "median": 4.5,
+    "p75": 11.0,
+    "p90": 12.3
+   },
+   "largest_headline_width_share": {
+    "n": 15,
+    "p10": 0.354,
+    "p25": 0.402,
+    "median": 0.462,
+    "p75": 0.836,
+    "p90": 0.889
+   },
+   "largest_headline_y_share": {
+    "n": 15,
+    "p10": 0.093,
+    "p25": 0.249,
+    "median": 0.324,
+    "p75": 0.445,
+    "p90": 0.561
+   },
+   "text_area_share": {
+    "n": 18,
+    "p10": 0.049,
+    "p25": 0.139,
+    "median": 0.257,
+    "p75": 0.876,
+    "p90": 1.246
+   },
+   "graphic_share": {
+    "n": 19,
+    "p10": 0.219,
+    "p25": 0.323,
+    "median": 0.397,
+    "p75": 0.446,
+    "p90": 0.632
+   },
+   "largest_graphic_share": {
+    "n": 19,
+    "p10": 0.062,
+    "p25": 0.103,
+    "median": 0.18,
+    "p75": 0.269,
+    "p90": 0.628
+   },
+   "image_boxes": {
+    "n": 16,
+    "p10": 4.0,
+    "p25": 5.0,
+    "median": 6.0,
+    "p75": 7.5,
+    "p90": 14.0
+   },
+   "paper_share": {
+    "n": 19,
+    "p10": 0.215,
+    "p25": 0.392,
+    "median": 0.453,
+    "p75": 0.511,
+    "p90": 0.579
+   },
+   "saturated_share": {
+    "n": 19,
+    "p10": 0.071,
+    "p25": 0.096,
+    "median": 0.144,
+    "p75": 0.247,
+    "p90": 0.361
+   },
+   "dark_share": {
+    "n": 19,
+    "p10": 0.031,
+    "p25": 0.048,
+    "median": 0.066,
+    "p75": 0.135,
+    "p90": 0.266
+   },
+   "dominant_share": {
+    "n": 19,
+    "p10": 0.11,
+    "p25": 0.14,
+    "median": 0.194,
+    "p75": 0.322,
+    "p90": 0.628
+   },
+   "font_families": {
+    "n": 16,
+    "p10": 1.5,
+    "p25": 2.0,
+    "median": 3.0,
+    "p75": 6.0,
+    "p90": 6.0
+   },
+   "vector_rules": {
+    "n": 16,
+    "p10": 118.5,
+    "p25": 194.25,
+    "median": 312.5,
+    "p75": 937.5,
+    "p90": 18025.0
+   },
+   "chars": {
+    "n": 19,
+    "p10": 126.8,
+    "p25": 234.5,
+    "median": 1534.0,
+    "p75": 7965.0,
+    "p90": 12769.8
+   },
+   "pages": 19,
+   "items": 19,
+   "titles": 19,
+   "formats": {
+    "magazine": 6,
+    "tabloid": 5,
+    "broadsheet": 5,
+    "berliner": 3
+   },
+   "source_kinds": {
+    "born_digital": 16,
+    "ocr": 2,
+    "image_only": 1
+   },
+   "dominant_kind": {
+    "photo/graphic": 16,
+    "headline": 3
+   },
+   "top_body_fonts": [
+    "VaarthaUni",
+    "CorpidOT",
+    "SCNT_NM",
+    "SCNT_BM",
+    "CorpidCdOT",
+    "YDIYGO340",
+    "FrutigerLTStd",
+    "MetroSwift"
+   ],
+   "top_head_fonts": [
+    "FrutigerLTStd",
+    "VaniUni",
+    "VarnaUni",
+    "UnitSlabPro",
+    "SCNT_BM",
+    "SCNT_MG",
+    "CorpidOT"
+   ]
+  },
+  "free_commuter|inside": {
+   "w_mm": {
+    "n": 483,
+    "p10": 255.8,
+    "p25": 261.0,
+    "median": 276.0,
+    "p75": 323.0,
+    "p90": 346.24
+   },
+   "h_mm": {
+    "n": 483,
+    "p10": 290.7,
+    "p25": 350.0,
+    "median": 381.0,
+    "p75": 458.6,
+    "p90": 544.0
+   },
+   "body_pt": {
+    "n": 410,
+    "p10": 6.5,
+    "p25": 7.5,
+    "median": 9.0,
+    "p75": 9.5,
+    "p90": 11.5
+   },
+   "body_leading_pt": {
+    "n": 376,
+    "p10": 7.6,
+    "p25": 9.375,
+    "median": 10.0,
+    "p75": 12.7,
+    "p90": 13.3
+   },
+   "headline_max_pt": {
+    "n": 381,
+    "p10": 27.0,
+    "p25": 40.0,
+    "median": 52.0,
+    "p75": 69.0,
+    "p90": 87.0
+   },
+   "headline_ratio": {
+    "n": 381,
+    "p10": 3.23,
+    "p25": 4.67,
+    "median": 5.89,
+    "p75": 7.6,
+    "p90": 10.0
+   },
+   "step2": {
+    "n": 367,
+    "p10": 0.42,
+    "p25": 0.55,
+    "median": 0.69,
+    "p75": 0.89,
+    "p90": 0.96
+   },
+   "step3": {
+    "n": 351,
+    "p10": 0.29,
+    "p25": 0.4,
+    "median": 0.52,
+    "p75": 0.695,
+    "p90": 0.89
+   },
+   "headline_blocks": {
+    "n": 410,
+    "p10": 0.9,
+    "p25": 3.0,
+    "median": 5.0,
+    "p75": 8.0,
+    "p90": 14.0
+   },
+   "largest_headline_width_share": {
+    "n": 369,
+    "p10": 0.261,
+    "p25": 0.379,
+    "median": 0.537,
+    "p75": 0.718,
+    "p90": 0.884
+   },
+   "largest_headline_y_share": {
+    "n": 369,
+    "p10": 0.051,
+    "p25": 0.068,
+    "median": 0.109,
+    "p75": 0.398,
+    "p90": 0.629
+   },
+   "text_area_share": {
+    "n": 410,
+    "p10": 0.04,
+    "p25": 0.18,
+    "median": 0.272,
+    "p75": 0.338,
+    "p90": 1.541
+   },
+   "graphic_share": {
+    "n": 483,
+    "p10": 0.16,
+    "p25": 0.249,
+    "median": 0.357,
+    "p75": 0.489,
+    "p90": 0.675
+   },
+   "largest_graphic_share": {
+    "n": 483,
+    "p10": 0.044,
+    "p25": 0.084,
+    "median": 0.145,
+    "p75": 0.329,
+    "p90": 0.648
+   },
+   "image_boxes": {
+    "n": 347,
+    "p10": 2.0,
+    "p25": 2.0,
+    "median": 4.0,
+    "p75": 7.0,
+    "p90": 14.0
+   },
+   "paper_share": {
+    "n": 483,
+    "p10": 0.278,
+    "p25": 0.365,
+    "median": 0.476,
+    "p75": 0.558,
+    "p90": 0.607
+   },
+   "saturated_share": {
+    "n": 483,
+    "p10": 0.033,
+    "p25": 0.079,
+    "median": 0.142,
+    "p75": 0.274,
+    "p90": 0.407
+   },
+   "dark_share": {
+    "n": 483,
+    "p10": 0.013,
+    "p25": 0.025,
+    "median": 0.05,
+    "p75": 0.105,
+    "p90": 0.205
+   },
+   "dominant_share": {
+    "n": 483,
+    "p10": 0.066,
+    "p25": 0.096,
+    "median": 0.161,
+    "p75": 0.335,
+    "p90": 0.648
+   },
+   "font_families": {
+    "n": 347,
+    "p10": 1.0,
+    "p25": 2.0,
+    "median": 3.0,
+    "p75": 5.0,
+    "p90": 6.0
+   },
+   "vector_rules": {
+    "n": 347,
+    "p10": 0.0,
+    "p25": 61.5,
+    "median": 207.0,
+    "p75": 1419.0,
+    "p90": 8826.6
+   },
+   "chars": {
+    "n": 483,
+    "p10": 0.0,
+    "p25": 402.5,
+    "median": 2799.0,
+    "p75": 4731.5,
+    "p90": 16419.4
+   },
+   "pages": 483,
+   "items": 19,
+   "titles": 19,
+   "formats": {
+    "magazine": 212,
+    "tabloid": 134,
+    "berliner": 84,
+    "broadsheet": 53
+   },
+   "source_kinds": {
+    "born_digital": 347,
+    "image_only": 73,
+    "ocr": 63
+   },
+   "dominant_kind": {
+    "photo/graphic": 419,
+    "headline": 64
+   },
+   "body_serif_share": 0.78,
+   "head_serif_share": 0.569,
+   "top_body_fonts": [
+    "MetroSwift",
+    "VaarthaUni",
+    "SCNT_BM",
+    "Times",
+    "CorpidOT",
+    "SCNT_NM",
+    "YDIYGO330",
+    "CorpidCdOT"
+   ],
+   "top_head_fonts": [
+    "UnitSlabPro",
+    "CorpidOT",
+    "SCNT_HG",
+    "Times",
+    "VaniUni",
+    "VarnaUni",
+    "CorpidCdOT",
+    "SCNT_BG"
+   ]
+  },
+  "modern_daily_full|back": {
+   "w_mm": {
+    "n": 42,
+    "p10": 228.0,
+    "p25": 230.025,
+    "median": 263.5,
+    "p75": 279.4,
+    "p90": 296.69
+   },
+   "h_mm": {
+    "n": 42,
+    "p10": 290.7,
+    "p25": 290.7,
+    "median": 475.25,
+    "p75": 546.1,
+    "p90": 570.23
+   },
+   "columns": {
+    "n": 19,
+    "p10": 0.0,
+    "p25": 1.0,
+    "median": 5.0,
+    "p75": 6.0,
+    "p90": 6.2
+   },
+   "column_pitch_mm": {
+    "n": 13,
+    "p10": 28.42,
+    "p25": 29.6,
+    "median": 35.7,
+    "p75": 44.6,
+    "p90": 99.92
+   },
+   "gutter_mm": {
+    "n": 11,
+    "p10": 2.9,
+    "p25": 3.2,
+    "median": 4.6,
+    "p75": 8.4,
+    "p90": 21.4
+   },
+   "body_pt": {
+    "n": 40,
+    "p10": 5.5,
+    "p25": 5.875,
+    "median": 7.0,
+    "p75": 9.125,
+    "p90": 11.8
+   },
+   "body_leading_pt": {
+    "n": 38,
+    "p10": 5.6,
+    "p25": 6.075,
+    "median": 7.9,
+    "p75": 10.0,
+    "p90": 13.2
+   },
+   "body_line_chars_median": {
+    "n": 19,
+    "p10": 14.8,
+    "p25": 23.5,
+    "median": 26.0,
+    "p75": 29.5,
+    "p90": 51.2
+   },
+   "headline_max_pt": {
+    "n": 37,
+    "p10": 27.6,
+    "p25": 34.0,
+    "median": 64.0,
+    "p75": 74.0,
+    "p90": 94.6
+   },
+   "headline_ratio": {
+    "n": 37,
+    "p10": 2.254,
+    "p25": 4.29,
+    "median": 9.5,
+    "p75": 12.83,
+    "p90": 13.45
+   },
+   "step2": {
+    "n": 36,
+    "p10": 0.5,
+    "p25": 0.74,
+    "median": 0.79,
+    "p75": 0.86,
+    "p90": 0.94
+   },
+   "step3": {
+    "n": 32,
+    "p10": 0.341,
+    "p25": 0.398,
+    "median": 0.595,
+    "p75": 0.752,
+    "p90": 0.825
+   },
+   "headline_blocks": {
+    "n": 40,
+    "p10": 1.0,
+    "p25": 5.0,
+    "median": 12.0,
+    "p75": 15.0,
+    "p90": 19.3
+   },
+   "largest_headline_width_share": {
+    "n": 37,
+    "p10": 0.268,
+    "p25": 0.37,
+    "median": 0.603,
+    "p75": 0.713,
+    "p90": 0.802
+   },
+   "largest_headline_y_share": {
+    "n": 37,
+    "p10": 0.053,
+    "p25": 0.247,
+    "median": 0.312,
+    "p75": 0.514,
+    "p90": 0.693
+   },
+   "text_area_share": {
+    "n": 40,
+    "p10": 0.079,
+    "p25": 0.162,
+    "median": 0.363,
+    "p75": 0.471,
+    "p90": 0.526
+   },
+   "graphic_share": {
+    "n": 42,
+    "p10": 0.228,
+    "p25": 0.259,
+    "median": 0.305,
+    "p75": 0.438,
+    "p90": 0.691
+   },
+   "largest_graphic_share": {
+    "n": 42,
+    "p10": 0.039,
+    "p25": 0.105,
+    "median": 0.158,
+    "p75": 0.215,
+    "p90": 0.504
+   },
+   "image_boxes": {
+    "n": 37,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 5.0,
+    "p75": 7.0,
+    "p90": 25.0
+   },
+   "paper_share": {
+    "n": 42,
+    "p10": 0.163,
+    "p25": 0.326,
+    "median": 0.403,
+    "p75": 0.475,
+    "p90": 0.535
+   },
+   "saturated_share": {
+    "n": 42,
+    "p10": 0.0,
+    "p25": 0.02,
+    "median": 0.155,
+    "p75": 0.219,
+    "p90": 0.304
+   },
+   "dark_share": {
+    "n": 42,
+    "p10": 0.009,
+    "p25": 0.038,
+    "median": 0.076,
+    "p75": 0.134,
+    "p90": 0.21
+   },
+   "dominant_share": {
+    "n": 42,
+    "p10": 0.039,
+    "p25": 0.108,
+    "median": 0.158,
+    "p75": 0.215,
+    "p90": 0.504
+   },
+   "font_families": {
+    "n": 37,
+    "p10": 3.0,
+    "p25": 3.0,
+    "median": 5.0,
+    "p75": 7.0,
+    "p90": 9.4
+   },
+   "vector_rules": {
+    "n": 37,
+    "p10": 0.0,
+    "p25": 6.0,
+    "median": 219.0,
+    "p75": 617.0,
+    "p90": 18371.8
+   },
+   "chars": {
+    "n": 42,
+    "p10": 207.3,
+    "p25": 1655.5,
+    "median": 7090.0,
+    "p75": 9638.25,
+    "p90": 14126.6
+   },
+   "pages": 42,
+   "items": 42,
+   "titles": 42,
+   "formats": {
+    "broadsheet": 21,
+    "magazine": 17,
+    "tabloid": 2,
+    "small": 2
+   },
+   "source_kinds": {
+    "born_digital": 37,
+    "ocr": 3,
+    "image_only": 2
+   },
+   "dominant_kind": {
+    "photo/graphic": 39,
+    "headline": 3
+   },
+   "body_serif_share": 0.469,
+   "head_serif_share": 0.208,
+   "top_body_fonts": [
+    "CenturySchoolbookBT",
+    "ArialMT",
+    "Helvetica",
+    "NimrodMT",
+    "HelveticaNeue",
+    "TimesNewRomanPSMT",
+    "Times",
+    "ArialMT+LGGGMA"
+   ],
+   "top_head_fonts": [
+    "AntiqueOlive",
+    "HelveticaNeue",
+    "Arial",
+    "Helvetica",
+    "MyriadPro",
+    "CourierNewPSMT",
+    "TimesNewRomanPS",
+    "BureauGrotesque"
+   ]
+  },
+  "modern_daily_full|front": {
+   "w_mm": {
+    "n": 42,
+    "p10": 228.0,
+    "p25": 230.025,
+    "median": 263.7,
+    "p75": 279.4,
+    "p90": 303.05
+   },
+   "h_mm": {
+    "n": 42,
+    "p10": 290.7,
+    "p25": 290.7,
+    "median": 546.1,
+    "p75": 546.1,
+    "p90": 570.23
+   },
+   "columns": {
+    "n": 20,
+    "p10": 0.9,
+    "p25": 2.75,
+    "median": 5.0,
+    "p75": 6.0,
+    "p90": 7.1
+   },
+   "column_pitch_mm": {
+    "n": 16,
+    "p10": 30.15,
+    "p25": 34.175,
+    "median": 45.3,
+    "p75": 54.175,
+    "p90": 96.5
+   },
+   "gutter_mm": {
+    "n": 14,
+    "p10": 2.73,
+    "p25": 3.875,
+    "median": 8.9,
+    "p75": 16.775,
+    "p90": 50.51
+   },
+   "body_pt": {
+    "n": 41,
+    "p10": 5.5,
+    "p25": 6.0,
+    "median": 9.0,
+    "p75": 10.0,
+    "p90": 15.5
+   },
+   "body_leading_pt": {
+    "n": 39,
+    "p10": 5.46,
+    "p25": 6.25,
+    "median": 9.9,
+    "p75": 10.95,
+    "p90": 13.72
+   },
+   "body_line_chars_median": {
+    "n": 20,
+    "p10": 23.25,
+    "p25": 25.625,
+    "median": 27.5,
+    "p75": 29.125,
+    "p90": 30.1
+   },
+   "headline_max_pt": {
+    "n": 38,
+    "p10": 57.5,
+    "p25": 62.0,
+    "median": 68.5,
+    "p75": 97.5,
+    "p90": 119.0
+   },
+   "headline_ratio": {
+    "n": 38,
+    "p10": 5.928,
+    "p25": 6.672,
+    "median": 10.415,
+    "p75": 11.89,
+    "p90": 13.327
+   },
+   "step2": {
+    "n": 37,
+    "p10": 0.416,
+    "p25": 0.49,
+    "median": 0.63,
+    "p75": 0.92,
+    "p90": 0.97
+   },
+   "step3": {
+    "n": 37,
+    "p10": 0.316,
+    "p25": 0.38,
+    "median": 0.44,
+    "p75": 0.66,
+    "p90": 0.854
+   },
+   "headline_blocks": {
+    "n": 41,
+    "p10": 5.0,
+    "p25": 10.0,
+    "median": 13.0,
+    "p75": 16.0,
+    "p90": 19.0
+   },
+   "largest_headline_width_share": {
+    "n": 38,
+    "p10": 0.479,
+    "p25": 0.664,
+    "median": 0.716,
+    "p75": 0.831,
+    "p90": 0.912
+   },
+   "largest_headline_y_share": {
+    "n": 38,
+    "p10": 0.051,
+    "p25": 0.153,
+    "median": 0.243,
+    "p75": 0.383,
+    "p90": 0.564
+   },
+   "text_area_share": {
+    "n": 41,
+    "p10": 0.197,
+    "p25": 0.354,
+    "median": 0.419,
+    "p75": 0.485,
+    "p90": 0.527
+   },
+   "graphic_share": {
+    "n": 42,
+    "p10": 0.23,
+    "p25": 0.269,
+    "median": 0.298,
+    "p75": 0.389,
+    "p90": 0.585
+   },
+   "largest_graphic_share": {
+    "n": 42,
+    "p10": 0.082,
+    "p25": 0.105,
+    "median": 0.134,
+    "p75": 0.204,
+    "p90": 0.41
+   },
+   "image_boxes": {
+    "n": 37,
+    "p10": 4.0,
+    "p25": 6.0,
+    "median": 8.0,
+    "p75": 11.0,
+    "p90": 14.0
+   },
+   "paper_share": {
+    "n": 42,
+    "p10": 0.338,
+    "p25": 0.387,
+    "median": 0.427,
+    "p75": 0.483,
+    "p90": 0.527
+   },
+   "saturated_share": {
+    "n": 42,
+    "p10": 0.065,
+    "p25": 0.098,
+    "median": 0.116,
+    "p75": 0.159,
+    "p90": 0.291
+   },
+   "dark_share": {
+    "n": 42,
+    "p10": 0.03,
+    "p25": 0.051,
+    "median": 0.086,
+    "p75": 0.11,
+    "p90": 0.146
+   },
+   "dominant_share": {
+    "n": 42,
+    "p10": 0.102,
+    "p25": 0.117,
+    "median": 0.138,
+    "p75": 0.204,
+    "p90": 0.41
+   },
+   "font_families": {
+    "n": 37,
+    "p10": 3.0,
+    "p25": 4.0,
+    "median": 5.0,
+    "p75": 7.0,
+    "p90": 9.0
+   },
+   "vector_rules": {
+    "n": 37,
+    "p10": 15.2,
+    "p25": 118.0,
+    "median": 318.0,
+    "p75": 1507.0,
+    "p90": 3167.4
+   },
+   "chars": {
+    "n": 42,
+    "p10": 546.1,
+    "p25": 4041.5,
+    "median": 6312.0,
+    "p75": 7812.75,
+    "p90": 8640.1
+   },
+   "pages": 42,
+   "items": 42,
+   "titles": 42,
+   "formats": {
+    "broadsheet": 23,
+    "magazine": 17,
+    "tabloid": 2
+   },
+   "source_kinds": {
+    "born_digital": 37,
+    "ocr": 4,
+    "image_only": 1
+   },
+   "dominant_kind": {
+    "photo/graphic": 32,
+    "headline": 10
+   },
+   "body_serif_share": 0.9,
+   "head_serif_share": 0.389,
+   "top_body_fonts": [
+    "CenturySchoolbookBT",
+    "NimrodMT",
+    "Times",
+    "CenturySchoolbook",
+    "PoynterOSTextThreeL",
+    "Utopia",
+    "MyriadPro",
+    "PalmSpringsPlain"
+   ],
+   "top_head_fonts": [
+    "AntiqueOlive",
+    "MyriadPro",
+    "Times",
+    "AntennaExtraCond",
+    "PoynterOSDisplayNarrow",
+    "EllingtonMTStd",
+    "QuorumITCbyBT",
+    "HelveticaNeue"
+   ]
+  },
+  "modern_daily_full|inside": {
+   "w_mm": {
+    "n": 1586,
+    "p10": 228.0,
+    "p25": 228.0,
+    "median": 263.5,
+    "p75": 279.4,
+    "p90": 303.5
+   },
+   "h_mm": {
+    "n": 1586,
+    "p10": 290.7,
+    "p25": 290.7,
+    "median": 304.8,
+    "p75": 546.1,
+    "p90": 571.5
+   },
+   "columns": {
+    "n": 749,
+    "p10": 1.0,
+    "p25": 2.0,
+    "median": 4.0,
+    "p75": 6.0,
+    "p90": 7.0
+   },
+   "column_pitch_mm": {
+    "n": 650,
+    "p10": 25.39,
+    "p25": 33.5,
+    "median": 44.65,
+    "p75": 55.025,
+    "p90": 102.55
+   },
+   "gutter_mm": {
+    "n": 524,
+    "p10": 2.63,
+    "p25": 4.1,
+    "median": 7.0,
+    "p75": 12.975,
+    "p90": 35.47
+   },
+   "body_pt": {
+    "n": 1566,
+    "p10": 5.0,
+    "p25": 5.5,
+    "median": 7.5,
+    "p75": 9.5,
+    "p90": 11.0
+   },
+   "body_leading_pt": {
+    "n": 1506,
+    "p10": 5.25,
+    "p25": 5.9,
+    "median": 8.575,
+    "p75": 10.25,
+    "p90": 12.7
+   },
+   "body_line_chars_median": {
+    "n": 748,
+    "p10": 21.0,
+    "p25": 26.0,
+    "median": 31.0,
+    "p75": 39.625,
+    "p90": 53.65
+   },
+   "headline_max_pt": {
+    "n": 1513,
+    "p10": 23.0,
+    "p25": 35.0,
+    "median": 48.0,
+    "p75": 64.0,
+    "p90": 96.0
+   },
+   "headline_ratio": {
+    "n": 1513,
+    "p10": 3.06,
+    "p25": 4.56,
+    "median": 6.47,
+    "p75": 8.91,
+    "p90": 11.076
+   },
+   "step2": {
+    "n": 1461,
+    "p10": 0.43,
+    "p25": 0.57,
+    "median": 0.76,
+    "p75": 0.9,
+    "p90": 0.96
+   },
+   "step3": {
+    "n": 1376,
+    "p10": 0.33,
+    "p25": 0.43,
+    "median": 0.59,
+    "p75": 0.74,
+    "p90": 0.85
+   },
+   "headline_blocks": {
+    "n": 1566,
+    "p10": 2.0,
+    "p25": 5.0,
+    "median": 9.0,
+    "p75": 15.0,
+    "p90": 25.0
+   },
+   "largest_headline_width_share": {
+    "n": 1503,
+    "p10": 0.2,
+    "p25": 0.307,
+    "median": 0.458,
+    "p75": 0.665,
+    "p90": 0.887
+   },
+   "largest_headline_y_share": {
+    "n": 1503,
+    "p10": 0.031,
+    "p25": 0.059,
+    "median": 0.237,
+    "p75": 0.575,
+    "p90": 0.801
+   },
+   "text_area_share": {
+    "n": 1566,
+    "p10": 0.143,
+    "p25": 0.235,
+    "median": 0.355,
+    "p75": 0.457,
+    "p90": 0.569
+   },
+   "graphic_share": {
+    "n": 1586,
+    "p10": 0.139,
+    "p25": 0.23,
+    "median": 0.348,
+    "p75": 0.476,
+    "p90": 0.573
+   },
+   "largest_graphic_share": {
+    "n": 1586,
+    "p10": 0.043,
+    "p25": 0.083,
+    "median": 0.145,
+    "p75": 0.254,
+    "p90": 0.425
+   },
+   "image_boxes": {
+    "n": 1434,
+    "p10": 2.0,
+    "p25": 4.0,
+    "median": 9.0,
+    "p75": 17.0,
+    "p90": 29.0
+   },
+   "paper_share": {
+    "n": 1586,
+    "p10": 0.236,
+    "p25": 0.31,
+    "median": 0.402,
+    "p75": 0.504,
+    "p90": 0.569
+   },
+   "saturated_share": {
+    "n": 1586,
+    "p10": 0.0,
+    "p25": 0.02,
+    "median": 0.114,
+    "p75": 0.212,
+    "p90": 0.316
+   },
+   "dark_share": {
+    "n": 1586,
+    "p10": 0.016,
+    "p25": 0.028,
+    "median": 0.05,
+    "p75": 0.089,
+    "p90": 0.148
+   },
+   "dominant_share": {
+    "n": 1586,
+    "p10": 0.052,
+    "p25": 0.09,
+    "median": 0.148,
+    "p75": 0.261,
+    "p90": 0.437
+   },
+   "font_families": {
+    "n": 1434,
+    "p10": 3.0,
+    "p25": 3.0,
+    "median": 5.0,
+    "p75": 8.0,
+    "p90": 11.0
+   },
+   "vector_rules": {
+    "n": 1434,
+    "p10": 8.0,
+    "p25": 70.0,
+    "median": 709.0,
+    "p75": 3233.75,
+    "p90": 9357.7
+   },
+   "chars": {
+    "n": 1586,
+    "p10": 1579.0,
+    "p25": 3683.75,
+    "median": 6356.5,
+    "p75": 10184.75,
+    "p90": 14566.5
+   },
+   "pages": 1586,
+   "items": 42,
+   "titles": 42,
+   "formats": {
+    "magazine": 787,
+    "broadsheet": 683,
+    "tabloid": 76,
+    "small": 40
+   },
+   "source_kinds": {
+    "born_digital": 1434,
+    "ocr": 132,
+    "image_only": 20
+   },
+   "dominant_kind": {
+    "photo/graphic": 1422,
+    "headline": 164
+   },
+   "body_serif_share": 0.553,
+   "head_serif_share": 0.206,
+   "top_body_fonts": [
+    "CenturySchoolbookBT",
+    "HelveticaNeue",
+    "Helvetica",
+    "NimrodMT",
+    "Utopia",
+    "PoynterOSTextThreeL",
+    "Times",
+    "MyriadPro"
+   ],
+   "top_head_fonts": [
+    "HelveticaNeue",
+    "Helvetica",
+    "MyriadPro",
+    "Interstate",
+    "AntennaExtraCond",
+    "Futura",
+    "TradeGothic",
+    "Arial"
+   ]
+  },
+  "news_magazine|back": {
+   "w_mm": {
+    "n": 17,
+    "p10": 205.3,
+    "p25": 272.8,
+    "median": 382.0,
+    "p75": 382.0,
+    "p90": 409.12
+   },
+   "h_mm": {
+    "n": 17,
+    "p10": 266.64,
+    "p25": 363.8,
+    "median": 509.4,
+    "p75": 509.4,
+    "p90": 620.18
+   },
+   "columns": {
+    "n": 10,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 1.0,
+    "p90": 2.1
+   },
+   "body_pt": {
+    "n": 10,
+    "p10": 5.3,
+    "p25": 10.375,
+    "median": 17.75,
+    "p75": 22.375,
+    "p90": 69.4
+   },
+   "body_leading_pt": {
+    "n": 8,
+    "p10": 11.15,
+    "p25": 19.025,
+    "median": 26.225,
+    "p75": 53.375,
+    "p90": 85.01
+   },
+   "body_line_chars_median": {
+    "n": 10,
+    "p10": 17.05,
+    "p25": 33.25,
+    "median": 40.5,
+    "p75": 58.125,
+    "p90": 73.9
+   },
+   "headline_max_pt": {
+    "n": 8,
+    "p10": 17.2,
+    "p25": 25.75,
+    "median": 79.5,
+    "p75": 93.5,
+    "p90": 130.4
+   },
+   "headline_ratio": {
+    "n": 8,
+    "p10": 2.333,
+    "p25": 2.675,
+    "median": 3.87,
+    "p75": 5.018,
+    "p90": 6.087
+   },
+   "step2": {
+    "n": 6,
+    "p10": 0.39,
+    "p25": 0.468,
+    "median": 0.78,
+    "p75": 0.905,
+    "p90": 0.93
+   },
+   "step3": {
+    "n": 6,
+    "p10": 0.345,
+    "p25": 0.4,
+    "median": 0.54,
+    "p75": 0.725,
+    "p90": 0.84
+   },
+   "headline_blocks": {
+    "n": 10,
+    "p10": 0.0,
+    "p25": 1.0,
+    "median": 1.5,
+    "p75": 3.0,
+    "p90": 4.2
+   },
+   "largest_headline_width_share": {
+    "n": 8,
+    "p10": 0.372,
+    "p25": 0.478,
+    "median": 0.625,
+    "p75": 0.8,
+    "p90": 0.874
+   },
+   "largest_headline_y_share": {
+    "n": 8,
+    "p10": 0.043,
+    "p25": 0.067,
+    "median": 0.173,
+    "p75": 0.497,
+    "p90": 0.609
+   },
+   "text_area_share": {
+    "n": 10,
+    "p10": 0.047,
+    "p25": 0.06,
+    "median": 0.103,
+    "p75": 0.233,
+    "p90": 0.327
+   },
+   "graphic_share": {
+    "n": 17,
+    "p10": 0.225,
+    "p25": 0.368,
+    "median": 0.568,
+    "p75": 0.8,
+    "p90": 0.925
+   },
+   "largest_graphic_share": {
+    "n": 17,
+    "p10": 0.16,
+    "p25": 0.224,
+    "median": 0.537,
+    "p75": 0.781,
+    "p90": 0.924
+   },
+   "image_boxes": {
+    "n": 5,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 1.0,
+    "p75": 2.0,
+    "p90": 2.0
+   },
+   "paper_share": {
+    "n": 17,
+    "p10": 0.031,
+    "p25": 0.065,
+    "median": 0.261,
+    "p75": 0.622,
+    "p90": 0.728
+   },
+   "saturated_share": {
+    "n": 17,
+    "p10": 0.056,
+    "p25": 0.135,
+    "median": 0.429,
+    "p75": 0.508,
+    "p90": 0.557
+   },
+   "dark_share": {
+    "n": 17,
+    "p10": 0.009,
+    "p25": 0.021,
+    "median": 0.068,
+    "p75": 0.273,
+    "p90": 0.473
+   },
+   "dominant_share": {
+    "n": 17,
+    "p10": 0.16,
+    "p25": 0.224,
+    "median": 0.537,
+    "p75": 0.781,
+    "p90": 0.924
+   },
+   "font_families": {
+    "n": 5,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 1.0,
+    "p75": 2.0,
+    "p90": 2.6
+   },
+   "vector_rules": {
+    "n": 5,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 0.0
+   },
+   "chars": {
+    "n": 17,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 85.0,
+    "p75": 601.0,
+    "p90": 1364.8
+   },
+   "pages": 17,
+   "items": 17,
+   "titles": 17,
+   "formats": {
+    "berliner": 9,
+    "small": 3,
+    "broadsheet": 3,
+    "magazine": 1,
+    "tabloid": 1
+   },
+   "source_kinds": {
+    "image_only": 7,
+    "born_digital": 5,
+    "ocr": 5
+   },
+   "dominant_kind": {
+    "photo/graphic": 17
+   },
+   "top_body_fonts": [
+    "Times",
+    "GothamNarrow",
+    "Arial",
+    "Cinzel"
+   ],
+   "top_head_fonts": [
+    "Times",
+    "Gotham",
+    "CochinLTStd",
+    "Cinzel"
+   ]
+  },
+  "news_magazine|front": {
+   "w_mm": {
+    "n": 17,
+    "p10": 204.74,
+    "p25": 382.0,
+    "median": 382.0,
+    "p75": 382.0,
+    "p90": 432.64
+   },
+   "h_mm": {
+    "n": 17,
+    "p10": 265.66,
+    "p25": 509.4,
+    "median": 509.4,
+    "p75": 509.4,
+    "p90": 563.02
+   },
+   "columns": {
+    "n": 15,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 0.0
+   },
+   "body_pt": {
+    "n": 15,
+    "p10": 15.5,
+    "p25": 16.25,
+    "median": 20.0,
+    "p75": 32.0,
+    "p90": 35.4
+   },
+   "body_leading_pt": {
+    "n": 10,
+    "p10": 16.58,
+    "p25": 19.238,
+    "median": 24.35,
+    "p75": 41.775,
+    "p90": 49.07
+   },
+   "body_line_chars_median": {
+    "n": 15,
+    "p10": 12.4,
+    "p25": 15.75,
+    "median": 18.5,
+    "p75": 23.0,
+    "p90": 26.1
+   },
+   "headline_max_pt": {
+    "n": 12,
+    "p10": 41.5,
+    "p25": 65.5,
+    "median": 79.5,
+    "p75": 141.75,
+    "p90": 175.2
+   },
+   "headline_ratio": {
+    "n": 12,
+    "p10": 2.259,
+    "p25": 2.865,
+    "median": 4.205,
+    "p75": 5.805,
+    "p90": 8.691
+   },
+   "step2": {
+    "n": 7,
+    "p10": 0.336,
+    "p25": 0.49,
+    "median": 0.59,
+    "p75": 0.765,
+    "p90": 0.856
+   },
+   "headline_blocks": {
+    "n": 15,
+    "p10": 0.0,
+    "p25": 1.0,
+    "median": 1.0,
+    "p75": 2.0,
+    "p90": 2.0
+   },
+   "largest_headline_width_share": {
+    "n": 12,
+    "p10": 0.25,
+    "p25": 0.266,
+    "median": 0.341,
+    "p75": 0.614,
+    "p90": 0.839
+   },
+   "largest_headline_y_share": {
+    "n": 12,
+    "p10": 0.289,
+    "p25": 0.331,
+    "median": 0.459,
+    "p75": 0.632,
+    "p90": 0.644
+   },
+   "text_area_share": {
+    "n": 15,
+    "p10": 0.034,
+    "p25": 0.042,
+    "median": 0.1,
+    "p75": 0.131,
+    "p90": 0.172
+   },
+   "graphic_share": {
+    "n": 17,
+    "p10": 0.672,
+    "p25": 0.805,
+    "median": 0.854,
+    "p75": 0.869,
+    "p90": 0.917
+   },
+   "largest_graphic_share": {
+    "n": 17,
+    "p10": 0.671,
+    "p25": 0.716,
+    "median": 0.818,
+    "p75": 0.869,
+    "p90": 0.917
+   },
+   "image_boxes": {
+    "n": 10,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 1.0,
+    "p75": 1.0,
+    "p90": 1.1
+   },
+   "paper_share": {
+    "n": 17,
+    "p10": 0.049,
+    "p25": 0.064,
+    "median": 0.078,
+    "p75": 0.14,
+    "p90": 0.258
+   },
+   "saturated_share": {
+    "n": 17,
+    "p10": 0.172,
+    "p25": 0.279,
+    "median": 0.399,
+    "p75": 0.611,
+    "p90": 0.707
+   },
+   "dark_share": {
+    "n": 17,
+    "p10": 0.068,
+    "p25": 0.237,
+    "median": 0.315,
+    "p75": 0.444,
+    "p90": 0.543
+   },
+   "dominant_share": {
+    "n": 17,
+    "p10": 0.671,
+    "p25": 0.716,
+    "median": 0.818,
+    "p75": 0.869,
+    "p90": 0.917
+   },
+   "font_families": {
+    "n": 10,
+    "p10": 1.9,
+    "p25": 2.0,
+    "median": 2.0,
+    "p75": 2.75,
+    "p90": 3.0
+   },
+   "vector_rules": {
+    "n": 10,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 0.0
+   },
+   "chars": {
+    "n": 17,
+    "p10": 34.2,
+    "p25": 88.0,
+    "median": 154.0,
+    "p75": 225.0,
+    "p90": 288.0
+   },
+   "pages": 17,
+   "items": 17,
+   "titles": 17,
+   "formats": {
+    "berliner": 9,
+    "broadsheet": 4,
+    "small": 3,
+    "tabloid": 1
+   },
+   "source_kinds": {
+    "born_digital": 10,
+    "ocr": 5,
+    "image_only": 2
+   },
+   "dominant_kind": {
+    "photo/graphic": 17
+   },
+   "body_serif_share": 0.143,
+   "top_body_fonts": [
+    "ITCFranklinGothicStd",
+    "HaffnerTIMEDisplay",
+    "Times",
+    "HaffnerTIME"
+   ],
+   "top_head_fonts": [
+    "HaffnerTIME",
+    "HaffnerTIMEDisplay",
+    "DuplicateIonic",
+    "ITCFranklinGothicStd"
+   ]
+  },
+  "news_magazine|inside": {
+   "w_mm": {
+    "n": 702,
+    "p10": 197.6,
+    "p25": 272.8,
+    "median": 382.0,
+    "p75": 382.0,
+    "p90": 635.0
+   },
+   "h_mm": {
+    "n": 702,
+    "p10": 256.8,
+    "p25": 363.8,
+    "median": 509.4,
+    "p75": 509.4,
+    "p90": 569.4
+   },
+   "columns": {
+    "n": 611,
+    "p10": 0.0,
+    "p25": 1.0,
+    "median": 2.0,
+    "p75": 3.0,
+    "p90": 4.0
+   },
+   "column_pitch_mm": {
+    "n": 405,
+    "p10": 39.64,
+    "p25": 73.6,
+    "median": 115.9,
+    "p75": 189.8,
+    "p90": 208.6
+   },
+   "gutter_mm": {
+    "n": 310,
+    "p10": 6.79,
+    "p25": 8.3,
+    "median": 14.8,
+    "p75": 64.775,
+    "p90": 93.0
+   },
+   "body_pt": {
+    "n": 611,
+    "p10": 7.5,
+    "p25": 13.5,
+    "median": 18.0,
+    "p75": 18.5,
+    "p90": 21.5
+   },
+   "body_leading_pt": {
+    "n": 568,
+    "p10": 9.8,
+    "p25": 17.2,
+    "median": 20.6,
+    "p75": 20.6,
+    "p90": 30.8
+   },
+   "body_line_chars_median": {
+    "n": 602,
+    "p10": 22.5,
+    "p25": 29.625,
+    "median": 40.0,
+    "p75": 49.0,
+    "p90": 59.45
+   },
+   "headline_max_pt": {
+    "n": 428,
+    "p10": 23.0,
+    "p25": 35.0,
+    "median": 48.0,
+    "p75": 53.0,
+    "p90": 90.0
+   },
+   "headline_ratio": {
+    "n": 428,
+    "p10": 1.88,
+    "p25": 2.205,
+    "median": 2.86,
+    "p75": 3.963,
+    "p90": 6.143
+   },
+   "step2": {
+    "n": 251,
+    "p10": 0.4,
+    "p25": 0.6,
+    "median": 0.75,
+    "p75": 0.94,
+    "p90": 0.97
+   },
+   "step3": {
+    "n": 123,
+    "p10": 0.3,
+    "p25": 0.415,
+    "median": 0.61,
+    "p75": 0.855,
+    "p90": 0.94
+   },
+   "headline_blocks": {
+    "n": 611,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 1.0,
+    "p75": 2.0,
+    "p90": 3.0
+   },
+   "largest_headline_width_share": {
+    "n": 407,
+    "p10": 0.158,
+    "p25": 0.222,
+    "median": 0.315,
+    "p75": 0.416,
+    "p90": 0.616
+   },
+   "largest_headline_y_share": {
+    "n": 407,
+    "p10": 0.046,
+    "p25": 0.093,
+    "median": 0.145,
+    "p75": 0.456,
+    "p90": 0.695
+   },
+   "text_area_share": {
+    "n": 611,
+    "p10": 0.035,
+    "p25": 0.145,
+    "median": 0.278,
+    "p75": 0.4,
+    "p90": 0.47
+   },
+   "graphic_share": {
+    "n": 702,
+    "p10": 0.071,
+    "p25": 0.196,
+    "median": 0.375,
+    "p75": 0.621,
+    "p90": 0.841
+   },
+   "largest_graphic_share": {
+    "n": 702,
+    "p10": 0.033,
+    "p25": 0.143,
+    "median": 0.308,
+    "p75": 0.571,
+    "p90": 0.835
+   },
+   "image_boxes": {
+    "n": 373,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 1.0,
+    "p75": 1.0,
+    "p90": 1.0
+   },
+   "paper_share": {
+    "n": 702,
+    "p10": 0.113,
+    "p25": 0.244,
+    "median": 0.471,
+    "p75": 0.632,
+    "p90": 0.725
+   },
+   "saturated_share": {
+    "n": 702,
+    "p10": 0.004,
+    "p25": 0.029,
+    "median": 0.095,
+    "p75": 0.201,
+    "p90": 0.394
+   },
+   "dark_share": {
+    "n": 702,
+    "p10": 0.005,
+    "p25": 0.021,
+    "median": 0.073,
+    "p75": 0.187,
+    "p90": 0.336
+   },
+   "dominant_share": {
+    "n": 702,
+    "p10": 0.055,
+    "p25": 0.151,
+    "median": 0.31,
+    "p75": 0.571,
+    "p90": 0.835
+   },
+   "font_families": {
+    "n": 373,
+    "p10": 1.0,
+    "p25": 2.0,
+    "median": 2.0,
+    "p75": 3.0,
+    "p90": 3.0
+   },
+   "vector_rules": {
+    "n": 373,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 0.0
+   },
+   "chars": {
+    "n": 702,
+    "p10": 0.0,
+    "p25": 235.5,
+    "median": 2685.5,
+    "p75": 4158.25,
+    "p90": 5315.2
+   },
+   "pages": 702,
+   "items": 17,
+   "titles": 17,
+   "formats": {
+    "berliner": 422,
+    "small": 136,
+    "broadsheet": 100,
+    "tabloid": 44
+   },
+   "source_kinds": {
+    "born_digital": 373,
+    "ocr": 238,
+    "image_only": 91
+   },
+   "dominant_kind": {
+    "photo/graphic": 668,
+    "headline": 34
+   },
+   "body_serif_share": 0.248,
+   "head_serif_share": 0.241,
+   "top_body_fonts": [
+    "HaffnerTIME",
+    "ITCFranklinGothicStd",
+    "Times",
+    "DuplicateIonic",
+    "BentonSans",
+    "Gibson",
+    "GothamNarrow",
+    "Frutiger"
+   ],
+   "top_head_fonts": [
+    "DuplicateIonic",
+    "ITCFranklinGothicStd",
+    "HaffnerTIME",
+    "Times",
+    "HaffnerTIMEDisplay",
+    "BentonSansWide",
+    "Gibson",
+    "FranklinITCPro"
+   ]
+  },
+  "pl_free_tabloid|back": {
+   "w_mm": {
+    "n": 3,
+    "p10": 289.0,
+    "p25": 289.0,
+    "median": 289.0,
+    "p75": 289.0,
+    "p90": 289.0
+   },
+   "h_mm": {
+    "n": 3,
+    "p10": 390.0,
+    "p25": 390.0,
+    "median": 390.0,
+    "p75": 390.0,
+    "p90": 390.0
+   },
+   "body_pt": {
+    "n": 3,
+    "p10": 9.2,
+    "p25": 9.5,
+    "median": 10.0,
+    "p75": 10.0,
+    "p90": 10.0
+   },
+   "body_leading_pt": {
+    "n": 3,
+    "p10": 10.5,
+    "p25": 10.5,
+    "median": 10.5,
+    "p75": 10.5,
+    "p90": 10.5
+   },
+   "headline_max_pt": {
+    "n": 3,
+    "p10": 118.4,
+    "p25": 147.5,
+    "median": 196.0,
+    "p75": 236.0,
+    "p90": 260.0
+   },
+   "headline_ratio": {
+    "n": 3,
+    "p10": 12.72,
+    "p25": 15.3,
+    "median": 19.6,
+    "p75": 23.6,
+    "p90": 26.0
+   },
+   "step2": {
+    "n": 3,
+    "p10": 0.42,
+    "p25": 0.465,
+    "median": 0.54,
+    "p75": 0.69,
+    "p90": 0.78
+   },
+   "step3": {
+    "n": 3,
+    "p10": 0.264,
+    "p25": 0.315,
+    "median": 0.4,
+    "p75": 0.525,
+    "p90": 0.6
+   },
+   "headline_blocks": {
+    "n": 3,
+    "p10": 6.0,
+    "p25": 6.0,
+    "median": 6.0,
+    "p75": 6.0,
+    "p90": 6.0
+   },
+   "largest_headline_width_share": {
+    "n": 3,
+    "p10": 0.427,
+    "p25": 0.427,
+    "median": 0.427,
+    "p75": 0.489,
+    "p90": 0.525
+   },
+   "largest_headline_y_share": {
+    "n": 3,
+    "p10": 0.083,
+    "p25": 0.146,
+    "median": 0.25,
+    "p75": 0.269,
+    "p90": 0.281
+   },
+   "text_area_share": {
+    "n": 3,
+    "p10": 0.425,
+    "p25": 0.434,
+    "median": 0.45,
+    "p75": 0.501,
+    "p90": 0.531
+   },
+   "graphic_share": {
+    "n": 3,
+    "p10": 0.392,
+    "p25": 0.402,
+    "median": 0.418,
+    "p75": 0.418,
+    "p90": 0.419
+   },
+   "largest_graphic_share": {
+    "n": 3,
+    "p10": 0.243,
+    "p25": 0.244,
+    "median": 0.245,
+    "p75": 0.245,
+    "p90": 0.246
+   },
+   "image_boxes": {
+    "n": 3,
+    "p10": 14.0,
+    "p25": 18.5,
+    "median": 26.0,
+    "p75": 31.5,
+    "p90": 34.8
+   },
+   "paper_share": {
+    "n": 3,
+    "p10": 0.319,
+    "p25": 0.323,
+    "median": 0.328,
+    "p75": 0.335,
+    "p90": 0.339
+   },
+   "saturated_share": {
+    "n": 3,
+    "p10": 0.341,
+    "p25": 0.342,
+    "median": 0.342,
+    "p75": 0.351,
+    "p90": 0.356
+   },
+   "dark_share": {
+    "n": 3,
+    "p10": 0.04,
+    "p25": 0.044,
+    "median": 0.052,
+    "p75": 0.061,
+    "p90": 0.067
+   },
+   "dominant_share": {
+    "n": 3,
+    "p10": 0.243,
+    "p25": 0.244,
+    "median": 0.245,
+    "p75": 0.245,
+    "p90": 0.246
+   },
+   "font_families": {
+    "n": 3,
+    "p10": 3.2,
+    "p25": 3.5,
+    "median": 4.0,
+    "p75": 4.0,
+    "p90": 4.0
+   },
+   "vector_rules": {
+    "n": 3,
+    "p10": 192.0,
+    "p25": 280.5,
+    "median": 428.0,
+    "p75": 435.5,
+    "p90": 440.0
+   },
+   "chars": {
+    "n": 3,
+    "p10": 2836.4,
+    "p25": 2868.5,
+    "median": 2922.0,
+    "p75": 3021.5,
+    "p90": 3081.2
+   },
+   "pages": 3,
+   "items": 3,
+   "titles": 1,
+   "formats": {
+    "tabloid": 3
+   },
+   "source_kinds": {
+    "born_digital": 3
+   },
+   "dominant_kind": {
+    "photo/graphic": 3
+   },
+   "top_body_fonts": [
+    "Utopia"
+   ],
+   "top_head_fonts": [
+    "GothamXNarrow",
+    "NimbusSansD"
+   ]
+  },
+  "pl_free_tabloid|front": {
+   "w_mm": {
+    "n": 3,
+    "p10": 289.0,
+    "p25": 289.0,
+    "median": 289.0,
+    "p75": 289.0,
+    "p90": 289.0
+   },
+   "h_mm": {
+    "n": 3,
+    "p10": 390.0,
+    "p25": 390.0,
+    "median": 390.0,
+    "p75": 390.0,
+    "p90": 390.0
+   },
+   "body_pt": {
+    "n": 3,
+    "p10": 9.5,
+    "p25": 9.5,
+    "median": 9.5,
+    "p75": 9.5,
+    "p90": 9.5
+   },
+   "body_leading_pt": {
+    "n": 3,
+    "p10": 8.92,
+    "p25": 9.4,
+    "median": 10.2,
+    "p75": 10.2,
+    "p90": 10.2
+   },
+   "headline_max_pt": {
+    "n": 3,
+    "p10": 162.6,
+    "p25": 181.5,
+    "median": 213.0,
+    "p75": 215.5,
+    "p90": 217.0
+   },
+   "headline_ratio": {
+    "n": 3,
+    "p10": 17.116,
+    "p25": 19.105,
+    "median": 22.42,
+    "p75": 22.685,
+    "p90": 22.844
+   },
+   "step2": {
+    "n": 3,
+    "p10": 0.702,
+    "p25": 0.735,
+    "median": 0.79,
+    "p75": 0.83,
+    "p90": 0.854
+   },
+   "step3": {
+    "n": 3,
+    "p10": 0.564,
+    "p25": 0.6,
+    "median": 0.66,
+    "p75": 0.72,
+    "p90": 0.756
+   },
+   "headline_blocks": {
+    "n": 3,
+    "p10": 10.0,
+    "p25": 10.0,
+    "median": 10.0,
+    "p75": 10.5,
+    "p90": 10.8
+   },
+   "largest_headline_width_share": {
+    "n": 3,
+    "p10": 0.58,
+    "p25": 0.582,
+    "median": 0.586,
+    "p75": 0.621,
+    "p90": 0.642
+   },
+   "largest_headline_y_share": {
+    "n": 3,
+    "p10": 0.353,
+    "p25": 0.364,
+    "median": 0.382,
+    "p75": 0.449,
+    "p90": 0.488
+   },
+   "text_area_share": {
+    "n": 3,
+    "p10": 1.007,
+    "p25": 1.068,
+    "median": 1.17,
+    "p75": 1.175,
+    "p90": 1.178
+   },
+   "graphic_share": {
+    "n": 3,
+    "p10": 0.254,
+    "p25": 0.268,
+    "median": 0.292,
+    "p75": 0.294,
+    "p90": 0.296
+   },
+   "largest_graphic_share": {
+    "n": 3,
+    "p10": 0.131,
+    "p25": 0.135,
+    "median": 0.141,
+    "p75": 0.17,
+    "p90": 0.187
+   },
+   "image_boxes": {
+    "n": 3,
+    "p10": 15.8,
+    "p25": 20.0,
+    "median": 27.0,
+    "p75": 43.5,
+    "p90": 53.4
+   },
+   "paper_share": {
+    "n": 3,
+    "p10": 0.371,
+    "p25": 0.378,
+    "median": 0.389,
+    "p75": 0.4,
+    "p90": 0.407
+   },
+   "saturated_share": {
+    "n": 3,
+    "p10": 0.309,
+    "p25": 0.31,
+    "median": 0.311,
+    "p75": 0.312,
+    "p90": 0.313
+   },
+   "dark_share": {
+    "n": 3,
+    "p10": 0.072,
+    "p25": 0.075,
+    "median": 0.08,
+    "p75": 0.083,
+    "p90": 0.086
+   },
+   "dominant_share": {
+    "n": 3,
+    "p10": 0.261,
+    "p25": 0.276,
+    "median": 0.302,
+    "p75": 0.329,
+    "p90": 0.345
+   },
+   "font_families": {
+    "n": 3,
+    "p10": 6.0,
+    "p25": 6.0,
+    "median": 6.0,
+    "p75": 6.0,
+    "p90": 6.0
+   },
+   "vector_rules": {
+    "n": 3,
+    "p10": 505.0,
+    "p25": 757.0,
+    "median": 1177.0,
+    "p75": 1681.5,
+    "p90": 1984.2
+   },
+   "chars": {
+    "n": 3,
+    "p10": 1254.2,
+    "p25": 1316.0,
+    "median": 1419.0,
+    "p75": 1459.5,
+    "p90": 1483.8
+   },
+   "pages": 3,
+   "items": 3,
+   "titles": 1,
+   "formats": {
+    "tabloid": 3
+   },
+   "source_kinds": {
+    "born_digital": 3
+   },
+   "dominant_kind": {
+    "headline": 3
+   },
+   "top_body_fonts": [
+    "Utopia"
+   ],
+   "top_head_fonts": [
+    "NimbusSansD",
+    "Upgrade",
+    "GothamXNarrow"
+   ]
+  },
+  "pl_free_tabloid|inside": {
+   "w_mm": {
+    "n": 15,
+    "p10": 289.0,
+    "p25": 289.0,
+    "median": 289.0,
+    "p75": 289.0,
+    "p90": 578.0
+   },
+   "h_mm": {
+    "n": 15,
+    "p10": 390.0,
+    "p25": 390.0,
+    "median": 390.0,
+    "p75": 390.0,
+    "p90": 390.0
+   },
+   "body_pt": {
+    "n": 15,
+    "p10": 9.4,
+    "p25": 10.0,
+    "median": 10.0,
+    "p75": 10.0,
+    "p90": 10.3
+   },
+   "body_leading_pt": {
+    "n": 15,
+    "p10": 10.5,
+    "p25": 10.5,
+    "median": 10.5,
+    "p75": 10.5,
+    "p90": 11.26
+   },
+   "headline_max_pt": {
+    "n": 15,
+    "p10": 96.8,
+    "p25": 111.5,
+    "median": 126.0,
+    "p75": 134.0,
+    "p90": 159.8
+   },
+   "headline_ratio": {
+    "n": 15,
+    "p10": 8.892,
+    "p25": 10.45,
+    "median": 12.7,
+    "p75": 13.4,
+    "p90": 15.98
+   },
+   "step2": {
+    "n": 15,
+    "p10": 0.59,
+    "p25": 0.69,
+    "median": 0.78,
+    "p75": 0.92,
+    "p90": 0.952
+   },
+   "step3": {
+    "n": 15,
+    "p10": 0.374,
+    "p25": 0.4,
+    "median": 0.6,
+    "p75": 0.675,
+    "p90": 0.888
+   },
+   "headline_blocks": {
+    "n": 15,
+    "p10": 3.4,
+    "p25": 5.0,
+    "median": 7.0,
+    "p75": 10.0,
+    "p90": 10.6
+   },
+   "largest_headline_width_share": {
+    "n": 15,
+    "p10": 0.317,
+    "p25": 0.395,
+    "median": 0.567,
+    "p75": 0.655,
+    "p90": 0.819
+   },
+   "largest_headline_y_share": {
+    "n": 15,
+    "p10": 0.064,
+    "p25": 0.074,
+    "median": 0.099,
+    "p75": 0.348,
+    "p90": 0.573
+   },
+   "text_area_share": {
+    "n": 15,
+    "p10": 0.417,
+    "p25": 0.488,
+    "median": 0.545,
+    "p75": 0.673,
+    "p90": 0.722
+   },
+   "graphic_share": {
+    "n": 15,
+    "p10": 0.265,
+    "p25": 0.284,
+    "median": 0.322,
+    "p75": 0.369,
+    "p90": 0.396
+   },
+   "largest_graphic_share": {
+    "n": 15,
+    "p10": 0.099,
+    "p25": 0.114,
+    "median": 0.134,
+    "p75": 0.161,
+    "p90": 0.194
+   },
+   "image_boxes": {
+    "n": 15,
+    "p10": 6.6,
+    "p25": 13.5,
+    "median": 21.0,
+    "p75": 33.0,
+    "p90": 36.6
+   },
+   "paper_share": {
+    "n": 15,
+    "p10": 0.353,
+    "p25": 0.388,
+    "median": 0.423,
+    "p75": 0.47,
+    "p90": 0.51
+   },
+   "saturated_share": {
+    "n": 15,
+    "p10": 0.182,
+    "p25": 0.189,
+    "median": 0.239,
+    "p75": 0.273,
+    "p90": 0.318
+   },
+   "dark_share": {
+    "n": 15,
+    "p10": 0.03,
+    "p25": 0.05,
+    "median": 0.062,
+    "p75": 0.107,
+    "p90": 0.118
+   },
+   "dominant_share": {
+    "n": 15,
+    "p10": 0.117,
+    "p25": 0.135,
+    "median": 0.161,
+    "p75": 0.194,
+    "p90": 0.231
+   },
+   "font_families": {
+    "n": 15,
+    "p10": 3.0,
+    "p25": 3.5,
+    "median": 5.0,
+    "p75": 5.5,
+    "p90": 6.0
+   },
+   "vector_rules": {
+    "n": 15,
+    "p10": 254.8,
+    "p25": 415.0,
+    "median": 509.0,
+    "p75": 859.0,
+    "p90": 921.8
+   },
+   "chars": {
+    "n": 15,
+    "p10": 1858.8,
+    "p25": 2581.0,
+    "median": 3355.0,
+    "p75": 4426.5,
+    "p90": 5070.6
+   },
+   "pages": 15,
+   "items": 13,
+   "titles": 1,
+   "formats": {
+    "tabloid": 12,
+    "broadsheet": 3
+   },
+   "source_kinds": {
+    "born_digital": 15
+   },
+   "dominant_kind": {
+    "headline": 8,
+    "photo/graphic": 7
+   },
+   "body_serif_share": 0.867,
+   "head_serif_share": 0.0,
+   "top_body_fonts": [
+    "Utopia",
+    "GothamXNarrow"
+   ],
+   "top_head_fonts": [
+    "Upgrade",
+    "GothamXNarrow",
+    "NimbusSansDOT",
+    "NimbusSansD"
+   ]
+  },
+  "pl_magazine|inside": {
+   "w_mm": {
+    "n": 75,
+    "p10": 209.9,
+    "p25": 209.9,
+    "median": 209.9,
+    "p75": 209.9,
+    "p90": 209.9
+   },
+   "h_mm": {
+    "n": 75,
+    "p10": 296.7,
+    "p25": 296.7,
+    "median": 296.7,
+    "p75": 296.7,
+    "p90": 296.7
+   },
+   "body_pt": {
+    "n": 75,
+    "p10": 6.2,
+    "p25": 6.5,
+    "median": 7.0,
+    "p75": 7.0,
+    "p90": 7.0
+   },
+   "body_leading_pt": {
+    "n": 75,
+    "p10": 6.44,
+    "p25": 6.7,
+    "median": 7.0,
+    "p75": 7.225,
+    "p90": 7.65
+   },
+   "headline_max_pt": {
+    "n": 75,
+    "p10": 14.0,
+    "p25": 16.0,
+    "median": 27.0,
+    "p75": 38.0,
+    "p90": 68.0
+   },
+   "headline_ratio": {
+    "n": 75,
+    "p10": 2.14,
+    "p25": 2.46,
+    "median": 4.15,
+    "p75": 5.465,
+    "p90": 9.718
+   },
+   "step2": {
+    "n": 75,
+    "p10": 0.442,
+    "p25": 0.74,
+    "median": 0.88,
+    "p75": 0.93,
+    "p90": 0.95
+   },
+   "step3": {
+    "n": 72,
+    "p10": 0.381,
+    "p25": 0.58,
+    "median": 0.745,
+    "p75": 0.85,
+    "p90": 0.88
+   },
+   "headline_blocks": {
+    "n": 75,
+    "p10": 1.0,
+    "p25": 2.0,
+    "median": 4.0,
+    "p75": 6.0,
+    "p90": 8.6
+   },
+   "largest_headline_width_share": {
+    "n": 69,
+    "p10": 0.088,
+    "p25": 0.141,
+    "median": 0.215,
+    "p75": 0.356,
+    "p90": 0.51
+   },
+   "largest_headline_y_share": {
+    "n": 69,
+    "p10": -0.005,
+    "p25": 0.03,
+    "median": 0.241,
+    "p75": 0.533,
+    "p90": 0.854
+   },
+   "text_area_share": {
+    "n": 75,
+    "p10": 0.254,
+    "p25": 0.423,
+    "median": 0.512,
+    "p75": 0.594,
+    "p90": 0.669
+   },
+   "graphic_share": {
+    "n": 75,
+    "p10": 0.297,
+    "p25": 0.345,
+    "median": 0.443,
+    "p75": 0.542,
+    "p90": 0.683
+   },
+   "largest_graphic_share": {
+    "n": 75,
+    "p10": 0.269,
+    "p25": 0.325,
+    "median": 0.414,
+    "p75": 0.517,
+    "p90": 0.677
+   },
+   "paper_share": {
+    "n": 75,
+    "p10": 0.008,
+    "p25": 0.013,
+    "median": 0.023,
+    "p75": 0.045,
+    "p90": 0.067
+   },
+   "saturated_share": {
+    "n": 75,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.002,
+    "p75": 0.116,
+    "p90": 0.208
+   },
+   "dark_share": {
+    "n": 75,
+    "p10": 0.0,
+    "p25": 0.004,
+    "median": 0.014,
+    "p75": 0.042,
+    "p90": 0.058
+   },
+   "dominant_share": {
+    "n": 75,
+    "p10": 0.269,
+    "p25": 0.325,
+    "median": 0.414,
+    "p75": 0.517,
+    "p90": 0.677
+   },
+   "chars": {
+    "n": 75,
+    "p10": 3374.6,
+    "p25": 5899.5,
+    "median": 7155.0,
+    "p75": 8648.5,
+    "p90": 9641.8
+   },
+   "pages": 75,
+   "items": 2,
+   "titles": 2,
+   "formats": {
+    "magazine": 75
+   },
+   "source_kinds": {
+    "ocr": 75
+   },
+   "dominant_kind": {
+    "photo/graphic": 75
+   },
+   "top_body_fonts": [],
+   "top_head_fonts": []
+  },
+  "pl_newspaper|back": {
+   "w_mm": {
+    "n": 24,
+    "p10": 191.84,
+    "p25": 209.9,
+    "median": 255.35,
+    "p75": 376.1,
+    "p90": 399.89
+   },
+   "h_mm": {
+    "n": 24,
+    "p10": 254.96,
+    "p25": 297.0,
+    "median": 350.0,
+    "p75": 511.75,
+    "p90": 553.43
+   },
+   "body_pt": {
+    "n": 23,
+    "p10": 6.6,
+    "p25": 7.25,
+    "median": 8.5,
+    "p75": 10.0,
+    "p90": 12.4
+   },
+   "body_leading_pt": {
+    "n": 20,
+    "p10": 6.77,
+    "p25": 8.075,
+    "median": 9.95,
+    "p75": 11.35,
+    "p90": 13.29
+   },
+   "headline_max_pt": {
+    "n": 16,
+    "p10": 25.0,
+    "p25": 28.75,
+    "median": 42.0,
+    "p75": 50.0,
+    "p90": 51.5
+   },
+   "headline_ratio": {
+    "n": 16,
+    "p10": 2.71,
+    "p25": 3.598,
+    "median": 4.82,
+    "p75": 6.005,
+    "p90": 6.735
+   },
+   "step2": {
+    "n": 15,
+    "p10": 0.368,
+    "p25": 0.615,
+    "median": 0.76,
+    "p75": 0.905,
+    "p90": 0.96
+   },
+   "step3": {
+    "n": 11,
+    "p10": 0.57,
+    "p25": 0.595,
+    "median": 0.65,
+    "p75": 0.805,
+    "p90": 0.86
+   },
+   "headline_blocks": {
+    "n": 23,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 2.0,
+    "p75": 14.0,
+    "p90": 21.2
+   },
+   "largest_headline_width_share": {
+    "n": 16,
+    "p10": 0.13,
+    "p25": 0.278,
+    "median": 0.424,
+    "p75": 0.598,
+    "p90": 0.792
+   },
+   "largest_headline_y_share": {
+    "n": 16,
+    "p10": 0.055,
+    "p25": 0.075,
+    "median": 0.211,
+    "p75": 0.564,
+    "p90": 0.704
+   },
+   "text_area_share": {
+    "n": 23,
+    "p10": 0.067,
+    "p25": 0.116,
+    "median": 0.269,
+    "p75": 0.55,
+    "p90": 0.568
+   },
+   "graphic_share": {
+    "n": 24,
+    "p10": 0.122,
+    "p25": 0.314,
+    "median": 0.416,
+    "p75": 0.685,
+    "p90": 0.888
+   },
+   "largest_graphic_share": {
+    "n": 24,
+    "p10": 0.068,
+    "p25": 0.203,
+    "median": 0.379,
+    "p75": 0.682,
+    "p90": 0.89
+   },
+   "image_boxes": {
+    "n": 14,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 2.0,
+    "p75": 2.0,
+    "p90": 3.7
+   },
+   "paper_share": {
+    "n": 24,
+    "p10": 0.0,
+    "p25": 0.031,
+    "median": 0.198,
+    "p75": 0.366,
+    "p90": 0.542
+   },
+   "saturated_share": {
+    "n": 24,
+    "p10": 0.0,
+    "p25": 0.004,
+    "median": 0.033,
+    "p75": 0.154,
+    "p90": 0.312
+   },
+   "dark_share": {
+    "n": 24,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.002,
+    "p75": 0.007,
+    "p90": 0.02
+   },
+   "dominant_share": {
+    "n": 24,
+    "p10": 0.068,
+    "p25": 0.203,
+    "median": 0.379,
+    "p75": 0.682,
+    "p90": 0.89
+   },
+   "font_families": {
+    "n": 14,
+    "p10": 2.0,
+    "p25": 2.25,
+    "median": 3.0,
+    "p75": 3.0,
+    "p90": 4.7
+   },
+   "vector_rules": {
+    "n": 14,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 9.0
+   },
+   "chars": {
+    "n": 24,
+    "p10": 170.8,
+    "p25": 308.5,
+    "median": 3310.0,
+    "p75": 11904.75,
+    "p90": 20723.7
+   },
+   "pages": 24,
+   "items": 24,
+   "titles": 23,
+   "formats": {
+    "magazine": 10,
+    "broadsheet": 6,
+    "small": 4,
+    "berliner": 2,
+    "tabloid": 2
+   },
+   "source_kinds": {
+    "born_digital": 14,
+    "ocr": 9,
+    "image_only": 1
+   },
+   "dominant_kind": {
+    "photo/graphic": 24
+   },
+   "body_serif_share": 0.636,
+   "head_serif_share": 0.4,
+   "top_body_fonts": [
+    "TimesNewRomanPSMT",
+    "Times",
+    "GuardianTextEgyp",
+    "Helvetica",
+    "UniversCE",
+    "ArialMT",
+    "Sylfaen"
+   ],
+   "top_head_fonts": [
+    "Times",
+    "GuardianSans",
+    "Arial",
+    "UniversCE",
+    "TimesNewRomanPSMT",
+    "Helvetica",
+    "Impact",
+    "Sylfaen"
+   ]
+  },
+  "pl_newspaper|front": {
+   "w_mm": {
+    "n": 24,
+    "p10": 209.9,
+    "p25": 209.975,
+    "median": 253.1,
+    "p75": 371.425,
+    "p90": 400.28
+   },
+   "h_mm": {
+    "n": 24,
+    "p10": 284.65,
+    "p25": 297.0,
+    "median": 350.0,
+    "p75": 511.35,
+    "p90": 559.11
+   },
+   "body_pt": {
+    "n": 22,
+    "p10": 7.0,
+    "p25": 7.625,
+    "median": 8.75,
+    "p75": 11.5,
+    "p90": 15.6
+   },
+   "body_leading_pt": {
+    "n": 18,
+    "p10": 7.15,
+    "p25": 8.088,
+    "median": 9.875,
+    "p75": 14.2,
+    "p90": 17.2
+   },
+   "headline_max_pt": {
+    "n": 15,
+    "p10": 24.0,
+    "p25": 35.0,
+    "median": 46.0,
+    "p75": 51.0,
+    "p90": 64.4
+   },
+   "headline_ratio": {
+    "n": 15,
+    "p10": 1.972,
+    "p25": 3.565,
+    "median": 5.88,
+    "p75": 7.15,
+    "p90": 8.216
+   },
+   "step2": {
+    "n": 13,
+    "p10": 0.754,
+    "p25": 0.8,
+    "median": 0.96,
+    "p75": 0.98,
+    "p90": 0.98
+   },
+   "step3": {
+    "n": 11,
+    "p10": 0.3,
+    "p25": 0.435,
+    "median": 0.63,
+    "p75": 0.77,
+    "p90": 0.9
+   },
+   "headline_blocks": {
+    "n": 22,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 2.5,
+    "p75": 24.75,
+    "p90": 31.5
+   },
+   "largest_headline_width_share": {
+    "n": 14,
+    "p10": 0.168,
+    "p25": 0.315,
+    "median": 0.326,
+    "p75": 0.467,
+    "p90": 0.903
+   },
+   "largest_headline_y_share": {
+    "n": 14,
+    "p10": 0.11,
+    "p25": 0.171,
+    "median": 0.324,
+    "p75": 0.487,
+    "p90": 0.657
+   },
+   "text_area_share": {
+    "n": 22,
+    "p10": 0.008,
+    "p25": 0.03,
+    "median": 0.3,
+    "p75": 0.485,
+    "p90": 0.575
+   },
+   "graphic_share": {
+    "n": 24,
+    "p10": 0.202,
+    "p25": 0.383,
+    "median": 0.521,
+    "p75": 0.841,
+    "p90": 0.898
+   },
+   "largest_graphic_share": {
+    "n": 24,
+    "p10": 0.117,
+    "p25": 0.31,
+    "median": 0.502,
+    "p75": 0.835,
+    "p90": 0.894
+   },
+   "image_boxes": {
+    "n": 13,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 1.0,
+    "p75": 2.0,
+    "p90": 3.6
+   },
+   "paper_share": {
+    "n": 24,
+    "p10": 0.0,
+    "p25": 0.005,
+    "median": 0.088,
+    "p75": 0.261,
+    "p90": 0.491
+   },
+   "saturated_share": {
+    "n": 24,
+    "p10": 0.008,
+    "p25": 0.019,
+    "median": 0.05,
+    "p75": 0.201,
+    "p90": 0.406
+   },
+   "dark_share": {
+    "n": 24,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.007,
+    "p75": 0.021,
+    "p90": 0.112
+   },
+   "dominant_share": {
+    "n": 24,
+    "p10": 0.117,
+    "p25": 0.31,
+    "median": 0.502,
+    "p75": 0.835,
+    "p90": 0.894
+   },
+   "font_families": {
+    "n": 13,
+    "p10": 2.0,
+    "p25": 2.0,
+    "median": 3.0,
+    "p75": 3.0,
+    "p90": 3.8
+   },
+   "vector_rules": {
+    "n": 13,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 16.0
+   },
+   "chars": {
+    "n": 24,
+    "p10": 13.8,
+    "p25": 68.25,
+    "median": 4620.0,
+    "p75": 12397.75,
+    "p90": 16806.1
+   },
+   "pages": 24,
+   "items": 24,
+   "titles": 23,
+   "formats": {
+    "magazine": 11,
+    "broadsheet": 6,
+    "small": 3,
+    "berliner": 2,
+    "tabloid": 2
+   },
+   "source_kinds": {
+    "born_digital": 13,
+    "ocr": 9,
+    "image_only": 2
+   },
+   "dominant_kind": {
+    "photo/graphic": 24
+   },
+   "body_serif_share": 0.7,
+   "head_serif_share": 0.333,
+   "top_body_fonts": [
+    "Times",
+    "GuardianTextEgyp",
+    "TimesNewRomanPSMT",
+    "Helvetica",
+    "TimesNewRomanPS",
+    "ArialMT",
+    "Sylfaen"
+   ],
+   "top_head_fonts": [
+    "Helvetica",
+    "GuardianEgyp",
+    "Times",
+    "Arial",
+    "ArialMT",
+    "TimesNewRomanPSMT",
+    "Impact"
+   ]
+  },
+  "pl_newspaper|inside": {
+   "w_mm": {
+    "n": 505,
+    "p10": 184.1,
+    "p25": 209.9,
+    "median": 209.9,
+    "p75": 235.8,
+    "p90": 418.4
+   },
+   "h_mm": {
+    "n": 505,
+    "p10": 257.2,
+    "p25": 296.9,
+    "median": 297.0,
+    "p75": 328.1,
+    "p90": 501.4
+   },
+   "body_pt": {
+    "n": 454,
+    "p10": 7.0,
+    "p25": 7.5,
+    "median": 8.0,
+    "p75": 10.0,
+    "p90": 12.0
+   },
+   "body_leading_pt": {
+    "n": 430,
+    "p10": 6.9,
+    "p25": 7.95,
+    "median": 9.675,
+    "p75": 11.975,
+    "p90": 12.9
+   },
+   "headline_max_pt": {
+    "n": 309,
+    "p10": 15.0,
+    "p25": 18.0,
+    "median": 25.0,
+    "p75": 38.0,
+    "p90": 52.0
+   },
+   "headline_ratio": {
+    "n": 309,
+    "p10": 1.86,
+    "p25": 2.14,
+    "median": 3.14,
+    "p75": 5.18,
+    "p90": 6.882
+   },
+   "step2": {
+    "n": 252,
+    "p10": 0.55,
+    "p25": 0.78,
+    "median": 0.895,
+    "p75": 0.94,
+    "p90": 0.96
+   },
+   "step3": {
+    "n": 214,
+    "p10": 0.453,
+    "p25": 0.61,
+    "median": 0.765,
+    "p75": 0.87,
+    "p90": 0.9
+   },
+   "headline_blocks": {
+    "n": 454,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 2.0,
+    "p75": 6.0,
+    "p90": 16.0
+   },
+   "largest_headline_width_share": {
+    "n": 286,
+    "p10": 0.12,
+    "p25": 0.165,
+    "median": 0.244,
+    "p75": 0.373,
+    "p90": 0.54
+   },
+   "largest_headline_y_share": {
+    "n": 286,
+    "p10": 0.019,
+    "p25": 0.048,
+    "median": 0.217,
+    "p75": 0.602,
+    "p90": 0.756
+   },
+   "text_area_share": {
+    "n": 454,
+    "p10": 0.126,
+    "p25": 0.214,
+    "median": 0.362,
+    "p75": 0.512,
+    "p90": 0.616
+   },
+   "graphic_share": {
+    "n": 505,
+    "p10": 0.16,
+    "p25": 0.26,
+    "median": 0.346,
+    "p75": 0.493,
+    "p90": 0.684
+   },
+   "largest_graphic_share": {
+    "n": 505,
+    "p10": 0.036,
+    "p25": 0.156,
+    "median": 0.323,
+    "p75": 0.469,
+    "p90": 0.668
+   },
+   "image_boxes": {
+    "n": 128,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 1.0,
+    "p75": 2.0,
+    "p90": 2.0
+   },
+   "paper_share": {
+    "n": 505,
+    "p10": 0.004,
+    "p25": 0.076,
+    "median": 0.268,
+    "p75": 0.459,
+    "p90": 0.654
+   },
+   "saturated_share": {
+    "n": 505,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.012,
+    "p75": 0.077,
+    "p90": 0.156
+   },
+   "dark_share": {
+    "n": 505,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.001,
+    "p75": 0.007,
+    "p90": 0.028
+   },
+   "dominant_share": {
+    "n": 505,
+    "p10": 0.038,
+    "p25": 0.156,
+    "median": 0.323,
+    "p75": 0.47,
+    "p90": 0.672
+   },
+   "font_families": {
+    "n": 128,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 2.0,
+    "p75": 3.0,
+    "p90": 3.0
+   },
+   "vector_rules": {
+    "n": 128,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 0.0
+   },
+   "chars": {
+    "n": 505,
+    "p10": 1.6,
+    "p25": 1557.0,
+    "median": 2774.0,
+    "p75": 7118.0,
+    "p90": 16251.6
+   },
+   "pages": 505,
+   "items": 22,
+   "titles": 22,
+   "formats": {
+    "magazine": 288,
+    "small": 94,
+    "broadsheet": 49,
+    "berliner": 38,
+    "tabloid": 36
+   },
+   "source_kinds": {
+    "ocr": 326,
+    "born_digital": 128,
+    "image_only": 51
+   },
+   "dominant_kind": {
+    "photo/graphic": 501,
+    "headline": 4
+   },
+   "body_serif_share": 0.825,
+   "head_serif_share": 0.506,
+   "top_body_fonts": [
+    "TimesNewRomanPSMT",
+    "Times",
+    "Helvetica",
+    "TimesNewRomanPS",
+    "ArialMT",
+    "Krokodylos",
+    "Sylfaen"
+   ],
+   "top_head_fonts": [
+    "Helvetica",
+    "Times",
+    "TimesNewRomanPSMT",
+    "Arial",
+    "TimesNewRomanPS",
+    "ArialMT",
+    "Impact",
+    "Sylfaen"
+   ]
+  },
+  "pl_tv_guide|back": {
+   "w_mm": {
+    "n": 22,
+    "p10": 210.0,
+    "p25": 210.6,
+    "median": 213.95,
+    "p75": 215.9,
+    "p90": 215.9
+   },
+   "h_mm": {
+    "n": 22,
+    "p10": 276.66,
+    "p25": 279.4,
+    "median": 279.4,
+    "p75": 288.5,
+    "p90": 294.73
+   },
+   "body_pt": {
+    "n": 9,
+    "p10": 4.5,
+    "p25": 5.0,
+    "median": 5.5,
+    "p75": 6.5,
+    "p90": 7.6
+   },
+   "body_leading_pt": {
+    "n": 9,
+    "p10": 5.4,
+    "p25": 5.5,
+    "median": 7.25,
+    "p75": 7.8,
+    "p90": 10.42
+   },
+   "headline_max_pt": {
+    "n": 9,
+    "p10": 15.4,
+    "p25": 16.0,
+    "median": 25.0,
+    "p75": 41.0,
+    "p90": 50.4
+   },
+   "headline_ratio": {
+    "n": 9,
+    "p10": 2.44,
+    "p25": 2.92,
+    "median": 3.85,
+    "p75": 8.2,
+    "p90": 9.246
+   },
+   "step2": {
+    "n": 9,
+    "p10": 0.894,
+    "p25": 0.94,
+    "median": 0.96,
+    "p75": 0.97,
+    "p90": 0.98
+   },
+   "step3": {
+    "n": 8,
+    "p10": 0.596,
+    "p25": 0.665,
+    "median": 0.76,
+    "p75": 0.85,
+    "p90": 0.88
+   },
+   "headline_blocks": {
+    "n": 9,
+    "p10": 5.0,
+    "p25": 6.0,
+    "median": 9.0,
+    "p75": 12.0,
+    "p90": 20.4
+   },
+   "largest_headline_width_share": {
+    "n": 9,
+    "p10": 0.154,
+    "p25": 0.181,
+    "median": 0.382,
+    "p75": 0.675,
+    "p90": 0.945
+   },
+   "largest_headline_y_share": {
+    "n": 9,
+    "p10": -0.004,
+    "p25": 0.026,
+    "median": 0.04,
+    "p75": 0.8,
+    "p90": 0.828
+   },
+   "text_area_share": {
+    "n": 9,
+    "p10": 0.142,
+    "p25": 0.156,
+    "median": 0.192,
+    "p75": 0.211,
+    "p90": 0.238
+   },
+   "graphic_share": {
+    "n": 22,
+    "p10": 0.525,
+    "p25": 0.644,
+    "median": 0.724,
+    "p75": 0.877,
+    "p90": 0.906
+   },
+   "largest_graphic_share": {
+    "n": 22,
+    "p10": 0.467,
+    "p25": 0.575,
+    "median": 0.682,
+    "p75": 0.873,
+    "p90": 0.908
+   },
+   "paper_share": {
+    "n": 22,
+    "p10": 0.081,
+    "p25": 0.105,
+    "median": 0.174,
+    "p75": 0.285,
+    "p90": 0.319
+   },
+   "saturated_share": {
+    "n": 22,
+    "p10": 0.078,
+    "p25": 0.145,
+    "median": 0.222,
+    "p75": 0.293,
+    "p90": 0.399
+   },
+   "dark_share": {
+    "n": 22,
+    "p10": 0.0,
+    "p25": 0.005,
+    "median": 0.017,
+    "p75": 0.034,
+    "p90": 0.149
+   },
+   "dominant_share": {
+    "n": 22,
+    "p10": 0.467,
+    "p25": 0.575,
+    "median": 0.682,
+    "p75": 0.873,
+    "p90": 0.908
+   },
+   "chars": {
+    "n": 22,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 1848.5,
+    "p90": 2764.2
+   },
+   "pages": 22,
+   "items": 22,
+   "titles": 22,
+   "formats": {
+    "small": 16,
+    "magazine": 6
+   },
+   "source_kinds": {
+    "image_only": 13,
+    "ocr": 9
+   },
+   "dominant_kind": {
+    "photo/graphic": 22
+   },
+   "top_body_fonts": [],
+   "top_head_fonts": []
+  },
+  "pl_tv_guide|front": {
+   "w_mm": {
+    "n": 23,
+    "p10": 205.48,
+    "p25": 210.3,
+    "median": 215.9,
+    "p75": 215.9,
+    "p90": 215.9
+   },
+   "h_mm": {
+    "n": 23,
+    "p10": 271.94,
+    "p25": 279.2,
+    "median": 279.4,
+    "p75": 283.15,
+    "p90": 291.38
+   },
+   "body_pt": {
+    "n": 9,
+    "p10": 7.9,
+    "p25": 10.5,
+    "median": 14.5,
+    "p75": 15.5,
+    "p90": 16.1
+   },
+   "headline_max_pt": {
+    "n": 8,
+    "p10": 21.9,
+    "p25": 55.5,
+    "median": 78.5,
+    "p75": 113.75,
+    "p90": 121.4
+   },
+   "headline_ratio": {
+    "n": 8,
+    "p10": 2.087,
+    "p25": 4.317,
+    "median": 5.8,
+    "p75": 7.435,
+    "p90": 10.291
+   },
+   "step2": {
+    "n": 7,
+    "p10": 0.276,
+    "p25": 0.295,
+    "median": 0.61,
+    "p75": 0.88,
+    "p90": 0.956
+   },
+   "step3": {
+    "n": 7,
+    "p10": 0.254,
+    "p25": 0.275,
+    "median": 0.3,
+    "p75": 0.585,
+    "p90": 0.792
+   },
+   "headline_blocks": {
+    "n": 9,
+    "p10": 0.8,
+    "p25": 1.0,
+    "median": 1.0,
+    "p75": 2.0,
+    "p90": 4.4
+   },
+   "largest_headline_width_share": {
+    "n": 8,
+    "p10": 0.191,
+    "p25": 0.286,
+    "median": 0.392,
+    "p75": 0.56,
+    "p90": 0.67
+   },
+   "largest_headline_y_share": {
+    "n": 8,
+    "p10": 0.015,
+    "p25": 0.169,
+    "median": 0.462,
+    "p75": 0.597,
+    "p90": 0.671
+   },
+   "text_area_share": {
+    "n": 9,
+    "p10": 0.055,
+    "p25": 0.096,
+    "median": 0.135,
+    "p75": 0.198,
+    "p90": 0.219
+   },
+   "graphic_share": {
+    "n": 23,
+    "p10": 0.756,
+    "p25": 0.806,
+    "median": 0.882,
+    "p75": 0.914,
+    "p90": 0.921
+   },
+   "largest_graphic_share": {
+    "n": 23,
+    "p10": 0.748,
+    "p25": 0.801,
+    "median": 0.88,
+    "p75": 0.914,
+    "p90": 0.924
+   },
+   "paper_share": {
+    "n": 23,
+    "p10": 0.077,
+    "p25": 0.08,
+    "median": 0.09,
+    "p75": 0.111,
+    "p90": 0.137
+   },
+   "saturated_share": {
+    "n": 23,
+    "p10": 0.28,
+    "p25": 0.336,
+    "median": 0.404,
+    "p75": 0.504,
+    "p90": 0.548
+   },
+   "dark_share": {
+    "n": 23,
+    "p10": 0.001,
+    "p25": 0.009,
+    "median": 0.032,
+    "p75": 0.057,
+    "p90": 0.101
+   },
+   "dominant_share": {
+    "n": 23,
+    "p10": 0.748,
+    "p25": 0.801,
+    "median": 0.88,
+    "p75": 0.914,
+    "p90": 0.924
+   },
+   "chars": {
+    "n": 23,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 168.5,
+    "p90": 243.0
+   },
+   "pages": 23,
+   "items": 23,
+   "titles": 23,
+   "formats": {
+    "small": 20,
+    "magazine": 3
+   },
+   "source_kinds": {
+    "image_only": 14,
+    "ocr": 9
+   },
+   "dominant_kind": {
+    "photo/graphic": 23
+   },
+   "top_body_fonts": [],
+   "top_head_fonts": []
+  },
+  "pl_tv_guide|inside": {
+   "w_mm": {
+    "n": 977,
+    "p10": 203.9,
+    "p25": 210.6,
+    "median": 215.9,
+    "p75": 215.9,
+    "p90": 215.9
+   },
+   "h_mm": {
+    "n": 977,
+    "p10": 271.78,
+    "p25": 279.4,
+    "median": 279.4,
+    "p75": 281.9,
+    "p90": 292.1
+   },
+   "body_pt": {
+    "n": 411,
+    "p10": 6.5,
+    "p25": 6.5,
+    "median": 7.0,
+    "p75": 7.5,
+    "p90": 8.5
+   },
+   "body_leading_pt": {
+    "n": 403,
+    "p10": 6.5,
+    "p25": 7.1,
+    "median": 8.1,
+    "p75": 9.8,
+    "p90": 10.7
+   },
+   "headline_max_pt": {
+    "n": 382,
+    "p10": 13.0,
+    "p25": 15.0,
+    "median": 19.0,
+    "p75": 25.0,
+    "p90": 34.9
+   },
+   "headline_ratio": {
+    "n": 382,
+    "p10": 1.86,
+    "p25": 2.14,
+    "median": 2.62,
+    "p75": 3.6,
+    "p90": 4.92
+   },
+   "step2": {
+    "n": 320,
+    "p10": 0.56,
+    "p25": 0.69,
+    "median": 0.84,
+    "p75": 0.93,
+    "p90": 0.941
+   },
+   "step3": {
+    "n": 216,
+    "p10": 0.38,
+    "p25": 0.538,
+    "median": 0.675,
+    "p75": 0.79,
+    "p90": 0.86
+   },
+   "headline_blocks": {
+    "n": 411,
+    "p10": 0.0,
+    "p25": 1.0,
+    "median": 2.0,
+    "p75": 4.0,
+    "p90": 5.0
+   },
+   "largest_headline_width_share": {
+    "n": 359,
+    "p10": 0.113,
+    "p25": 0.157,
+    "median": 0.245,
+    "p75": 0.369,
+    "p90": 0.46
+   },
+   "largest_headline_y_share": {
+    "n": 359,
+    "p10": 0.006,
+    "p25": 0.017,
+    "median": 0.122,
+    "p75": 0.508,
+    "p90": 0.704
+   },
+   "text_area_share": {
+    "n": 411,
+    "p10": 0.158,
+    "p25": 0.243,
+    "median": 0.402,
+    "p75": 0.462,
+    "p90": 0.538
+   },
+   "graphic_share": {
+    "n": 977,
+    "p10": 0.24,
+    "p25": 0.385,
+    "median": 0.685,
+    "p75": 0.783,
+    "p90": 0.88
+   },
+   "largest_graphic_share": {
+    "n": 977,
+    "p10": 0.133,
+    "p25": 0.223,
+    "median": 0.494,
+    "p75": 0.747,
+    "p90": 0.863
+   },
+   "paper_share": {
+    "n": 977,
+    "p10": 0.113,
+    "p25": 0.187,
+    "median": 0.263,
+    "p75": 0.308,
+    "p90": 0.333
+   },
+   "saturated_share": {
+    "n": 977,
+    "p10": 0.048,
+    "p25": 0.077,
+    "median": 0.104,
+    "p75": 0.166,
+    "p90": 0.262
+   },
+   "dark_share": {
+    "n": 977,
+    "p10": 0.0,
+    "p25": 0.003,
+    "median": 0.01,
+    "p75": 0.028,
+    "p90": 0.059
+   },
+   "dominant_share": {
+    "n": 977,
+    "p10": 0.133,
+    "p25": 0.223,
+    "median": 0.494,
+    "p75": 0.747,
+    "p90": 0.863
+   },
+   "chars": {
+    "n": 977,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 4608.0,
+    "p90": 8046.2
+   },
+   "pages": 977,
+   "items": 23,
+   "titles": 23,
+   "formats": {
+    "small": 832,
+    "magazine": 145
+   },
+   "source_kinds": {
+    "image_only": 566,
+    "ocr": 411
+   },
+   "dominant_kind": {
+    "photo/graphic": 976,
+    "headline": 1
+   },
+   "top_body_fonts": [],
+   "top_head_fonts": []
+  },
+  "tabloid|back": {
+   "w_mm": {
+    "n": 32,
+    "p10": 215.9,
+    "p25": 275.85,
+    "median": 290.0,
+    "p75": 304.8,
+    "p90": 310.44
+   },
+   "h_mm": {
+    "n": 32,
+    "p10": 279.4,
+    "p25": 387.525,
+    "median": 420.0,
+    "p75": 434.8,
+    "p90": 440.8
+   },
+   "columns": {
+    "n": 17,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 0.8
+   },
+   "body_pt": {
+    "n": 32,
+    "p10": 6.75,
+    "p25": 9.375,
+    "median": 11.0,
+    "p75": 11.0,
+    "p90": 11.0
+   },
+   "body_leading_pt": {
+    "n": 7,
+    "p10": 5.22,
+    "p25": 6.175,
+    "median": 8.75,
+    "p75": 12.875,
+    "p90": 14.2
+   },
+   "body_line_chars_median": {
+    "n": 17,
+    "p10": 19.3,
+    "p25": 29.0,
+    "median": 37.0,
+    "p75": 38.0,
+    "p90": 40.8
+   },
+   "headline_max_pt": {
+    "n": 28,
+    "p10": 22.0,
+    "p25": 22.0,
+    "median": 22.0,
+    "p75": 22.0,
+    "p90": 30.2
+   },
+   "headline_ratio": {
+    "n": 28,
+    "p10": 2.0,
+    "p25": 2.0,
+    "median": 2.0,
+    "p75": 2.44,
+    "p90": 4.61
+   },
+   "step2": {
+    "n": 5,
+    "p10": 0.544,
+    "p25": 0.85,
+    "median": 0.92,
+    "p75": 0.93,
+    "p90": 0.954
+   },
+   "step3": {
+    "n": 5,
+    "p10": 0.38,
+    "p25": 0.5,
+    "median": 0.61,
+    "p75": 0.85,
+    "p90": 0.856
+   },
+   "headline_blocks": {
+    "n": 32,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 4.8
+   },
+   "largest_headline_width_share": {
+    "n": 5,
+    "p10": 0.367,
+    "p25": 0.507,
+    "median": 0.517,
+    "p75": 0.642,
+    "p90": 0.787
+   },
+   "largest_headline_y_share": {
+    "n": 5,
+    "p10": 0.117,
+    "p25": 0.143,
+    "median": 0.349,
+    "p75": 0.449,
+    "p90": 0.538
+   },
+   "text_area_share": {
+    "n": 32,
+    "p10": 0.004,
+    "p25": 0.004,
+    "median": 0.005,
+    "p75": 0.041,
+    "p90": 0.132
+   },
+   "graphic_share": {
+    "n": 32,
+    "p10": 0.212,
+    "p25": 0.462,
+    "median": 0.564,
+    "p75": 0.66,
+    "p90": 0.687
+   },
+   "largest_graphic_share": {
+    "n": 32,
+    "p10": 0.091,
+    "p25": 0.244,
+    "median": 0.304,
+    "p75": 0.331,
+    "p90": 0.339
+   },
+   "image_boxes": {
+    "n": 27,
+    "p10": 4.6,
+    "p25": 5.0,
+    "median": 5.0,
+    "p75": 5.0,
+    "p90": 5.0
+   },
+   "paper_share": {
+    "n": 32,
+    "p10": 0.312,
+    "p25": 0.339,
+    "median": 0.415,
+    "p75": 0.446,
+    "p90": 0.661
+   },
+   "saturated_share": {
+    "n": 32,
+    "p10": 0.043,
+    "p25": 0.15,
+    "median": 0.268,
+    "p75": 0.354,
+    "p90": 0.361
+   },
+   "dark_share": {
+    "n": 32,
+    "p10": 0.006,
+    "p25": 0.066,
+    "median": 0.093,
+    "p75": 0.126,
+    "p90": 0.168
+   },
+   "dominant_share": {
+    "n": 32,
+    "p10": 0.114,
+    "p25": 0.253,
+    "median": 0.309,
+    "p75": 0.331,
+    "p90": 0.34
+   },
+   "font_families": {
+    "n": 27,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 1.0,
+    "p75": 2.0,
+    "p90": 3.0
+   },
+   "vector_rules": {
+    "n": 27,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 32.0,
+    "p90": 40.0
+   },
+   "chars": {
+    "n": 32,
+    "p10": 47.1,
+    "p25": 49.0,
+    "median": 54.5,
+    "p75": 180.0,
+    "p90": 1100.6
+   },
+   "pages": 32,
+   "items": 32,
+   "titles": 31,
+   "formats": {
+    "tabloid": 19,
+    "small": 6,
+    "berliner": 5,
+    "magazine": 2
+   },
+   "source_kinds": {
+    "born_digital": 27,
+    "ocr": 5
+   },
+   "dominant_kind": {
+    "photo/graphic": 30,
+    "headline": 2
+   },
+   "body_serif_share": 0.87,
+   "head_serif_share": 0.0,
+   "top_body_fonts": [
+    "TimesNewRomanPSMT",
+    "Tahoma",
+    "FuturaBT",
+    "CentSchlbookPS",
+    "Times",
+    "NotoSansBengaliUI"
+   ],
+   "top_head_fonts": [
+    "FuturaBT",
+    "ArialMT",
+    "FuturaStd",
+    "Impact"
+   ]
+  },
+  "tabloid|front": {
+   "w_mm": {
+    "n": 33,
+    "p10": 166.8,
+    "p25": 215.9,
+    "median": 290.0,
+    "p75": 304.8,
+    "p90": 310.08
+   },
+   "h_mm": {
+    "n": 33,
+    "p10": 236.52,
+    "p25": 290.7,
+    "median": 420.0,
+    "p75": 434.8,
+    "p90": 440.8
+   },
+   "columns": {
+    "n": 14,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 0.0
+   },
+   "body_pt": {
+    "n": 30,
+    "p10": 6.4,
+    "p25": 9.875,
+    "median": 11.0,
+    "p75": 11.0,
+    "p90": 11.1
+   },
+   "body_leading_pt": {
+    "n": 8,
+    "p10": 8.255,
+    "p25": 8.9,
+    "median": 10.425,
+    "p75": 14.025,
+    "p90": 18.54
+   },
+   "body_line_chars_median": {
+    "n": 14,
+    "p10": 21.15,
+    "p25": 30.625,
+    "median": 36.5,
+    "p75": 38.0,
+    "p90": 41.1
+   },
+   "headline_max_pt": {
+    "n": 7,
+    "p10": 37.6,
+    "p25": 53.0,
+    "median": 65.0,
+    "p75": 84.5,
+    "p90": 122.8
+   },
+   "headline_ratio": {
+    "n": 7,
+    "p10": 2.168,
+    "p25": 4.36,
+    "median": 8.12,
+    "p75": 8.805,
+    "p90": 15.176
+   },
+   "step2": {
+    "n": 6,
+    "p10": 0.405,
+    "p25": 0.48,
+    "median": 0.705,
+    "p75": 0.907,
+    "p90": 0.97
+   },
+   "step3": {
+    "n": 5,
+    "p10": 0.366,
+    "p25": 0.39,
+    "median": 0.55,
+    "p75": 0.58,
+    "p90": 0.676
+   },
+   "headline_blocks": {
+    "n": 30,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 6.1
+   },
+   "largest_headline_width_share": {
+    "n": 6,
+    "p10": 0.353,
+    "p25": 0.433,
+    "median": 0.666,
+    "p75": 0.848,
+    "p90": 0.912
+   },
+   "largest_headline_y_share": {
+    "n": 6,
+    "p10": 0.025,
+    "p25": 0.042,
+    "median": 0.205,
+    "p75": 0.663,
+    "p90": 0.781
+   },
+   "text_area_share": {
+    "n": 30,
+    "p10": 0.003,
+    "p25": 0.004,
+    "median": 0.004,
+    "p75": 0.122,
+    "p90": 0.374
+   },
+   "graphic_share": {
+    "n": 33,
+    "p10": 0.261,
+    "p25": 0.596,
+    "median": 0.833,
+    "p75": 0.873,
+    "p90": 0.917
+   },
+   "largest_graphic_share": {
+    "n": 33,
+    "p10": 0.246,
+    "p25": 0.555,
+    "median": 0.825,
+    "p75": 0.875,
+    "p90": 0.907
+   },
+   "image_boxes": {
+    "n": 23,
+    "p10": 2.2,
+    "p25": 3.0,
+    "median": 3.0,
+    "p75": 3.0,
+    "p90": 3.0
+   },
+   "paper_share": {
+    "n": 33,
+    "p10": 0.076,
+    "p25": 0.097,
+    "median": 0.155,
+    "p75": 0.251,
+    "p90": 0.38
+   },
+   "saturated_share": {
+    "n": 33,
+    "p10": 0.106,
+    "p25": 0.183,
+    "median": 0.363,
+    "p75": 0.548,
+    "p90": 0.603
+   },
+   "dark_share": {
+    "n": 33,
+    "p10": 0.01,
+    "p25": 0.076,
+    "median": 0.094,
+    "p75": 0.183,
+    "p90": 0.213
+   },
+   "dominant_share": {
+    "n": 33,
+    "p10": 0.246,
+    "p25": 0.555,
+    "median": 0.825,
+    "p75": 0.875,
+    "p90": 0.907
+   },
+   "font_families": {
+    "n": 23,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 1.0,
+    "p75": 1.0,
+    "p90": 2.0
+   },
+   "vector_rules": {
+    "n": 23,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 32.0,
+    "p90": 459.2
+   },
+   "chars": {
+    "n": 33,
+    "p10": 19.0,
+    "p25": 46.0,
+    "median": 49.0,
+    "p75": 267.0,
+    "p90": 845.8
+   },
+   "pages": 33,
+   "items": 33,
+   "titles": 31,
+   "formats": {
+    "tabloid": 16,
+    "small": 8,
+    "berliner": 5,
+    "magazine": 4
+   },
+   "source_kinds": {
+    "born_digital": 23,
+    "ocr": 7,
+    "image_only": 3
+   },
+   "dominant_kind": {
+    "photo/graphic": 32,
+    "headline": 1
+   },
+   "body_serif_share": 0.87,
+   "top_body_fonts": [
+    "TimesNewRomanPSMT",
+    "Times",
+    "Helvetica",
+    "NotoSansBengaliUI"
+   ],
+   "top_head_fonts": [
+    "Futura",
+    "Helvetica"
+   ]
+  },
+  "tabloid|inside": {
+   "w_mm": {
+    "n": 1074,
+    "p10": 215.9,
+    "p25": 233.4,
+    "median": 290.0,
+    "p75": 304.8,
+    "p90": 310.8
+   },
+   "h_mm": {
+    "n": 1074,
+    "p10": 279.4,
+    "p25": 290.7,
+    "median": 420.0,
+    "p75": 434.8,
+    "p90": 440.8
+   },
+   "columns": {
+    "n": 542,
+    "p10": 2.0,
+    "p25": 3.0,
+    "median": 5.0,
+    "p75": 5.0,
+    "p90": 6.0
+   },
+   "column_pitch_mm": {
+    "n": 499,
+    "p10": 22.36,
+    "p25": 40.15,
+    "median": 52.7,
+    "p75": 52.8,
+    "p90": 68.08
+   },
+   "gutter_mm": {
+    "n": 328,
+    "p10": 3.07,
+    "p25": 3.2,
+    "median": 3.9,
+    "p75": 5.9,
+    "p90": 25.28
+   },
+   "body_pt": {
+    "n": 1071,
+    "p10": 6.5,
+    "p25": 8.5,
+    "median": 9.0,
+    "p75": 9.0,
+    "p90": 11.5
+   },
+   "body_leading_pt": {
+    "n": 945,
+    "p10": 6.1,
+    "p25": 8.9,
+    "median": 10.0,
+    "p75": 10.8,
+    "p90": 12.0
+   },
+   "body_line_chars_median": {
+    "n": 542,
+    "p10": 19.0,
+    "p25": 29.0,
+    "median": 33.0,
+    "p75": 40.0,
+    "p90": 61.0
+   },
+   "headline_max_pt": {
+    "n": 924,
+    "p10": 22.0,
+    "p25": 28.0,
+    "median": 45.0,
+    "p75": 47.0,
+    "p90": 59.0
+   },
+   "headline_ratio": {
+    "n": 924,
+    "p10": 2.59,
+    "p25": 3.33,
+    "median": 5.0,
+    "p75": 5.56,
+    "p90": 8.911
+   },
+   "step2": {
+    "n": 871,
+    "p10": 0.43,
+    "p25": 0.5,
+    "median": 0.73,
+    "p75": 0.9,
+    "p90": 0.94
+   },
+   "step3": {
+    "n": 747,
+    "p10": 0.36,
+    "p25": 0.44,
+    "median": 0.5,
+    "p75": 0.76,
+    "p90": 0.85
+   },
+   "headline_blocks": {
+    "n": 1071,
+    "p10": 0.0,
+    "p25": 1.0,
+    "median": 3.0,
+    "p75": 4.0,
+    "p90": 7.0
+   },
+   "largest_headline_width_share": {
+    "n": 886,
+    "p10": 0.225,
+    "p25": 0.342,
+    "median": 0.482,
+    "p75": 0.594,
+    "p90": 0.698
+   },
+   "largest_headline_y_share": {
+    "n": 886,
+    "p10": 0.025,
+    "p25": 0.051,
+    "median": 0.074,
+    "p75": 0.141,
+    "p90": 0.548
+   },
+   "text_area_share": {
+    "n": 1071,
+    "p10": 0.102,
+    "p25": 0.173,
+    "median": 0.333,
+    "p75": 0.464,
+    "p90": 0.594
+   },
+   "graphic_share": {
+    "n": 1074,
+    "p10": 0.054,
+    "p25": 0.109,
+    "median": 0.235,
+    "p75": 0.473,
+    "p90": 0.61
+   },
+   "largest_graphic_share": {
+    "n": 1074,
+    "p10": 0.015,
+    "p25": 0.04,
+    "median": 0.104,
+    "p75": 0.316,
+    "p90": 0.472
+   },
+   "image_boxes": {
+    "n": 904,
+    "p10": 2.0,
+    "p25": 4.0,
+    "median": 6.0,
+    "p75": 7.0,
+    "p90": 9.0
+   },
+   "paper_share": {
+    "n": 1074,
+    "p10": 0.239,
+    "p25": 0.347,
+    "median": 0.499,
+    "p75": 0.594,
+    "p90": 0.858
+   },
+   "saturated_share": {
+    "n": 1074,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.125,
+    "p90": 0.326
+   },
+   "dark_share": {
+    "n": 1074,
+    "p10": 0.0,
+    "p25": 0.012,
+    "median": 0.03,
+    "p75": 0.062,
+    "p90": 0.116
+   },
+   "dominant_share": {
+    "n": 1074,
+    "p10": 0.018,
+    "p25": 0.048,
+    "median": 0.107,
+    "p75": 0.329,
+    "p90": 0.484
+   },
+   "font_families": {
+    "n": 904,
+    "p10": 2.0,
+    "p25": 2.0,
+    "median": 2.0,
+    "p75": 3.0,
+    "p90": 5.0
+   },
+   "vector_rules": {
+    "n": 904,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 2.0,
+    "p75": 32.0,
+    "p90": 86.7
+   },
+   "chars": {
+    "n": 1074,
+    "p10": 656.1,
+    "p25": 2001.25,
+    "median": 5248.0,
+    "p75": 8871.5,
+    "p90": 11110.7
+   },
+   "pages": 1074,
+   "items": 32,
+   "titles": 31,
+   "formats": {
+    "tabloid": 576,
+    "small": 256,
+    "berliner": 150,
+    "magazine": 92
+   },
+   "source_kinds": {
+    "born_digital": 904,
+    "ocr": 167,
+    "image_only": 3
+   },
+   "dominant_kind": {
+    "photo/graphic": 922,
+    "headline": 152
+   },
+   "body_serif_share": 0.496,
+   "head_serif_share": 0.024,
+   "top_body_fonts": [
+    "Tahoma",
+    "Times",
+    "CentSchlbookPS",
+    "NotoSansBengaliUI",
+    "FuturaBT",
+    "Helvetica",
+    "TimesNewRoman",
+    "HelveticaNeue"
+   ],
+   "top_head_fonts": [
+    "FuturaBT",
+    "FuturaMdBT",
+    "Futura",
+    "MyriadPro",
+    "Impact",
+    "Arial",
+    "Times",
+    "ArialMT"
+   ]
+  },
+  "tv_guide|back": {
+   "w_mm": {
+    "n": 20,
+    "p10": 122.12,
+    "p25": 126.9,
+    "median": 129.65,
+    "p75": 132.95,
+    "p90": 381.0
+   },
+   "h_mm": {
+    "n": 20,
+    "p10": 147.48,
+    "p25": 184.9,
+    "median": 194.25,
+    "p75": 195.575,
+    "p90": 677.3
+   },
+   "columns": {
+    "n": 19,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 0.0
+   },
+   "body_pt": {
+    "n": 19,
+    "p10": 5.4,
+    "p25": 6.0,
+    "median": 8.0,
+    "p75": 10.0,
+    "p90": 68.5
+   },
+   "body_leading_pt": {
+    "n": 15,
+    "p10": 7.77,
+    "p25": 9.65,
+    "median": 11.8,
+    "p75": 13.35,
+    "p90": 89.7
+   },
+   "body_line_chars_median": {
+    "n": 19,
+    "p10": 13.0,
+    "p25": 17.0,
+    "median": 18.0,
+    "p75": 24.75,
+    "p90": 33.0
+   },
+   "headline_max_pt": {
+    "n": 16,
+    "p10": 14.5,
+    "p25": 20.75,
+    "median": 29.5,
+    "p75": 70.25,
+    "p90": 178.0
+   },
+   "headline_ratio": {
+    "n": 16,
+    "p10": 1.9,
+    "p25": 2.4,
+    "median": 2.6,
+    "p75": 4.072,
+    "p90": 11.385
+   },
+   "step2": {
+    "n": 10,
+    "p10": 0.519,
+    "p25": 0.89,
+    "median": 0.89,
+    "p75": 0.938,
+    "p90": 0.953
+   },
+   "step3": {
+    "n": 6,
+    "p10": 0.53,
+    "p25": 0.77,
+    "median": 0.77,
+    "p75": 0.845,
+    "p90": 0.915
+   },
+   "headline_blocks": {
+    "n": 19,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 1.0,
+    "p75": 1.0,
+    "p90": 4.4
+   },
+   "largest_headline_width_share": {
+    "n": 12,
+    "p10": 0.274,
+    "p25": 0.388,
+    "median": 0.649,
+    "p75": 0.731,
+    "p90": 0.854
+   },
+   "largest_headline_y_share": {
+    "n": 12,
+    "p10": 0.055,
+    "p25": 0.116,
+    "median": 0.219,
+    "p75": 0.551,
+    "p90": 0.788
+   },
+   "text_area_share": {
+    "n": 19,
+    "p10": 0.03,
+    "p25": 0.047,
+    "median": 0.066,
+    "p75": 0.342,
+    "p90": 0.362
+   },
+   "graphic_share": {
+    "n": 20,
+    "p10": 0.401,
+    "p25": 0.637,
+    "median": 0.768,
+    "p75": 0.874,
+    "p90": 0.894
+   },
+   "largest_graphic_share": {
+    "n": 20,
+    "p10": 0.256,
+    "p25": 0.636,
+    "median": 0.754,
+    "p75": 0.868,
+    "p90": 0.895
+   },
+   "paper_share": {
+    "n": 20,
+    "p10": 0.051,
+    "p25": 0.065,
+    "median": 0.109,
+    "p75": 0.222,
+    "p90": 0.48
+   },
+   "saturated_share": {
+    "n": 20,
+    "p10": 0.129,
+    "p25": 0.271,
+    "median": 0.449,
+    "p75": 0.566,
+    "p90": 0.629
+   },
+   "dark_share": {
+    "n": 20,
+    "p10": 0.051,
+    "p25": 0.117,
+    "median": 0.127,
+    "p75": 0.438,
+    "p90": 0.82
+   },
+   "dominant_share": {
+    "n": 20,
+    "p10": 0.26,
+    "p25": 0.636,
+    "median": 0.754,
+    "p75": 0.868,
+    "p90": 0.895
+   },
+   "chars": {
+    "n": 20,
+    "p10": 49.9,
+    "p25": 107.0,
+    "median": 170.5,
+    "p75": 250.75,
+    "p90": 644.5
+   },
+   "pages": 20,
+   "items": 20,
+   "titles": 20,
+   "formats": {
+    "small": 17,
+    "broadsheet": 3
+   },
+   "source_kinds": {
+    "ocr": 19,
+    "image_only": 1
+   },
+   "dominant_kind": {
+    "photo/graphic": 19,
+    "headline": 1
+   },
+   "top_body_fonts": [],
+   "top_head_fonts": []
+  },
+  "tv_guide|front": {
+   "w_mm": {
+    "n": 20,
+    "p10": 120.95,
+    "p25": 124.5,
+    "median": 133.9,
+    "p75": 135.9,
+    "p90": 261.57
+   },
+   "h_mm": {
+    "n": 20,
+    "p10": 180.41,
+    "p25": 185.425,
+    "median": 194.25,
+    "p75": 196.275,
+    "p90": 392.44
+   },
+   "columns": {
+    "n": 19,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 0.0
+   },
+   "body_pt": {
+    "n": 19,
+    "p10": 7.0,
+    "p25": 8.25,
+    "median": 11.0,
+    "p75": 16.5,
+    "p90": 20.1
+   },
+   "body_leading_pt": {
+    "n": 14,
+    "p10": 10.29,
+    "p25": 12.3,
+    "median": 15.825,
+    "p75": 18.575,
+    "p90": 26.915
+   },
+   "body_line_chars_median": {
+    "n": 17,
+    "p10": 13.0,
+    "p25": 16.0,
+    "median": 17.0,
+    "p75": 19.0,
+    "p90": 23.0
+   },
+   "headline_max_pt": {
+    "n": 16,
+    "p10": 21.0,
+    "p25": 28.5,
+    "median": 45.5,
+    "p75": 56.0,
+    "p90": 62.0
+   },
+   "headline_ratio": {
+    "n": 16,
+    "p10": 2.455,
+    "p25": 2.647,
+    "median": 3.085,
+    "p75": 4.695,
+    "p90": 8.355
+   },
+   "step2": {
+    "n": 12,
+    "p10": 0.395,
+    "p25": 0.523,
+    "median": 0.845,
+    "p75": 0.952,
+    "p90": 0.969
+   },
+   "step3": {
+    "n": 7,
+    "p10": 0.3,
+    "p25": 0.385,
+    "median": 0.59,
+    "p75": 0.78,
+    "p90": 0.882
+   },
+   "headline_blocks": {
+    "n": 19,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 1.0,
+    "p75": 1.0,
+    "p90": 2.0
+   },
+   "largest_headline_width_share": {
+    "n": 10,
+    "p10": 0.263,
+    "p25": 0.336,
+    "median": 0.411,
+    "p75": 0.51,
+    "p90": 0.877
+   },
+   "largest_headline_y_share": {
+    "n": 10,
+    "p10": 0.032,
+    "p25": 0.037,
+    "median": 0.079,
+    "p75": 0.265,
+    "p90": 0.506
+   },
+   "text_area_share": {
+    "n": 19,
+    "p10": 0.046,
+    "p25": 0.085,
+    "median": 0.102,
+    "p75": 0.142,
+    "p90": 0.174
+   },
+   "graphic_share": {
+    "n": 20,
+    "p10": 0.515,
+    "p25": 0.693,
+    "median": 0.804,
+    "p75": 0.88,
+    "p90": 0.913
+   },
+   "largest_graphic_share": {
+    "n": 20,
+    "p10": 0.505,
+    "p25": 0.669,
+    "median": 0.8,
+    "p75": 0.878,
+    "p90": 0.924
+   },
+   "paper_share": {
+    "n": 20,
+    "p10": 0.018,
+    "p25": 0.045,
+    "median": 0.116,
+    "p75": 0.179,
+    "p90": 0.261
+   },
+   "saturated_share": {
+    "n": 20,
+    "p10": 0.156,
+    "p25": 0.261,
+    "median": 0.462,
+    "p75": 0.594,
+    "p90": 0.705
+   },
+   "dark_share": {
+    "n": 20,
+    "p10": 0.014,
+    "p25": 0.058,
+    "median": 0.141,
+    "p75": 0.3,
+    "p90": 0.422
+   },
+   "dominant_share": {
+    "n": 20,
+    "p10": 0.505,
+    "p25": 0.669,
+    "median": 0.8,
+    "p75": 0.878,
+    "p90": 0.924
+   },
+   "chars": {
+    "n": 20,
+    "p10": 44.7,
+    "p25": 69.0,
+    "median": 95.5,
+    "p75": 140.5,
+    "p90": 201.4
+   },
+   "pages": 20,
+   "items": 20,
+   "titles": 20,
+   "formats": {
+    "small": 17,
+    "tabloid": 3
+   },
+   "source_kinds": {
+    "ocr": 17,
+    "born_digital": 2,
+    "image_only": 1
+   },
+   "dominant_kind": {
+    "photo/graphic": 20
+   },
+   "top_body_fonts": [
+    "Times",
+    "Helvetica"
+   ],
+   "top_head_fonts": [
+    "Times",
+    "Helvetica"
+   ]
+  },
+  "tv_guide|inside": {
+   "w_mm": {
+    "n": 920,
+    "p10": 108.8,
+    "p25": 124.9,
+    "median": 130.2,
+    "p75": 134.5,
+    "p90": 562.0
+   },
+   "h_mm": {
+    "n": 920,
+    "p10": 149.0,
+    "p25": 184.9,
+    "median": 194.5,
+    "p75": 196.1,
+    "p90": 430.7
+   },
+   "columns": {
+    "n": 914,
+    "p10": 0.0,
+    "p25": 2.0,
+    "median": 2.0,
+    "p75": 4.0,
+    "p90": 5.0
+   },
+   "column_pitch_mm": {
+    "n": 722,
+    "p10": 11.72,
+    "p25": 28.425,
+    "median": 39.7,
+    "p75": 60.0,
+    "p90": 76.51
+   },
+   "gutter_mm": {
+    "n": 422,
+    "p10": 3.6,
+    "p25": 5.7,
+    "median": 14.25,
+    "p75": 25.475,
+    "p90": 40.79
+   },
+   "body_pt": {
+    "n": 914,
+    "p10": 5.0,
+    "p25": 6.0,
+    "median": 6.5,
+    "p75": 8.0,
+    "p90": 14.0
+   },
+   "body_leading_pt": {
+    "n": 890,
+    "p10": 6.5,
+    "p25": 7.2,
+    "median": 8.1,
+    "p75": 9.5,
+    "p90": 15.305
+   },
+   "body_line_chars_median": {
+    "n": 906,
+    "p10": 18.0,
+    "p25": 21.625,
+    "median": 26.0,
+    "p75": 32.0,
+    "p90": 37.0
+   },
+   "headline_max_pt": {
+    "n": 764,
+    "p10": 13.0,
+    "p25": 15.0,
+    "median": 20.0,
+    "p75": 31.0,
+    "p90": 48.0
+   },
+   "headline_ratio": {
+    "n": 764,
+    "p10": 2.12,
+    "p25": 2.33,
+    "median": 3.0,
+    "p75": 3.897,
+    "p90": 5.521
+   },
+   "step2": {
+    "n": 522,
+    "p10": 0.54,
+    "p25": 0.67,
+    "median": 0.845,
+    "p75": 0.94,
+    "p90": 0.96
+   },
+   "step3": {
+    "n": 364,
+    "p10": 0.42,
+    "p25": 0.53,
+    "median": 0.68,
+    "p75": 0.82,
+    "p90": 0.9
+   },
+   "headline_blocks": {
+    "n": 914,
+    "p10": 0.0,
+    "p25": 1.0,
+    "median": 1.0,
+    "p75": 3.0,
+    "p90": 5.0
+   },
+   "largest_headline_width_share": {
+    "n": 727,
+    "p10": 0.141,
+    "p25": 0.184,
+    "median": 0.307,
+    "p75": 0.538,
+    "p90": 0.783
+   },
+   "largest_headline_y_share": {
+    "n": 727,
+    "p10": 0.019,
+    "p25": 0.032,
+    "median": 0.107,
+    "p75": 0.528,
+    "p90": 0.763
+   },
+   "text_area_share": {
+    "n": 914,
+    "p10": 0.156,
+    "p25": 0.257,
+    "median": 0.392,
+    "p75": 0.484,
+    "p90": 0.539
+   },
+   "graphic_share": {
+    "n": 920,
+    "p10": 0.063,
+    "p25": 0.156,
+    "median": 0.333,
+    "p75": 0.495,
+    "p90": 0.677
+   },
+   "largest_graphic_share": {
+    "n": 920,
+    "p10": 0.017,
+    "p25": 0.096,
+    "median": 0.29,
+    "p75": 0.453,
+    "p90": 0.663
+   },
+   "image_boxes": {
+    "n": 73,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 1.0,
+    "p75": 2.0,
+    "p90": 2.0
+   },
+   "paper_share": {
+    "n": 920,
+    "p10": 0.046,
+    "p25": 0.155,
+    "median": 0.319,
+    "p75": 0.478,
+    "p90": 0.537
+   },
+   "saturated_share": {
+    "n": 920,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.004,
+    "p75": 0.038,
+    "p90": 0.184
+   },
+   "dark_share": {
+    "n": 920,
+    "p10": 0.0,
+    "p25": 0.001,
+    "median": 0.032,
+    "p75": 0.144,
+    "p90": 0.228
+   },
+   "dominant_share": {
+    "n": 920,
+    "p10": 0.021,
+    "p25": 0.104,
+    "median": 0.291,
+    "p75": 0.453,
+    "p90": 0.663
+   },
+   "font_families": {
+    "n": 73,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 2.0,
+    "p75": 2.0,
+    "p90": 2.0
+   },
+   "vector_rules": {
+    "n": 73,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 0.0
+   },
+   "chars": {
+    "n": 920,
+    "p10": 460.8,
+    "p25": 1368.0,
+    "median": 2282.0,
+    "p75": 3084.25,
+    "p90": 4177.3
+   },
+   "pages": 920,
+   "items": 20,
+   "titles": 20,
+   "formats": {
+    "small": 782,
+    "broadsheet": 138
+   },
+   "source_kinds": {
+    "ocr": 841,
+    "born_digital": 73,
+    "image_only": 6
+   },
+   "dominant_kind": {
+    "photo/graphic": 864,
+    "headline": 56
+   },
+   "body_serif_share": 0.548,
+   "head_serif_share": 0.586,
+   "top_body_fonts": [
+    "Times",
+    "Helvetica"
+   ],
+   "top_head_fonts": [
+    "Times",
+    "Helvetica",
+    "HiddenHorzOCR"
+   ]
+  },
+  "uk_tabloid|back": {
+   "w_mm": {
+    "n": 16,
+    "p10": 228.5,
+    "p25": 266.7,
+    "median": 268.65,
+    "p75": 322.425,
+    "p90": 441.0
+   },
+   "h_mm": {
+    "n": 16,
+    "p10": 290.7,
+    "p25": 353.1,
+    "median": 558.8,
+    "p75": 559.325,
+    "p90": 560.9
+   },
+   "body_pt": {
+    "n": 12,
+    "p10": 6.15,
+    "p25": 7.5,
+    "median": 8.0,
+    "p75": 11.5,
+    "p90": 11.5
+   },
+   "body_leading_pt": {
+    "n": 8,
+    "p10": 5.045,
+    "p25": 7.025,
+    "median": 7.85,
+    "p75": 8.0,
+    "p90": 8.57
+   },
+   "headline_max_pt": {
+    "n": 8,
+    "p10": 34.3,
+    "p25": 64.0,
+    "median": 100.0,
+    "p75": 137.75,
+    "p90": 155.0
+   },
+   "headline_ratio": {
+    "n": 8,
+    "p10": 4.465,
+    "p25": 8.005,
+    "median": 13.025,
+    "p75": 18.98,
+    "p90": 29.372
+   },
+   "step2": {
+    "n": 8,
+    "p10": 0.267,
+    "p25": 0.383,
+    "median": 0.655,
+    "p75": 0.915,
+    "p90": 0.942
+   },
+   "step3": {
+    "n": 7,
+    "p10": 0.172,
+    "p25": 0.215,
+    "median": 0.3,
+    "p75": 0.485,
+    "p90": 0.664
+   },
+   "headline_blocks": {
+    "n": 12,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 6.0,
+    "p75": 8.25,
+    "p90": 9.0
+   },
+   "largest_headline_width_share": {
+    "n": 8,
+    "p10": 0.286,
+    "p25": 0.398,
+    "median": 0.445,
+    "p75": 0.669,
+    "p90": 0.755
+   },
+   "largest_headline_y_share": {
+    "n": 8,
+    "p10": 0.038,
+    "p25": 0.134,
+    "median": 0.326,
+    "p75": 0.628,
+    "p90": 0.839
+   },
+   "text_area_share": {
+    "n": 12,
+    "p10": 0.004,
+    "p25": 0.005,
+    "median": 0.327,
+    "p75": 0.525,
+    "p90": 0.585
+   },
+   "graphic_share": {
+    "n": 16,
+    "p10": 0.229,
+    "p25": 0.262,
+    "median": 0.494,
+    "p75": 0.664,
+    "p90": 0.681
+   },
+   "largest_graphic_share": {
+    "n": 16,
+    "p10": 0.142,
+    "p25": 0.203,
+    "median": 0.297,
+    "p75": 0.478,
+    "p90": 0.595
+   },
+   "image_boxes": {
+    "n": 12,
+    "p10": 2.2,
+    "p25": 7.0,
+    "median": 13.0,
+    "p75": 28.5,
+    "p90": 34.8
+   },
+   "paper_share": {
+    "n": 16,
+    "p10": 0.239,
+    "p25": 0.301,
+    "median": 0.358,
+    "p75": 0.442,
+    "p90": 0.545
+   },
+   "saturated_share": {
+    "n": 16,
+    "p10": 0.138,
+    "p25": 0.159,
+    "median": 0.186,
+    "p75": 0.258,
+    "p90": 0.312
+   },
+   "dark_share": {
+    "n": 16,
+    "p10": 0.046,
+    "p25": 0.068,
+    "median": 0.116,
+    "p75": 0.173,
+    "p90": 0.228
+   },
+   "dominant_share": {
+    "n": 16,
+    "p10": 0.142,
+    "p25": 0.205,
+    "median": 0.297,
+    "p75": 0.478,
+    "p90": 0.595
+   },
+   "font_families": {
+    "n": 12,
+    "p10": 2.0,
+    "p25": 2.0,
+    "median": 4.5,
+    "p75": 5.0,
+    "p90": 5.9
+   },
+   "vector_rules": {
+    "n": 12,
+    "p10": 8.4,
+    "p25": 99.0,
+    "median": 4970.5,
+    "p75": 9432.0,
+    "p90": 14571.3
+   },
+   "chars": {
+    "n": 16,
+    "p10": 0.0,
+    "p25": 40.5,
+    "median": 1147.5,
+    "p75": 6106.25,
+    "p90": 7678.0
+   },
+   "pages": 16,
+   "items": 16,
+   "titles": 16,
+   "formats": {
+    "broadsheet": 9,
+    "magazine": 7
+   },
+   "source_kinds": {
+    "born_digital": 12,
+    "image_only": 4
+   },
+   "dominant_kind": {
+    "photo/graphic": 14,
+    "headline": 2
+   },
+   "top_body_fonts": [
+    "Interstate",
+    "News701BT",
+    "HelveticaNeueLTStd",
+    "DMTruth",
+    "Rom",
+    "A4F91+GYNAZQ+NewsGothicStd",
+    "KeplerStd",
+    "A282D+KRXTLI+NewsGothicStd"
+   ],
+   "top_head_fonts": [
+    "Interstate",
+    "DMTruth",
+    "DMAmplitudeCond",
+    "TiemposHeadline",
+    "HBlack",
+    "A7E02+VUNLBH+ChronicleDispCond"
+   ]
+  },
+  "uk_tabloid|front": {
+   "w_mm": {
+    "n": 16,
+    "p10": 228.5,
+    "p25": 266.7,
+    "median": 268.65,
+    "p75": 322.425,
+    "p90": 441.0
+   },
+   "h_mm": {
+    "n": 16,
+    "p10": 290.7,
+    "p25": 353.1,
+    "median": 558.8,
+    "p75": 559.325,
+    "p90": 560.9
+   },
+   "body_pt": {
+    "n": 12,
+    "p10": 7.5,
+    "p25": 8.25,
+    "median": 9.5,
+    "p75": 10.0,
+    "p90": 10.0
+   },
+   "body_leading_pt": {
+    "n": 12,
+    "p10": 7.43,
+    "p25": 8.075,
+    "median": 10.5,
+    "p75": 11.0,
+    "p90": 11.0
+   },
+   "headline_max_pt": {
+    "n": 12,
+    "p10": 51.0,
+    "p25": 101.25,
+    "median": 126.5,
+    "p75": 142.25,
+    "p90": 143.9
+   },
+   "headline_ratio": {
+    "n": 12,
+    "p10": 5.37,
+    "p25": 10.455,
+    "median": 14.095,
+    "p75": 16.9,
+    "p90": 18.397
+   },
+   "step2": {
+    "n": 12,
+    "p10": 0.411,
+    "p25": 0.427,
+    "median": 0.705,
+    "p75": 0.945,
+    "p90": 0.99
+   },
+   "step3": {
+    "n": 12,
+    "p10": 0.295,
+    "p25": 0.362,
+    "median": 0.42,
+    "p75": 0.645,
+    "p90": 0.942
+   },
+   "headline_blocks": {
+    "n": 12,
+    "p10": 5.1,
+    "p25": 6.0,
+    "median": 6.5,
+    "p75": 7.25,
+    "p90": 8.0
+   },
+   "largest_headline_width_share": {
+    "n": 12,
+    "p10": 0.543,
+    "p25": 0.584,
+    "median": 0.684,
+    "p75": 0.944,
+    "p90": 0.948
+   },
+   "largest_headline_y_share": {
+    "n": 12,
+    "p10": 0.128,
+    "p25": 0.341,
+    "median": 0.484,
+    "p75": 0.619,
+    "p90": 0.632
+   },
+   "text_area_share": {
+    "n": 12,
+    "p10": 0.399,
+    "p25": 0.406,
+    "median": 0.494,
+    "p75": 0.547,
+    "p90": 0.613
+   },
+   "graphic_share": {
+    "n": 16,
+    "p10": 0.276,
+    "p25": 0.318,
+    "median": 0.363,
+    "p75": 0.478,
+    "p90": 0.718
+   },
+   "largest_graphic_share": {
+    "n": 16,
+    "p10": 0.139,
+    "p25": 0.179,
+    "median": 0.239,
+    "p75": 0.325,
+    "p90": 0.452
+   },
+   "image_boxes": {
+    "n": 12,
+    "p10": 6.0,
+    "p25": 6.0,
+    "median": 10.5,
+    "p75": 16.0,
+    "p90": 16.9
+   },
+   "paper_share": {
+    "n": 16,
+    "p10": 0.282,
+    "p25": 0.305,
+    "median": 0.376,
+    "p75": 0.451,
+    "p90": 0.467
+   },
+   "saturated_share": {
+    "n": 16,
+    "p10": 0.118,
+    "p25": 0.174,
+    "median": 0.314,
+    "p75": 0.402,
+    "p90": 0.432
+   },
+   "dark_share": {
+    "n": 16,
+    "p10": 0.04,
+    "p25": 0.101,
+    "median": 0.214,
+    "p75": 0.295,
+    "p90": 0.326
+   },
+   "dominant_share": {
+    "n": 16,
+    "p10": 0.178,
+    "p25": 0.219,
+    "median": 0.308,
+    "p75": 0.374,
+    "p90": 0.452
+   },
+   "font_families": {
+    "n": 12,
+    "p10": 3.1,
+    "p25": 4.75,
+    "median": 6.0,
+    "p75": 9.25,
+    "p90": 10.0
+   },
+   "vector_rules": {
+    "n": 12,
+    "p10": 237.7,
+    "p25": 400.75,
+    "median": 3112.5,
+    "p75": 3556.0,
+    "p90": 5257.0
+   },
+   "chars": {
+    "n": 16,
+    "p10": 0.0,
+    "p25": 356.25,
+    "median": 1028.5,
+    "p75": 5653.75,
+    "p90": 6907.0
+   },
+   "pages": 16,
+   "items": 16,
+   "titles": 16,
+   "formats": {
+    "broadsheet": 9,
+    "magazine": 7
+   },
+   "source_kinds": {
+    "born_digital": 12,
+    "image_only": 4
+   },
+   "dominant_kind": {
+    "photo/graphic": 11,
+    "headline": 5
+   },
+   "top_body_fonts": [
+    "News701BT",
+    "KeplerStd",
+    "RotationLTStd",
+    "HelveticaNeueLTStd",
+    "FRegCond",
+    "Interstate",
+    "A130+ZZVKFE+KeplerStd",
+    "A128+OAMHIA+KeplerStd"
+   ],
+   "top_head_fonts": [
+    "Interstate",
+    "DMBentonSansExtraComp",
+    "ChronicleDispCond",
+    "DMBallarvaleCondensed",
+    "TimesNewRomanPSMT",
+    "A133+FHVZLN+ChronicleDispCond",
+    "A12B+USKBVO+ChronicleDispCond",
+    "A12C+PBYZEY+ChronicleDispCond"
+   ]
+  },
+  "uk_tabloid|inside": {
+   "w_mm": {
+    "n": 626,
+    "p10": 228.5,
+    "p25": 266.7,
+    "median": 273.0,
+    "p75": 441.0,
+    "p90": 441.0
+   },
+   "h_mm": {
+    "n": 626,
+    "p10": 290.7,
+    "p25": 353.1,
+    "median": 359.8,
+    "p75": 560.9,
+    "p90": 560.9
+   },
+   "body_pt": {
+    "n": 432,
+    "p10": 6.0,
+    "p25": 7.5,
+    "median": 8.0,
+    "p75": 10.0,
+    "p90": 11.5
+   },
+   "body_leading_pt": {
+    "n": 384,
+    "p10": 5.85,
+    "p25": 7.4,
+    "median": 8.0,
+    "p75": 10.0,
+    "p90": 12.0
+   },
+   "headline_max_pt": {
+    "n": 395,
+    "p10": 31.0,
+    "p25": 39.0,
+    "median": 65.0,
+    "p75": 97.0,
+    "p90": 138.0
+   },
+   "headline_ratio": {
+    "n": 395,
+    "p10": 2.82,
+    "p25": 4.53,
+    "median": 8.4,
+    "p75": 12.68,
+    "p90": 17.38
+   },
+   "step2": {
+    "n": 344,
+    "p10": 0.31,
+    "p25": 0.41,
+    "median": 0.66,
+    "p75": 0.92,
+    "p90": 0.98
+   },
+   "step3": {
+    "n": 320,
+    "p10": 0.23,
+    "p25": 0.29,
+    "median": 0.405,
+    "p75": 0.56,
+    "p90": 0.75
+   },
+   "headline_blocks": {
+    "n": 432,
+    "p10": 1.0,
+    "p25": 2.0,
+    "median": 5.0,
+    "p75": 7.0,
+    "p90": 12.0
+   },
+   "largest_headline_width_share": {
+    "n": 390,
+    "p10": 0.237,
+    "p25": 0.383,
+    "median": 0.54,
+    "p75": 0.741,
+    "p90": 0.915
+   },
+   "largest_headline_y_share": {
+    "n": 390,
+    "p10": 0.033,
+    "p25": 0.041,
+    "median": 0.097,
+    "p75": 0.33,
+    "p90": 0.559
+   },
+   "text_area_share": {
+    "n": 432,
+    "p10": 0.036,
+    "p25": 0.211,
+    "median": 0.388,
+    "p75": 0.517,
+    "p90": 0.629
+   },
+   "graphic_share": {
+    "n": 626,
+    "p10": 0.186,
+    "p25": 0.255,
+    "median": 0.428,
+    "p75": 0.623,
+    "p90": 0.716
+   },
+   "largest_graphic_share": {
+    "n": 626,
+    "p10": 0.065,
+    "p25": 0.127,
+    "median": 0.234,
+    "p75": 0.384,
+    "p90": 0.548
+   },
+   "image_boxes": {
+    "n": 414,
+    "p10": 2.0,
+    "p25": 4.0,
+    "median": 9.0,
+    "p75": 18.0,
+    "p90": 31.7
+   },
+   "paper_share": {
+    "n": 626,
+    "p10": 0.247,
+    "p25": 0.307,
+    "median": 0.377,
+    "p75": 0.471,
+    "p90": 0.603
+   },
+   "saturated_share": {
+    "n": 626,
+    "p10": 0.032,
+    "p25": 0.098,
+    "median": 0.197,
+    "p75": 0.296,
+    "p90": 0.389
+   },
+   "dark_share": {
+    "n": 626,
+    "p10": 0.018,
+    "p25": 0.045,
+    "median": 0.099,
+    "p75": 0.161,
+    "p90": 0.237
+   },
+   "dominant_share": {
+    "n": 626,
+    "p10": 0.079,
+    "p25": 0.142,
+    "median": 0.245,
+    "p75": 0.387,
+    "p90": 0.556
+   },
+   "font_families": {
+    "n": 414,
+    "p10": 3.0,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 7.0,
+    "p90": 10.0
+   },
+   "vector_rules": {
+    "n": 414,
+    "p10": 5.0,
+    "p25": 49.25,
+    "median": 688.0,
+    "p75": 4189.5,
+    "p90": 10334.6
+   },
+   "chars": {
+    "n": 626,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 2586.0,
+    "p75": 6014.75,
+    "p90": 9242.5
+   },
+   "pages": 626,
+   "items": 16,
+   "titles": 16,
+   "formats": {
+    "magazine": 322,
+    "broadsheet": 304
+   },
+   "source_kinds": {
+    "born_digital": 414,
+    "image_only": 194,
+    "ocr": 18
+   },
+   "dominant_kind": {
+    "photo/graphic": 553,
+    "headline": 73
+   },
+   "body_serif_share": 0.25,
+   "head_serif_share": 0.197,
+   "top_body_fonts": [
+    "News701BT",
+    "KeplerStd",
+    "RotationLTStd",
+    "Rom",
+    "UtopiaStd",
+    "Interstate",
+    "HelveticaNeueLTStd",
+    "DMTruth"
+   ],
+   "top_head_fonts": [
+    "Interstate",
+    "DMTruth",
+    "TitlingGothicFBCond",
+    "HelveticaNeueLTStd",
+    "Popular",
+    "DMMillerHeadline",
+    "TempoStd",
+    "HBlack"
+   ]
+  },
+  "us_local_newspaper|back": {
+   "w_mm": {
+    "n": 29,
+    "p10": 253.6,
+    "p25": 263.5,
+    "median": 288.9,
+    "p75": 288.9,
+    "p90": 289.1
+   },
+   "h_mm": {
+    "n": 29,
+    "p10": 533.0,
+    "p25": 549.3,
+    "median": 571.1,
+    "p75": 571.5,
+    "p90": 571.5
+   },
+   "columns": {
+    "n": 29,
+    "p10": 0.0,
+    "p25": 1.0,
+    "median": 4.0,
+    "p75": 8.0,
+    "p90": 13.0
+   },
+   "column_pitch_mm": {
+    "n": 21,
+    "p10": 14.9,
+    "p25": 15.1,
+    "median": 32.1,
+    "p75": 45.4,
+    "p90": 62.3
+   },
+   "gutter_mm": {
+    "n": 16,
+    "p10": 2.15,
+    "p25": 2.75,
+    "median": 3.3,
+    "p75": 4.275,
+    "p90": 19.45
+   },
+   "body_pt": {
+    "n": 29,
+    "p10": 6.0,
+    "p25": 6.5,
+    "median": 8.5,
+    "p75": 10.0,
+    "p90": 15.4
+   },
+   "body_leading_pt": {
+    "n": 26,
+    "p10": 7.75,
+    "p25": 8.025,
+    "median": 9.8,
+    "p75": 10.45,
+    "p90": 13.8
+   },
+   "body_line_chars_median": {
+    "n": 29,
+    "p10": 13.0,
+    "p25": 18.5,
+    "median": 25.0,
+    "p75": 30.5,
+    "p90": 40.0
+   },
+   "headline_max_pt": {
+    "n": 29,
+    "p10": 31.6,
+    "p25": 42.0,
+    "median": 55.0,
+    "p75": 59.0,
+    "p90": 68.4
+   },
+   "headline_ratio": {
+    "n": 29,
+    "p10": 3.654,
+    "p25": 4.43,
+    "median": 5.5,
+    "p75": 8.0,
+    "p90": 9.5
+   },
+   "step2": {
+    "n": 27,
+    "p10": 0.616,
+    "p25": 0.68,
+    "median": 0.82,
+    "p75": 0.93,
+    "p90": 0.974
+   },
+   "step3": {
+    "n": 26,
+    "p10": 0.54,
+    "p25": 0.625,
+    "median": 0.72,
+    "p75": 0.837,
+    "p90": 0.91
+   },
+   "headline_blocks": {
+    "n": 29,
+    "p10": 2.8,
+    "p25": 6.0,
+    "median": 13.0,
+    "p75": 18.0,
+    "p90": 30.4
+   },
+   "largest_headline_width_share": {
+    "n": 28,
+    "p10": 0.307,
+    "p25": 0.338,
+    "median": 0.446,
+    "p75": 0.654,
+    "p90": 0.92
+   },
+   "largest_headline_y_share": {
+    "n": 28,
+    "p10": 0.047,
+    "p25": 0.132,
+    "median": 0.221,
+    "p75": 0.396,
+    "p90": 0.727
+   },
+   "text_area_share": {
+    "n": 29,
+    "p10": 0.09,
+    "p25": 0.152,
+    "median": 0.295,
+    "p75": 0.394,
+    "p90": 0.408
+   },
+   "graphic_share": {
+    "n": 29,
+    "p10": 0.208,
+    "p25": 0.255,
+    "median": 0.352,
+    "p75": 0.508,
+    "p90": 0.625
+   },
+   "largest_graphic_share": {
+    "n": 29,
+    "p10": 0.04,
+    "p25": 0.106,
+    "median": 0.15,
+    "p75": 0.381,
+    "p90": 0.531
+   },
+   "image_boxes": {
+    "n": 28,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 1.0,
+    "p75": 10.0,
+    "p90": 14.3
+   },
+   "paper_share": {
+    "n": 29,
+    "p10": 0.234,
+    "p25": 0.3,
+    "median": 0.403,
+    "p75": 0.512,
+    "p90": 0.605
+   },
+   "saturated_share": {
+    "n": 29,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.086,
+    "p75": 0.224,
+    "p90": 0.315
+   },
+   "dark_share": {
+    "n": 29,
+    "p10": 0.012,
+    "p25": 0.019,
+    "median": 0.028,
+    "p75": 0.054,
+    "p90": 0.119
+   },
+   "dominant_share": {
+    "n": 29,
+    "p10": 0.052,
+    "p25": 0.106,
+    "median": 0.15,
+    "p75": 0.381,
+    "p90": 0.531
+   },
+   "font_families": {
+    "n": 28,
+    "p10": 3.0,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 5.0,
+    "p90": 5.0
+   },
+   "vector_rules": {
+    "n": 28,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 6.0,
+    "p75": 22.75,
+    "p90": 1538.7
+   },
+   "chars": {
+    "n": 29,
+    "p10": 365.6,
+    "p25": 1919.0,
+    "median": 5630.0,
+    "p75": 10823.0,
+    "p90": 14373.0
+   },
+   "pages": 29,
+   "items": 29,
+   "titles": 29,
+   "formats": {
+    "broadsheet": 29
+   },
+   "source_kinds": {
+    "born_digital": 28,
+    "ocr": 1
+   },
+   "dominant_kind": {
+    "photo/graphic": 27,
+    "headline": 2
+   },
+   "body_serif_share": 0.296,
+   "head_serif_share": 0.273,
+   "top_body_fonts": [
+    "ArialMT",
+    "Helvetica",
+    "TimesNewRomanPSMT",
+    "Times",
+    "FranklinGothic",
+    "BaskervilleBE",
+    "TimesNewRomanPS",
+    "ArialMT+OGAQVX"
+   ],
+   "top_head_fonts": [
+    "Helvetica",
+    "ArialMT",
+    "CourierNewPSMT",
+    "TimesNewRomanPS",
+    "BureauGrotesque",
+    "Times",
+    "Arial",
+    "Minion"
+   ]
+  },
+  "us_local_newspaper|front": {
+   "w_mm": {
+    "n": 29,
+    "p10": 266.7,
+    "p25": 266.7,
+    "median": 288.9,
+    "p75": 288.9,
+    "p90": 288.9
+   },
+   "h_mm": {
+    "n": 29,
+    "p10": 546.1,
+    "p25": 551.2,
+    "median": 571.5,
+    "p75": 571.5,
+    "p90": 571.5
+   },
+   "columns": {
+    "n": 29,
+    "p10": 5.0,
+    "p25": 6.0,
+    "median": 6.0,
+    "p75": 7.0,
+    "p90": 8.0
+   },
+   "column_pitch_mm": {
+    "n": 29,
+    "p10": 28.74,
+    "p25": 35.8,
+    "median": 43.0,
+    "p75": 48.2,
+    "p90": 51.54
+   },
+   "gutter_mm": {
+    "n": 13,
+    "p10": 1.54,
+    "p25": 3.3,
+    "median": 3.7,
+    "p75": 7.0,
+    "p90": 9.4
+   },
+   "body_pt": {
+    "n": 29,
+    "p10": 9.4,
+    "p25": 9.5,
+    "median": 10.0,
+    "p75": 10.0,
+    "p90": 10.0
+   },
+   "body_leading_pt": {
+    "n": 29,
+    "p10": 10.0,
+    "p25": 10.0,
+    "median": 10.7,
+    "p75": 10.8,
+    "p90": 10.98
+   },
+   "body_line_chars_median": {
+    "n": 29,
+    "p10": 24.0,
+    "p25": 25.0,
+    "median": 26.0,
+    "p75": 30.5,
+    "p90": 32.2
+   },
+   "headline_max_pt": {
+    "n": 29,
+    "p10": 59.0,
+    "p25": 66.0,
+    "median": 68.0,
+    "p75": 74.0,
+    "p90": 113.0
+   },
+   "headline_ratio": {
+    "n": 29,
+    "p10": 5.844,
+    "p25": 6.6,
+    "median": 6.95,
+    "p75": 8.0,
+    "p90": 11.89
+   },
+   "step2": {
+    "n": 29,
+    "p10": 0.456,
+    "p25": 0.61,
+    "median": 0.88,
+    "p75": 0.94,
+    "p90": 0.99
+   },
+   "step3": {
+    "n": 28,
+    "p10": 0.327,
+    "p25": 0.542,
+    "median": 0.82,
+    "p75": 0.895,
+    "p90": 0.946
+   },
+   "headline_blocks": {
+    "n": 29,
+    "p10": 10.8,
+    "p25": 14.0,
+    "median": 15.0,
+    "p75": 16.0,
+    "p90": 16.2
+   },
+   "largest_headline_width_share": {
+    "n": 29,
+    "p10": 0.235,
+    "p25": 0.443,
+    "median": 0.541,
+    "p75": 0.776,
+    "p90": 0.915
+   },
+   "largest_headline_y_share": {
+    "n": 29,
+    "p10": 0.069,
+    "p25": 0.075,
+    "median": 0.163,
+    "p75": 0.307,
+    "p90": 0.656
+   },
+   "text_area_share": {
+    "n": 29,
+    "p10": 0.322,
+    "p25": 0.409,
+    "median": 0.461,
+    "p75": 0.501,
+    "p90": 0.52
+   },
+   "graphic_share": {
+    "n": 29,
+    "p10": 0.207,
+    "p25": 0.249,
+    "median": 0.257,
+    "p75": 0.295,
+    "p90": 0.371
+   },
+   "largest_graphic_share": {
+    "n": 29,
+    "p10": 0.088,
+    "p25": 0.1,
+    "median": 0.122,
+    "p75": 0.144,
+    "p90": 0.16
+   },
+   "image_boxes": {
+    "n": 28,
+    "p10": 7.0,
+    "p25": 8.0,
+    "median": 9.0,
+    "p75": 10.0,
+    "p90": 11.0
+   },
+   "paper_share": {
+    "n": 29,
+    "p10": 0.427,
+    "p25": 0.458,
+    "median": 0.513,
+    "p75": 0.532,
+    "p90": 0.558
+   },
+   "saturated_share": {
+    "n": 29,
+    "p10": 0.045,
+    "p25": 0.063,
+    "median": 0.076,
+    "p75": 0.105,
+    "p90": 0.122
+   },
+   "dark_share": {
+    "n": 29,
+    "p10": 0.034,
+    "p25": 0.041,
+    "median": 0.051,
+    "p75": 0.074,
+    "p90": 0.085
+   },
+   "dominant_share": {
+    "n": 29,
+    "p10": 0.088,
+    "p25": 0.103,
+    "median": 0.122,
+    "p75": 0.144,
+    "p90": 0.164
+   },
+   "font_families": {
+    "n": 28,
+    "p10": 3.0,
+    "p25": 3.0,
+    "median": 3.0,
+    "p75": 4.25,
+    "p90": 5.0
+   },
+   "vector_rules": {
+    "n": 28,
+    "p10": 11.0,
+    "p25": 12.0,
+    "median": 15.5,
+    "p75": 247.5,
+    "p90": 284.6
+   },
+   "chars": {
+    "n": 29,
+    "p10": 4758.6,
+    "p25": 5369.0,
+    "median": 5853.0,
+    "p75": 6637.0,
+    "p90": 7868.4
+   },
+   "pages": 29,
+   "items": 29,
+   "titles": 29,
+   "formats": {
+    "broadsheet": 29
+   },
+   "source_kinds": {
+    "born_digital": 28,
+    "ocr": 1
+   },
+   "dominant_kind": {
+    "photo/graphic": 25,
+    "headline": 4
+   },
+   "body_serif_share": 1.0,
+   "head_serif_share": 0.909,
+   "top_body_fonts": [
+    "Times",
+    "PoynterOSTextThreeL",
+    "NimrodMT",
+    "TimesNewRomanPSMT",
+    "BaskervilleBE"
+   ],
+   "top_head_fonts": [
+    "Times",
+    "AntennaExtraCond",
+    "MyriadPro",
+    "TimesNewRomanPSMT",
+    "Minion"
+   ]
+  },
+  "us_local_newspaper|inside": {
+   "w_mm": {
+    "n": 1143,
+    "p10": 263.5,
+    "p25": 266.7,
+    "median": 288.9,
+    "p75": 289.1,
+    "p90": 289.1
+   },
+   "h_mm": {
+    "n": 1143,
+    "p10": 546.1,
+    "p25": 549.3,
+    "median": 571.5,
+    "p75": 571.5,
+    "p90": 571.5
+   },
+   "columns": {
+    "n": 1142,
+    "p10": 2.0,
+    "p25": 4.0,
+    "median": 5.0,
+    "p75": 6.0,
+    "p90": 8.0
+   },
+   "column_pitch_mm": {
+    "n": 1032,
+    "p10": 28.0,
+    "p25": 34.175,
+    "median": 44.4,
+    "p75": 51.6,
+    "p90": 66.0
+   },
+   "gutter_mm": {
+    "n": 794,
+    "p10": 2.8,
+    "p25": 3.4,
+    "median": 6.3,
+    "p75": 11.65,
+    "p90": 26.1
+   },
+   "body_pt": {
+    "n": 1142,
+    "p10": 6.5,
+    "p25": 7.5,
+    "median": 9.5,
+    "p75": 10.0,
+    "p90": 10.0
+   },
+   "body_leading_pt": {
+    "n": 1106,
+    "p10": 7.0,
+    "p25": 8.9,
+    "median": 9.9,
+    "p75": 10.7,
+    "p90": 11.0
+   },
+   "body_line_chars_median": {
+    "n": 1142,
+    "p10": 20.0,
+    "p25": 24.0,
+    "median": 26.0,
+    "p75": 30.0,
+    "p90": 39.0
+   },
+   "headline_max_pt": {
+    "n": 1123,
+    "p10": 26.0,
+    "p25": 37.0,
+    "median": 51.0,
+    "p75": 65.0,
+    "p90": 77.0
+   },
+   "headline_ratio": {
+    "n": 1123,
+    "p10": 3.0,
+    "p25": 4.29,
+    "median": 5.53,
+    "p75": 7.235,
+    "p90": 9.3
+   },
+   "step2": {
+    "n": 1093,
+    "p10": 0.49,
+    "p25": 0.67,
+    "median": 0.83,
+    "p75": 0.94,
+    "p90": 0.97
+   },
+   "step3": {
+    "n": 1012,
+    "p10": 0.38,
+    "p25": 0.52,
+    "median": 0.675,
+    "p75": 0.83,
+    "p90": 0.92
+   },
+   "headline_blocks": {
+    "n": 1142,
+    "p10": 2.1,
+    "p25": 4.0,
+    "median": 7.5,
+    "p75": 13.0,
+    "p90": 23.0
+   },
+   "largest_headline_width_share": {
+    "n": 1116,
+    "p10": 0.199,
+    "p25": 0.307,
+    "median": 0.456,
+    "p75": 0.743,
+    "p90": 0.917
+   },
+   "largest_headline_y_share": {
+    "n": 1116,
+    "p10": 0.03,
+    "p25": 0.047,
+    "median": 0.256,
+    "p75": 0.626,
+    "p90": 0.821
+   },
+   "text_area_share": {
+    "n": 1142,
+    "p10": 0.155,
+    "p25": 0.281,
+    "median": 0.398,
+    "p75": 0.501,
+    "p90": 0.613
+   },
+   "graphic_share": {
+    "n": 1143,
+    "p10": 0.092,
+    "p25": 0.171,
+    "median": 0.281,
+    "p75": 0.375,
+    "p90": 0.497
+   },
+   "largest_graphic_share": {
+    "n": 1143,
+    "p10": 0.027,
+    "p25": 0.055,
+    "median": 0.1,
+    "p75": 0.174,
+    "p90": 0.339
+   },
+   "image_boxes": {
+    "n": 1099,
+    "p10": 1.0,
+    "p25": 2.0,
+    "median": 5.0,
+    "p75": 9.0,
+    "p90": 23.0
+   },
+   "paper_share": {
+    "n": 1143,
+    "p10": 0.322,
+    "p25": 0.416,
+    "median": 0.483,
+    "p75": 0.544,
+    "p90": 0.597
+   },
+   "saturated_share": {
+    "n": 1143,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.118,
+    "p90": 0.23
+   },
+   "dark_share": {
+    "n": 1143,
+    "p10": 0.011,
+    "p25": 0.023,
+    "median": 0.042,
+    "p75": 0.076,
+    "p90": 0.118
+   },
+   "dominant_share": {
+    "n": 1143,
+    "p10": 0.035,
+    "p25": 0.058,
+    "median": 0.103,
+    "p75": 0.179,
+    "p90": 0.342
+   },
+   "font_families": {
+    "n": 1099,
+    "p10": 3.0,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 7.0,
+    "p90": 11.0
+   },
+   "vector_rules": {
+    "n": 1099,
+    "p10": 2.0,
+    "p25": 11.0,
+    "median": 36.0,
+    "p75": 749.5,
+    "p90": 6393.0
+   },
+   "chars": {
+    "n": 1143,
+    "p10": 3032.0,
+    "p25": 6100.5,
+    "median": 9118.0,
+    "p75": 12564.5,
+    "p90": 15926.2
+   },
+   "pages": 1143,
+   "items": 29,
+   "titles": 29,
+   "formats": {
+    "broadsheet": 1141,
+    "magazine": 2
+   },
+   "source_kinds": {
+    "born_digital": 1099,
+    "ocr": 43,
+    "image_only": 1
+   },
+   "dominant_kind": {
+    "photo/graphic": 1008,
+    "headline": 135
+   },
+   "body_serif_share": 0.569,
+   "head_serif_share": 0.508,
+   "top_body_fonts": [
+    "Times",
+    "BaskervilleBE",
+    "Helvetica",
+    "PoynterOSTextThreeL",
+    "FranklinGothic",
+    "ArialMT",
+    "TimesNewRomanPSMT",
+    "PoynterAgateZero"
+   ],
+   "top_head_fonts": [
+    "Times",
+    "Helvetica",
+    "BureauGrotesque",
+    "AntennaExtraCond",
+    "Minion",
+    "Clearface",
+    "ArialMT",
+    "TimesNewRomanPSMT"
+   ]
+  },
+  "world_newspaper|back": {
+   "w_mm": {
+    "n": 39,
+    "p10": 198.96,
+    "p25": 209.9,
+    "median": 230.0,
+    "p75": 421.4,
+    "p90": 813.5
+   },
+   "h_mm": {
+    "n": 39,
+    "p10": 279.4,
+    "p25": 297.0,
+    "median": 300.0,
+    "p75": 548.95,
+    "p90": 1056.9
+   },
+   "columns": {
+    "n": 38,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 3.0,
+    "p75": 4.0,
+    "p90": 6.0
+   },
+   "column_pitch_mm": {
+    "n": 23,
+    "p10": 26.66,
+    "p25": 33.5,
+    "median": 43.9,
+    "p75": 95.1,
+    "p90": 144.44
+   },
+   "gutter_mm": {
+    "n": 19,
+    "p10": 3.34,
+    "p25": 6.7,
+    "median": 9.7,
+    "p75": 36.0,
+    "p90": 54.68
+   },
+   "body_pt": {
+    "n": 38,
+    "p10": 6.35,
+    "p25": 7.5,
+    "median": 9.5,
+    "p75": 18.125,
+    "p90": 32.1
+   },
+   "body_leading_pt": {
+    "n": 33,
+    "p10": 6.52,
+    "p25": 10.0,
+    "median": 10.4,
+    "p75": 21.7,
+    "p90": 50.8
+   },
+   "body_line_chars_median": {
+    "n": 36,
+    "p10": 20.0,
+    "p25": 23.375,
+    "median": 29.0,
+    "p75": 42.125,
+    "p90": 55.0
+   },
+   "headline_max_pt": {
+    "n": 37,
+    "p10": 29.6,
+    "p25": 37.0,
+    "median": 47.0,
+    "p75": 74.0,
+    "p90": 129.4
+   },
+   "headline_ratio": {
+    "n": 37,
+    "p10": 2.708,
+    "p25": 3.61,
+    "median": 4.29,
+    "p75": 6.71,
+    "p90": 8.692
+   },
+   "step2": {
+    "n": 33,
+    "p10": 0.422,
+    "p25": 0.54,
+    "median": 0.77,
+    "p75": 0.93,
+    "p90": 0.98
+   },
+   "step3": {
+    "n": 25,
+    "p10": 0.326,
+    "p25": 0.47,
+    "median": 0.67,
+    "p75": 0.82,
+    "p90": 0.874
+   },
+   "headline_blocks": {
+    "n": 38,
+    "p10": 1.0,
+    "p25": 2.0,
+    "median": 3.5,
+    "p75": 6.0,
+    "p90": 8.0
+   },
+   "largest_headline_width_share": {
+    "n": 37,
+    "p10": 0.25,
+    "p25": 0.292,
+    "median": 0.472,
+    "p75": 0.63,
+    "p90": 0.846
+   },
+   "largest_headline_y_share": {
+    "n": 37,
+    "p10": 0.05,
+    "p25": 0.104,
+    "median": 0.204,
+    "p75": 0.75,
+    "p90": 0.81
+   },
+   "text_area_share": {
+    "n": 38,
+    "p10": 0.07,
+    "p25": 0.113,
+    "median": 0.212,
+    "p75": 0.388,
+    "p90": 0.477
+   },
+   "graphic_share": {
+    "n": 39,
+    "p10": 0.266,
+    "p25": 0.298,
+    "median": 0.438,
+    "p75": 0.687,
+    "p90": 0.765
+   },
+   "largest_graphic_share": {
+    "n": 39,
+    "p10": 0.109,
+    "p25": 0.135,
+    "median": 0.257,
+    "p75": 0.613,
+    "p90": 0.767
+   },
+   "image_boxes": {
+    "n": 14,
+    "p10": 3.3,
+    "p25": 4.0,
+    "median": 7.5,
+    "p75": 14.5,
+    "p90": 15.7
+   },
+   "paper_share": {
+    "n": 39,
+    "p10": 0.149,
+    "p25": 0.203,
+    "median": 0.376,
+    "p75": 0.469,
+    "p90": 0.569
+   },
+   "saturated_share": {
+    "n": 39,
+    "p10": 0.06,
+    "p25": 0.118,
+    "median": 0.192,
+    "p75": 0.279,
+    "p90": 0.47
+   },
+   "dark_share": {
+    "n": 39,
+    "p10": 0.016,
+    "p25": 0.026,
+    "median": 0.045,
+    "p75": 0.116,
+    "p90": 0.228
+   },
+   "dominant_share": {
+    "n": 39,
+    "p10": 0.117,
+    "p25": 0.14,
+    "median": 0.257,
+    "p75": 0.613,
+    "p90": 0.767
+   },
+   "font_families": {
+    "n": 14,
+    "p10": 2.0,
+    "p25": 3.0,
+    "median": 3.0,
+    "p75": 5.75,
+    "p90": 6.0
+   },
+   "vector_rules": {
+    "n": 14,
+    "p10": 39.0,
+    "p25": 53.75,
+    "median": 622.0,
+    "p75": 2768.0,
+    "p90": 3024.7
+   },
+   "chars": {
+    "n": 39,
+    "p10": 65.8,
+    "p25": 253.5,
+    "median": 3182.0,
+    "p75": 5601.0,
+    "p90": 6785.6
+   },
+   "pages": 39,
+   "items": 39,
+   "titles": 38,
+   "formats": {
+    "magazine": 14,
+    "broadsheet": 10,
+    "tabloid": 7,
+    "small": 7,
+    "berliner": 1
+   },
+   "source_kinds": {
+    "ocr": 24,
+    "born_digital": 14,
+    "image_only": 1
+   },
+   "dominant_kind": {
+    "photo/graphic": 37,
+    "headline": 2
+   },
+   "body_serif_share": 0.333,
+   "head_serif_share": 0.143,
+   "top_body_fonts": [
+    "BatonTurbo",
+    "Muna",
+    "PeriodicoText",
+    "GothamNarrow",
+    "HelveticaNeue",
+    "Imperial",
+    "GuardianSansCond",
+    "Helvetica"
+   ],
+   "top_head_fonts": [
+    "Kufi",
+    "BatonTurbo",
+    "GothamNarrow",
+    "NeueAachenPro",
+    "TitlingGothic",
+    "GuardianSans",
+    "Arial",
+    "Clan"
+   ]
+  },
+  "world_newspaper|front": {
+   "w_mm": {
+    "n": 42,
+    "p10": 209.9,
+    "p25": 209.9,
+    "median": 280.65,
+    "p75": 355.825,
+    "p90": 813.5
+   },
+   "h_mm": {
+    "n": 42,
+    "p10": 283.27,
+    "p25": 297.2,
+    "median": 374.95,
+    "p75": 868.025,
+    "p90": 1056.9
+   },
+   "columns": {
+    "n": 41,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 1.0,
+    "p75": 2.0,
+    "p90": 4.0
+   },
+   "column_pitch_mm": {
+    "n": 12,
+    "p10": 25.8,
+    "p25": 31.35,
+    "median": 43.2,
+    "p75": 111.525,
+    "p90": 113.55
+   },
+   "gutter_mm": {
+    "n": 10,
+    "p10": 2.74,
+    "p25": 5.175,
+    "median": 19.6,
+    "p75": 70.75,
+    "p90": 86.98
+   },
+   "body_pt": {
+    "n": 41,
+    "p10": 7.0,
+    "p25": 9.5,
+    "median": 11.5,
+    "p75": 18.0,
+    "p90": 30.5
+   },
+   "body_leading_pt": {
+    "n": 34,
+    "p10": 7.73,
+    "p25": 10.075,
+    "median": 12.5,
+    "p75": 23.25,
+    "p90": 38.4
+   },
+   "body_line_chars_median": {
+    "n": 41,
+    "p10": 17.0,
+    "p25": 20.0,
+    "median": 28.0,
+    "p75": 46.5,
+    "p90": 93.0
+   },
+   "headline_max_pt": {
+    "n": 40,
+    "p10": 31.8,
+    "p25": 42.75,
+    "median": 58.5,
+    "p75": 113.5,
+    "p90": 199.0
+   },
+   "headline_ratio": {
+    "n": 40,
+    "p10": 2.994,
+    "p25": 3.76,
+    "median": 4.74,
+    "p75": 8.0,
+    "p90": 9.887
+   },
+   "step2": {
+    "n": 37,
+    "p10": 0.408,
+    "p25": 0.61,
+    "median": 0.79,
+    "p75": 0.92,
+    "p90": 0.974
+   },
+   "step3": {
+    "n": 34,
+    "p10": 0.235,
+    "p25": 0.38,
+    "median": 0.58,
+    "p75": 0.81,
+    "p90": 0.88
+   },
+   "headline_blocks": {
+    "n": 41,
+    "p10": 1.0,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 6.0,
+    "p90": 10.0
+   },
+   "largest_headline_width_share": {
+    "n": 39,
+    "p10": 0.285,
+    "p25": 0.431,
+    "median": 0.584,
+    "p75": 0.774,
+    "p90": 0.903
+   },
+   "largest_headline_y_share": {
+    "n": 39,
+    "p10": 0.047,
+    "p25": 0.226,
+    "median": 0.352,
+    "p75": 0.55,
+    "p90": 0.718
+   },
+   "text_area_share": {
+    "n": 41,
+    "p10": 0.139,
+    "p25": 0.168,
+    "median": 0.216,
+    "p75": 0.282,
+    "p90": 0.496
+   },
+   "graphic_share": {
+    "n": 42,
+    "p10": 0.274,
+    "p25": 0.4,
+    "median": 0.501,
+    "p75": 0.564,
+    "p90": 0.655
+   },
+   "largest_graphic_share": {
+    "n": 42,
+    "p10": 0.102,
+    "p25": 0.228,
+    "median": 0.316,
+    "p75": 0.489,
+    "p90": 0.532
+   },
+   "image_boxes": {
+    "n": 14,
+    "p10": 4.0,
+    "p25": 5.0,
+    "median": 9.0,
+    "p75": 13.0,
+    "p90": 13.7
+   },
+   "paper_share": {
+    "n": 42,
+    "p10": 0.204,
+    "p25": 0.249,
+    "median": 0.354,
+    "p75": 0.42,
+    "p90": 0.567
+   },
+   "saturated_share": {
+    "n": 42,
+    "p10": 0.093,
+    "p25": 0.147,
+    "median": 0.242,
+    "p75": 0.36,
+    "p90": 0.488
+   },
+   "dark_share": {
+    "n": 42,
+    "p10": 0.024,
+    "p25": 0.057,
+    "median": 0.096,
+    "p75": 0.175,
+    "p90": 0.256
+   },
+   "dominant_share": {
+    "n": 42,
+    "p10": 0.112,
+    "p25": 0.228,
+    "median": 0.316,
+    "p75": 0.489,
+    "p90": 0.532
+   },
+   "font_families": {
+    "n": 14,
+    "p10": 2.0,
+    "p25": 2.0,
+    "median": 3.0,
+    "p75": 4.0,
+    "p90": 5.0
+   },
+   "vector_rules": {
+    "n": 14,
+    "p10": 37.6,
+    "p25": 66.0,
+    "median": 287.5,
+    "p75": 768.25,
+    "p90": 1877.6
+   },
+   "chars": {
+    "n": 42,
+    "p10": 461.4,
+    "p25": 669.25,
+    "median": 1049.5,
+    "p75": 1851.0,
+    "p90": 3731.0
+   },
+   "pages": 42,
+   "items": 42,
+   "titles": 41,
+   "formats": {
+    "broadsheet": 15,
+    "magazine": 14,
+    "tabloid": 7,
+    "small": 5,
+    "berliner": 1
+   },
+   "source_kinds": {
+    "ocr": 27,
+    "born_digital": 14,
+    "image_only": 1
+   },
+   "dominant_kind": {
+    "photo/graphic": 39,
+    "headline": 3
+   },
+   "top_body_fonts": [
+    "Aktuell",
+    "Beirut",
+    "MercuryTextG4",
+    "Clan",
+    "DispatchCond",
+    "TimesClassicText",
+    "Gotham",
+    "Helvetica"
+   ],
+   "top_head_fonts": [
+    "BatonTurbo",
+    "Farah",
+    "MercuryDisplay",
+    "Clan",
+    "TitlingGothic",
+    "GuardianSansXCond",
+    "Gotham",
+    "TimesNewRoman"
+   ]
+  },
+  "world_newspaper|inside": {
+   "w_mm": {
+    "n": 1052,
+    "p10": 209.5,
+    "p25": 209.9,
+    "median": 281.9,
+    "p75": 361.3,
+    "p90": 765.2
+   },
+   "h_mm": {
+    "n": 1052,
+    "p10": 281.8,
+    "p25": 297.0,
+    "median": 370.0,
+    "p75": 577.8,
+    "p90": 1054.5
+   },
+   "columns": {
+    "n": 1021,
+    "p10": 0.0,
+    "p25": 2.0,
+    "median": 4.0,
+    "p75": 5.0,
+    "p90": 6.0
+   },
+   "column_pitch_mm": {
+    "n": 857,
+    "p10": 26.46,
+    "p25": 37.8,
+    "median": 49.7,
+    "p75": 87.7,
+    "p90": 167.48
+   },
+   "gutter_mm": {
+    "n": 687,
+    "p10": 3.1,
+    "p25": 4.65,
+    "median": 9.5,
+    "p75": 29.0,
+    "p90": 68.38
+   },
+   "body_pt": {
+    "n": 1021,
+    "p10": 6.0,
+    "p25": 8.0,
+    "median": 9.5,
+    "p75": 12.0,
+    "p90": 22.0
+   },
+   "body_leading_pt": {
+    "n": 939,
+    "p10": 6.6,
+    "p25": 9.025,
+    "median": 10.4,
+    "p75": 17.75,
+    "p90": 28.0
+   },
+   "body_line_chars_median": {
+    "n": 1017,
+    "p10": 21.0,
+    "p25": 26.0,
+    "median": 29.5,
+    "p75": 37.0,
+    "p90": 48.0
+   },
+   "headline_max_pt": {
+    "n": 966,
+    "p10": 20.0,
+    "p25": 29.0,
+    "median": 43.5,
+    "p75": 72.0,
+    "p90": 112.0
+   },
+   "headline_ratio": {
+    "n": 966,
+    "p10": 2.29,
+    "p25": 3.052,
+    "median": 4.44,
+    "p75": 6.455,
+    "p90": 8.7
+   },
+   "step2": {
+    "n": 848,
+    "p10": 0.42,
+    "p25": 0.57,
+    "median": 0.77,
+    "p75": 0.93,
+    "p90": 0.97
+   },
+   "step3": {
+    "n": 742,
+    "p10": 0.301,
+    "p25": 0.4,
+    "median": 0.57,
+    "p75": 0.748,
+    "p90": 0.88
+   },
+   "headline_blocks": {
+    "n": 1021,
+    "p10": 1.0,
+    "p25": 2.0,
+    "median": 4.0,
+    "p75": 6.0,
+    "p90": 9.0
+   },
+   "largest_headline_width_share": {
+    "n": 941,
+    "p10": 0.201,
+    "p25": 0.32,
+    "median": 0.495,
+    "p75": 0.687,
+    "p90": 0.847
+   },
+   "largest_headline_y_share": {
+    "n": 941,
+    "p10": 0.041,
+    "p25": 0.079,
+    "median": 0.144,
+    "p75": 0.423,
+    "p90": 0.656
+   },
+   "text_area_share": {
+    "n": 1021,
+    "p10": 0.108,
+    "p25": 0.202,
+    "median": 0.328,
+    "p75": 0.439,
+    "p90": 0.581
+   },
+   "graphic_share": {
+    "n": 1052,
+    "p10": 0.143,
+    "p25": 0.215,
+    "median": 0.335,
+    "p75": 0.481,
+    "p90": 0.611
+   },
+   "largest_graphic_share": {
+    "n": 1052,
+    "p10": 0.054,
+    "p25": 0.103,
+    "median": 0.179,
+    "p75": 0.32,
+    "p90": 0.499
+   },
+   "image_boxes": {
+    "n": 449,
+    "p10": 1.0,
+    "p25": 2.0,
+    "median": 4.0,
+    "p75": 9.0,
+    "p90": 15.0
+   },
+   "paper_share": {
+    "n": 1052,
+    "p10": 0.23,
+    "p25": 0.35,
+    "median": 0.442,
+    "p75": 0.526,
+    "p90": 0.608
+   },
+   "saturated_share": {
+    "n": 1052,
+    "p10": 0.0,
+    "p25": 0.045,
+    "median": 0.109,
+    "p75": 0.213,
+    "p90": 0.332
+   },
+   "dark_share": {
+    "n": 1052,
+    "p10": 0.009,
+    "p25": 0.022,
+    "median": 0.047,
+    "p75": 0.088,
+    "p90": 0.155
+   },
+   "dominant_share": {
+    "n": 1052,
+    "p10": 0.06,
+    "p25": 0.107,
+    "median": 0.179,
+    "p75": 0.32,
+    "p90": 0.499
+   },
+   "font_families": {
+    "n": 449,
+    "p10": 2.0,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 5.0,
+    "p90": 7.0
+   },
+   "vector_rules": {
+    "n": 449,
+    "p10": 4.0,
+    "p25": 9.0,
+    "median": 48.0,
+    "p75": 492.0,
+    "p90": 3727.6
+   },
+   "chars": {
+    "n": 1052,
+    "p10": 319.7,
+    "p25": 2468.75,
+    "median": 4398.0,
+    "p75": 6907.25,
+    "p90": 10959.9
+   },
+   "pages": 1052,
+   "items": 39,
+   "titles": 38,
+   "formats": {
+    "magazine": 347,
+    "broadsheet": 290,
+    "tabloid": 246,
+    "small": 123,
+    "berliner": 46
+   },
+   "source_kinds": {
+    "ocr": 572,
+    "born_digital": 449,
+    "image_only": 31
+   },
+   "dominant_kind": {
+    "photo/graphic": 996,
+    "headline": 56
+   },
+   "body_serif_share": 0.503,
+   "head_serif_share": 0.194,
+   "top_body_fonts": [
+    "PeriodicoText",
+    "Muna",
+    "Aktuell",
+    "MercuryTextG4",
+    "Imperial",
+    "ITCFranklinGothicStd",
+    "TimesClassicText",
+    "Clan"
+   ],
+   "top_head_fonts": [
+    "Clan",
+    "MercuryDisplay",
+    "TitlingGothic",
+    "BatonTurbo",
+    "Kufi",
+    "GuardianSansCond",
+    "ArialNarrow",
+    "Gotham"
+   ]
+  },
+  "daily_newspaper|front|format=berliner": {
+   "w_mm": {
+    "n": 97,
+    "p10": 279.4,
+    "p25": 300.0,
+    "median": 311.0,
+    "p75": 335.0,
+    "p90": 350.0
+   },
+   "h_mm": {
+    "n": 97,
+    "p10": 450.0,
+    "p25": 470.0,
+    "median": 484.6,
+    "p75": 512.4,
+    "p90": 515.0
+   },
+   "columns": {
+    "n": 18,
+    "p10": 2.7,
+    "p25": 4.0,
+    "median": 5.0,
+    "p75": 6.0,
+    "p90": 6.0
+   },
+   "column_pitch_mm": {
+    "n": 17,
+    "p10": 47.84,
+    "p25": 52.9,
+    "median": 56.6,
+    "p75": 71.8,
+    "p90": 81.78
+   },
+   "gutter_mm": {
+    "n": 16,
+    "p10": 4.05,
+    "p25": 4.2,
+    "median": 6.6,
+    "p75": 13.4,
+    "p90": 24.8
+   },
+   "body_pt": {
+    "n": 97,
+    "p10": 8.5,
+    "p25": 9.0,
+    "median": 9.5,
+    "p75": 10.0,
+    "p90": 11.0
+   },
+   "body_leading_pt": {
+    "n": 96,
+    "p10": 9.5,
+    "p25": 10.0,
+    "median": 11.1,
+    "p75": 12.175,
+    "p90": 15.9
+   },
+   "body_line_chars_median": {
+    "n": 18,
+    "p10": 19.8,
+    "p25": 21.5,
+    "median": 29.5,
+    "p75": 34.0,
+    "p90": 39.65
+   },
+   "headline_max_pt": {
+    "n": 97,
+    "p10": 36.0,
+    "p25": 44.0,
+    "median": 52.0,
+    "p75": 62.0,
+    "p90": 80.8
+   },
+   "headline_ratio": {
+    "n": 97,
+    "p10": 3.89,
+    "p25": 4.44,
+    "median": 5.29,
+    "p75": 6.0,
+    "p90": 7.816
+   },
+   "step2": {
+    "n": 95,
+    "p10": 0.45,
+    "p25": 0.53,
+    "median": 0.67,
+    "p75": 0.76,
+    "p90": 0.882
+   },
+   "step3": {
+    "n": 88,
+    "p10": 0.33,
+    "p25": 0.38,
+    "median": 0.47,
+    "p75": 0.57,
+    "p90": 0.696
+   },
+   "headline_blocks": {
+    "n": 97,
+    "p10": 3.0,
+    "p25": 5.0,
+    "median": 6.0,
+    "p75": 9.0,
+    "p90": 12.0
+   },
+   "largest_headline_width_share": {
+    "n": 97,
+    "p10": 0.343,
+    "p25": 0.476,
+    "median": 0.616,
+    "p75": 0.732,
+    "p90": 0.781
+   },
+   "largest_headline_y_share": {
+    "n": 97,
+    "p10": 0.08,
+    "p25": 0.129,
+    "median": 0.22,
+    "p75": 0.352,
+    "p90": 0.472
+   },
+   "text_area_share": {
+    "n": 97,
+    "p10": 0.203,
+    "p25": 0.279,
+    "median": 0.328,
+    "p75": 0.394,
+    "p90": 0.475
+   },
+   "graphic_share": {
+    "n": 97,
+    "p10": 0.174,
+    "p25": 0.215,
+    "median": 0.267,
+    "p75": 0.329,
+    "p90": 0.409
+   },
+   "largest_graphic_share": {
+    "n": 97,
+    "p10": 0.095,
+    "p25": 0.117,
+    "median": 0.14,
+    "p75": 0.197,
+    "p90": 0.255
+   },
+   "image_boxes": {
+    "n": 97,
+    "p10": 2.0,
+    "p25": 2.0,
+    "median": 4.0,
+    "p75": 7.0,
+    "p90": 12.4
+   },
+   "paper_share": {
+    "n": 97,
+    "p10": 0.413,
+    "p25": 0.465,
+    "median": 0.549,
+    "p75": 0.592,
+    "p90": 0.637
+   },
+   "saturated_share": {
+    "n": 97,
+    "p10": 0.034,
+    "p25": 0.06,
+    "median": 0.093,
+    "p75": 0.172,
+    "p90": 0.209
+   },
+   "dark_share": {
+    "n": 97,
+    "p10": 0.012,
+    "p25": 0.021,
+    "median": 0.036,
+    "p75": 0.069,
+    "p90": 0.107
+   },
+   "dominant_share": {
+    "n": 97,
+    "p10": 0.098,
+    "p25": 0.12,
+    "median": 0.143,
+    "p75": 0.197,
+    "p90": 0.255
+   },
+   "font_families": {
+    "n": 97,
+    "p10": 2.6,
+    "p25": 4.0,
+    "median": 6.0,
+    "p75": 7.0,
+    "p90": 8.0
+   },
+   "vector_rules": {
+    "n": 97,
+    "p10": 40.8,
+    "p25": 100.0,
+    "median": 359.0,
+    "p75": 708.0,
+    "p90": 2012.2
+   },
+   "chars": {
+    "n": 97,
+    "p10": 1639.4,
+    "p25": 3375.0,
+    "median": 6139.0,
+    "p75": 7874.0,
+    "p90": 9482.8
+   },
+   "pages": 97,
+   "titles": 16
+  },
+  "daily_newspaper|front|format=broadsheet": {
+   "w_mm": {
+    "n": 3195,
+    "p10": 279.3,
+    "p25": 279.4,
+    "median": 279.4,
+    "p75": 279.4,
+    "p90": 292.1
+   },
+   "h_mm": {
+    "n": 3195,
+    "p10": 539.8,
+    "p25": 539.8,
+    "median": 539.8,
+    "p75": 555.8,
+    "p90": 571.5
+   },
+   "columns": {
+    "n": 784,
+    "p10": 2.0,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 5.0,
+    "p90": 6.0
+   },
+   "column_pitch_mm": {
+    "n": 745,
+    "p10": 33.9,
+    "p25": 49.1,
+    "median": 63.9,
+    "p75": 66.9,
+    "p90": 97.9
+   },
+   "gutter_mm": {
+    "n": 534,
+    "p10": 3.6,
+    "p25": 5.7,
+    "median": 6.45,
+    "p75": 22.45,
+    "p90": 63.1
+   },
+   "body_pt": {
+    "n": 3185,
+    "p10": 9.0,
+    "p25": 9.5,
+    "median": 9.5,
+    "p75": 9.5,
+    "p90": 10.0
+   },
+   "body_leading_pt": {
+    "n": 3183,
+    "p10": 10.0,
+    "p25": 10.5,
+    "median": 11.0,
+    "p75": 11.0,
+    "p90": 11.0
+   },
+   "body_line_chars_median": {
+    "n": 784,
+    "p10": 28.0,
+    "p25": 33.0,
+    "median": 36.0,
+    "p75": 37.0,
+    "p90": 43.0
+   },
+   "headline_max_pt": {
+    "n": 3184,
+    "p10": 42.0,
+    "p25": 47.0,
+    "median": 55.0,
+    "p75": 72.0,
+    "p90": 88.0
+   },
+   "headline_ratio": {
+    "n": 3184,
+    "p10": 4.42,
+    "p25": 4.95,
+    "median": 5.89,
+    "p75": 7.58,
+    "p90": 9.3
+   },
+   "step2": {
+    "n": 3182,
+    "p10": 0.49,
+    "p25": 0.63,
+    "median": 0.77,
+    "p75": 0.88,
+    "p90": 0.949
+   },
+   "step3": {
+    "n": 3163,
+    "p10": 0.38,
+    "p25": 0.48,
+    "median": 0.61,
+    "p75": 0.72,
+    "p90": 0.8
+   },
+   "headline_blocks": {
+    "n": 3185,
+    "p10": 5.0,
+    "p25": 6.0,
+    "median": 7.0,
+    "p75": 9.0,
+    "p90": 12.0
+   },
+   "largest_headline_width_share": {
+    "n": 3184,
+    "p10": 0.433,
+    "p25": 0.577,
+    "median": 0.661,
+    "p75": 0.717,
+    "p90": 0.898
+   },
+   "largest_headline_y_share": {
+    "n": 3184,
+    "p10": 0.121,
+    "p25": 0.195,
+    "median": 0.254,
+    "p75": 0.485,
+    "p90": 0.603
+   },
+   "text_area_share": {
+    "n": 3185,
+    "p10": 0.22,
+    "p25": 0.248,
+    "median": 0.283,
+    "p75": 0.336,
+    "p90": 0.416
+   },
+   "graphic_share": {
+    "n": 3195,
+    "p10": 0.215,
+    "p25": 0.247,
+    "median": 0.281,
+    "p75": 0.321,
+    "p90": 0.368
+   },
+   "largest_graphic_share": {
+    "n": 3195,
+    "p10": 0.103,
+    "p25": 0.126,
+    "median": 0.149,
+    "p75": 0.172,
+    "p90": 0.221
+   },
+   "image_boxes": {
+    "n": 3179,
+    "p10": 3.0,
+    "p25": 4.0,
+    "median": 5.0,
+    "p75": 7.0,
+    "p90": 10.0
+   },
+   "paper_share": {
+    "n": 3195,
+    "p10": 0.474,
+    "p25": 0.52,
+    "median": 0.554,
+    "p75": 0.582,
+    "p90": 0.607
+   },
+   "saturated_share": {
+    "n": 3195,
+    "p10": 0.053,
+    "p25": 0.081,
+    "median": 0.116,
+    "p75": 0.158,
+    "p90": 0.2
+   },
+   "dark_share": {
+    "n": 3195,
+    "p10": 0.034,
+    "p25": 0.051,
+    "median": 0.073,
+    "p75": 0.103,
+    "p90": 0.136
+   },
+   "dominant_share": {
+    "n": 3195,
+    "p10": 0.104,
+    "p25": 0.128,
+    "median": 0.15,
+    "p75": 0.172,
+    "p90": 0.222
+   },
+   "font_families": {
+    "n": 3179,
+    "p10": 2.0,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 6.0,
+    "p90": 8.0
+   },
+   "vector_rules": {
+    "n": 3179,
+    "p10": 13.0,
+    "p25": 126.0,
+    "median": 409.0,
+    "p75": 1110.0,
+    "p90": 3654.4
+   },
+   "chars": {
+    "n": 3195,
+    "p10": 3621.4,
+    "p25": 4355.0,
+    "median": 5285.0,
+    "p75": 6379.5,
+    "p90": 7788.2
+   },
+   "pages": 3195,
+   "titles": 440
+  },
+  "daily_newspaper|front|format=magazine": {
+   "w_mm": {
+    "n": 64,
+    "p10": 210.0,
+    "p25": 247.6,
+    "median": 273.0,
+    "p75": 279.4,
+    "p90": 280.7
+   },
+   "h_mm": {
+    "n": 64,
+    "p10": 292.1,
+    "p25": 297.0,
+    "median": 306.1,
+    "p75": 323.8,
+    "p90": 351.79
+   },
+   "columns": {
+    "n": 11,
+    "p10": 0.0,
+    "p25": 1.0,
+    "median": 2.0,
+    "p75": 2.5,
+    "p90": 3.0
+   },
+   "column_pitch_mm": {
+    "n": 6,
+    "p10": 50.9,
+    "p25": 59.075,
+    "median": 81.5,
+    "p75": 130.85,
+    "p90": 150.15
+   },
+   "gutter_mm": {
+    "n": 6,
+    "p10": 3.6,
+    "p25": 12.65,
+    "median": 39.45,
+    "p75": 89.05,
+    "p90": 109.1
+   },
+   "body_pt": {
+    "n": 64,
+    "p10": 7.65,
+    "p25": 10.0,
+    "median": 11.5,
+    "p75": 18.0,
+    "p90": 27.85
+   },
+   "body_leading_pt": {
+    "n": 58,
+    "p10": 8.0,
+    "p25": 10.625,
+    "median": 13.0,
+    "p75": 19.0,
+    "p90": 31.3
+   },
+   "body_line_chars_median": {
+    "n": 11,
+    "p10": 23.0,
+    "p25": 23.5,
+    "median": 30.0,
+    "p75": 39.0,
+    "p90": 70.0
+   },
+   "headline_max_pt": {
+    "n": 64,
+    "p10": 44.0,
+    "p25": 57.75,
+    "median": 80.0,
+    "p75": 117.75,
+    "p90": 161.7
+   },
+   "headline_ratio": {
+    "n": 64,
+    "p10": 4.024,
+    "p25": 4.41,
+    "median": 5.495,
+    "p75": 6.8,
+    "p90": 11.141
+   },
+   "step2": {
+    "n": 58,
+    "p10": 0.324,
+    "p25": 0.36,
+    "median": 0.495,
+    "p75": 0.76,
+    "p90": 0.943
+   },
+   "step3": {
+    "n": 36,
+    "p10": 0.235,
+    "p25": 0.295,
+    "median": 0.345,
+    "p75": 0.492,
+    "p90": 0.61
+   },
+   "headline_blocks": {
+    "n": 64,
+    "p10": 1.0,
+    "p25": 1.0,
+    "median": 2.0,
+    "p75": 5.0,
+    "p90": 6.0
+   },
+   "largest_headline_width_share": {
+    "n": 64,
+    "p10": 0.373,
+    "p25": 0.529,
+    "median": 0.636,
+    "p75": 0.784,
+    "p90": 0.891
+   },
+   "largest_headline_y_share": {
+    "n": 64,
+    "p10": 0.164,
+    "p25": 0.24,
+    "median": 0.426,
+    "p75": 0.573,
+    "p90": 0.686
+   },
+   "text_area_share": {
+    "n": 64,
+    "p10": 0.188,
+    "p25": 0.235,
+    "median": 0.331,
+    "p75": 0.441,
+    "p90": 0.8
+   },
+   "graphic_share": {
+    "n": 64,
+    "p10": 0.304,
+    "p25": 0.372,
+    "median": 0.456,
+    "p75": 0.488,
+    "p90": 0.558
+   },
+   "largest_graphic_share": {
+    "n": 64,
+    "p10": 0.166,
+    "p25": 0.215,
+    "median": 0.333,
+    "p75": 0.417,
+    "p90": 0.497
+   },
+   "image_boxes": {
+    "n": 63,
+    "p10": 4.0,
+    "p25": 5.0,
+    "median": 8.0,
+    "p75": 11.0,
+    "p90": 15.0
+   },
+   "paper_share": {
+    "n": 64,
+    "p10": 0.263,
+    "p25": 0.303,
+    "median": 0.376,
+    "p75": 0.423,
+    "p90": 0.463
+   },
+   "saturated_share": {
+    "n": 64,
+    "p10": 0.108,
+    "p25": 0.132,
+    "median": 0.194,
+    "p75": 0.281,
+    "p90": 0.387
+   },
+   "dark_share": {
+    "n": 64,
+    "p10": 0.037,
+    "p25": 0.049,
+    "median": 0.096,
+    "p75": 0.174,
+    "p90": 0.249
+   },
+   "dominant_share": {
+    "n": 64,
+    "p10": 0.178,
+    "p25": 0.226,
+    "median": 0.342,
+    "p75": 0.417,
+    "p90": 0.497
+   },
+   "font_families": {
+    "n": 63,
+    "p10": 2.0,
+    "p25": 2.0,
+    "median": 3.0,
+    "p75": 4.0,
+    "p90": 5.8
+   },
+   "vector_rules": {
+    "n": 63,
+    "p10": 33.2,
+    "p25": 88.5,
+    "median": 202.0,
+    "p75": 413.0,
+    "p90": 2017.6
+   },
+   "chars": {
+    "n": 64,
+    "p10": 304.2,
+    "p25": 542.25,
+    "median": 757.0,
+    "p75": 1529.0,
+    "p90": 2452.7
+   },
+   "pages": 64,
+   "titles": 16
+  },
+  "daily_newspaper|front|format=small": {
+   "w_mm": {
+    "n": 43,
+    "p10": 254.0,
+    "p25": 254.0,
+    "median": 254.0,
+    "p75": 269.9,
+    "p90": 279.0
+   },
+   "h_mm": {
+    "n": 43,
+    "p10": 254.0,
+    "p25": 254.0,
+    "median": 254.0,
+    "p75": 254.0,
+    "p90": 273.0
+   },
+   "columns": {
+    "n": 11,
+    "p10": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "p75": 0.0,
+    "p90": 1.0
+   },
+   "body_pt": {
+    "n": 42,
+    "p10": 9.5,
+    "p25": 9.5,
+    "median": 13.0,
+    "p75": 29.25,
+    "p90": 30.5
+   },
+   "body_leading_pt": {
+    "n": 38,
+    "p10": 9.7,
+    "p25": 10.5,
+    "median": 17.25,
+    "p75": 29.4,
+    "p90": 31.72
+   },
+   "body_line_chars_median": {
+    "n": 11,
+    "p10": 26.0,
+    "p25": 29.5,
+    "median": 34.0,
+    "p75": 38.0,
+    "p90": 46.0
+   },
+   "headline_max_pt": {
+    "n": 42,
+    "p10": 61.2,
+    "p25": 80.5,
+    "median": 103.5,
+    "p75": 150.75,
+    "p90": 172.4
+   },
+   "headline_ratio": {
+    "n": 42,
+    "p10": 4.201,
+    "p25": 4.742,
+    "median": 5.7,
+    "p75": 8.162,
+    "p90": 9.944
+   },
+   "step2": {
+    "n": 38,
+    "p10": 0.254,
+    "p25": 0.343,
+    "median": 0.415,
+    "p75": 0.53,
+    "p90": 0.772
+   },
+   "step3": {
+    "n": 22,
+    "p10": 0.211,
+    "p25": 0.235,
+    "median": 0.32,
+    "p75": 0.407,
+    "p90": 0.449
+   },
+   "headline_blocks": {
+    "n": 42,
+    "p10": 1.0,
+    "p25": 2.0,
+    "median": 2.0,
+    "p75": 3.0,
+    "p90": 4.9
+   },
+   "largest_headline_width_share": {
+    "n": 41,
+    "p10": 0.462,
+    "p25": 0.562,
+    "median": 0.643,
+    "p75": 0.828,
+    "p90": 0.867
+   },
+   "largest_headline_y_share": {
+    "n": 41,
+    "p10": 0.193,
+    "p25": 0.206,
+    "median": 0.428,
+    "p75": 0.545,
+    "p90": 0.613
+   },
+   "text_area_share": {
+    "n": 42,
+    "p10": 0.185,
+    "p25": 0.232,
+    "median": 0.389,
+    "p75": 0.782,
+    "p90": 0.985
+   },
+   "graphic_share": {
+    "n": 43,
+    "p10": 0.317,
+    "p25": 0.355,
+    "median": 0.44,
+    "p75": 0.499,
+    "p90": 0.529
+   },
+   "largest_graphic_share": {
+    "n": 43,
+    "p10": 0.242,
+    "p25": 0.287,
+    "median": 0.346,
+    "p75": 0.387,
+    "p90": 0.445
+   },
+   "image_boxes": {
+    "n": 42,
+    "p10": 3.0,
+    "p25": 4.25,
+    "median": 9.5,
+    "p75": 12.0,
+    "p90": 18.0
+   },
+   "paper_share": {
+    "n": 43,
+    "p10": 0.268,
+    "p25": 0.296,
+    "median": 0.347,
+    "p75": 0.39,
+    "p90": 0.548
+   },
+   "saturated_share": {
+    "n": 43,
+    "p10": 0.105,
+    "p25": 0.153,
+    "median": 0.248,
+    "p75": 0.382,
+    "p90": 0.435
+   },
+   "dark_share": {
+    "n": 43,
+    "p10": 0.04,
+    "p25": 0.089,
+    "median": 0.153,
+    "p75": 0.239,
+    "p90": 0.275
+   },
+   "dominant_share": {
+    "n": 43,
+    "p10": 0.251,
+    "p25": 0.301,
+    "median": 0.35,
+    "p75": 0.393,
+    "p90": 0.445
+   },
+   "font_families": {
+    "n": 42,
+    "p10": 2.0,
+    "p25": 2.0,
+    "median": 3.0,
+    "p75": 4.0,
+    "p90": 5.0
+   },
+   "vector_rules": {
+    "n": 42,
+    "p10": 84.0,
+    "p25": 88.5,
+    "median": 132.0,
+    "p75": 209.0,
+    "p90": 312.9
+   },
+   "chars": {
+    "n": 43,
+    "p10": 216.4,
+    "p25": 255.0,
+    "median": 366.0,
+    "p75": 807.5,
+    "p90": 1102.8
+   },
+   "pages": 43,
+   "titles": 9
+  },
+  "daily_newspaper|front|format=tabloid": {
+   "w_mm": {
+    "n": 263,
+    "p10": 270.0,
+    "p25": 270.0,
+    "median": 277.5,
+    "p75": 289.0,
+    "p90": 293.5
+   },
+   "h_mm": {
+    "n": 263,
+    "p10": 374.9,
+    "p25": 380.0,
+    "median": 391.0,
+    "p75": 415.0,
+    "p90": 422.4
+   },
+   "columns": {
+    "n": 57,
+    "p10": 0.0,
+    "p25": 1.0,
+    "median": 2.0,
+    "p75": 4.0,
+    "p90": 4.0
+   },
+   "column_pitch_mm": {
+    "n": 33,
+    "p10": 49.5,
+    "p25": 53.0,
+    "median": 66.4,
+    "p75": 101.6,
+    "p90": 152.3
+   },
+   "gutter_mm": {
+    "n": 33,
+    "p10": 4.1,
+    "p25": 5.2,
+    "median": 8.6,
+    "p75": 56.0,
+    "p90": 105.54
+   },
+   "body_pt": {
+    "n": 263,
+    "p10": 8.5,
+    "p25": 9.0,
+    "median": 10.0,
+    "p75": 11.0,
+    "p90": 20.0
+   },
+   "body_leading_pt": {
+    "n": 253,
+    "p10": 9.3,
+    "p25": 10.2,
+    "median": 11.0,
+    "p75": 12.0,
+    "p90": 20.0
+   },
+   "body_line_chars_median": {
+    "n": 57,
+    "p10": 23.6,
+    "p25": 27.0,
+    "median": 31.0,
+    "p75": 37.0,
+    "p90": 58.4
+   },
+   "headline_max_pt": {
+    "n": 262,
+    "p10": 41.0,
+    "p25": 50.0,
+    "median": 58.0,
+    "p75": 84.0,
+    "p90": 118.7
+   },
+   "headline_ratio": {
+    "n": 262,
+    "p10": 3.533,
+    "p25": 4.35,
+    "median": 5.485,
+    "p75": 7.2,
+    "p90": 11.52
+   },
+   "step2": {
+    "n": 249,
+    "p10": 0.35,
+    "p25": 0.4,
+    "median": 0.53,
+    "p75": 0.74,
+    "p90": 0.92
+   },
+   "step3": {
+    "n": 231,
+    "p10": 0.27,
+    "p25": 0.33,
+    "median": 0.4,
+    "p75": 0.5,
+    "p90": 0.68
+   },
+   "headline_blocks": {
+    "n": 263,
+    "p10": 2.0,
+    "p25": 4.0,
+    "median": 6.0,
+    "p75": 7.0,
+    "p90": 9.0
+   },
+   "largest_headline_width_share": {
+    "n": 262,
+    "p10": 0.391,
+    "p25": 0.538,
+    "median": 0.673,
+    "p75": 0.76,
+    "p90": 0.911
+   },
+   "largest_headline_y_share": {
+    "n": 262,
+    "p10": 0.144,
+    "p25": 0.214,
+    "median": 0.274,
+    "p75": 0.384,
+    "p90": 0.613
+   },
+   "text_area_share": {
+    "n": 263,
+    "p10": 0.189,
+    "p25": 0.245,
+    "median": 0.301,
+    "p75": 0.356,
+    "p90": 0.578
+   },
+   "graphic_share": {
+    "n": 263,
+    "p10": 0.25,
+    "p25": 0.293,
+    "median": 0.35,
+    "p75": 0.41,
+    "p90": 0.472
+   },
+   "largest_graphic_share": {
+    "n": 263,
+    "p10": 0.102,
+    "p25": 0.143,
+    "median": 0.202,
+    "p75": 0.257,
+    "p90": 0.319
+   },
+   "image_boxes": {
+    "n": 255,
+    "p10": 3.0,
+    "p25": 4.0,
+    "median": 7.0,
+    "p75": 10.0,
+    "p90": 17.0
+   },
+   "paper_share": {
+    "n": 263,
+    "p10": 0.315,
+    "p25": 0.405,
+    "median": 0.471,
+    "p75": 0.539,
+    "p90": 0.578
+   },
+   "saturated_share": {
+    "n": 263,
+    "p10": 0.062,
+    "p25": 0.096,
+    "median": 0.149,
+    "p75": 0.224,
+    "p90": 0.305
+   },
+   "dark_share": {
+    "n": 263,
+    "p10": 0.028,
+    "p25": 0.049,
+    "median": 0.086,
+    "p75": 0.131,
+    "p90": 0.193
+   },
+   "dominant_share": {
+    "n": 263,
+    "p10": 0.128,
+    "p25": 0.171,
+    "median": 0.215,
+    "p75": 0.275,
+    "p90": 0.326
+   },
+   "font_families": {
+    "n": 255,
+    "p10": 3.0,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 5.0,
+    "p90": 7.0
+   },
+   "vector_rules": {
+    "n": 255,
+    "p10": 78.4,
+    "p25": 243.0,
+    "median": 420.0,
+    "p75": 1255.5,
+    "p90": 3571.8
+   },
+   "chars": {
+    "n": 263,
+    "p10": 1014.4,
+    "p25": 1489.0,
+    "median": 2434.0,
+    "p75": 3439.0,
+    "p90": 4409.8
+   },
+   "pages": 263,
+   "titles": 45
+  },
+  "daily_newspaper|front|region=Asia": {
+   "w_mm": {
+    "n": 109,
+    "p10": 277.5,
+    "p25": 315.0,
+    "median": 343.0,
+    "p75": 358.8,
+    "p90": 394.0
+   },
+   "h_mm": {
+    "n": 109,
+    "p10": 415.0,
+    "p25": 512.4,
+    "median": 538.7,
+    "p75": 546.1,
+    "p90": 561.5
+   },
+   "columns": {
+    "n": 25,
+    "p10": 2.8,
+    "p25": 5.0,
+    "median": 6.0,
+    "p75": 7.0,
+    "p90": 8.0
+   },
+   "column_pitch_mm": {
+    "n": 24,
+    "p10": 34.95,
+    "p25": 41.35,
+    "median": 51.1,
+    "p75": 61.975,
+    "p90": 78.54
+   },
+   "gutter_mm": {
+    "n": 19,
+    "p10": 3.86,
+    "p25": 4.3,
+    "median": 5.3,
+    "p75": 6.2,
+    "p90": 14.88
+   },
+   "body_pt": {
+    "n": 109,
+    "p10": 8.0,
+    "p25": 8.5,
+    "median": 10.5,
+    "p75": 11.0,
+    "p90": 11.0
+   },
+   "body_leading_pt": {
+    "n": 109,
+    "p10": 9.0,
+    "p25": 10.9,
+    "median": 11.8,
+    "p75": 15.0,
+    "p90": 15.7
+   },
+   "body_line_chars_median": {
+    "n": 25,
+    "p10": 15.8,
+    "p25": 21.0,
+    "median": 28.0,
+    "p75": 32.0,
+    "p90": 34.0
+   },
+   "headline_max_pt": {
+    "n": 108,
+    "p10": 41.0,
+    "p25": 45.0,
+    "median": 53.0,
+    "p75": 63.0,
+    "p90": 76.3
+   },
+   "headline_ratio": {
+    "n": 108,
+    "p10": 4.24,
+    "p25": 4.465,
+    "median": 5.29,
+    "p75": 6.0,
+    "p90": 7.41
+   },
+   "step2": {
+    "n": 108,
+    "p10": 0.48,
+    "p25": 0.57,
+    "median": 0.68,
+    "p75": 0.782,
+    "p90": 0.943
+   },
+   "step3": {
+    "n": 105,
+    "p10": 0.374,
+    "p25": 0.46,
+    "median": 0.56,
+    "p75": 0.65,
+    "p90": 0.756
+   },
+   "headline_blocks": {
+    "n": 109,
+    "p10": 3.0,
+    "p25": 4.0,
+    "median": 6.0,
+    "p75": 11.0,
+    "p90": 16.0
+   },
+   "largest_headline_width_share": {
+    "n": 108,
+    "p10": 0.346,
+    "p25": 0.473,
+    "median": 0.591,
+    "p75": 0.77,
+    "p90": 0.819
+   },
+   "largest_headline_y_share": {
+    "n": 108,
+    "p10": 0.094,
+    "p25": 0.12,
+    "median": 0.13,
+    "p75": 0.296,
+    "p90": 0.527
+   },
+   "text_area_share": {
+    "n": 109,
+    "p10": 0.207,
+    "p25": 0.224,
+    "median": 0.356,
+    "p75": 0.459,
+    "p90": 0.587
+   },
+   "graphic_share": {
+    "n": 109,
+    "p10": 0.176,
+    "p25": 0.217,
+    "median": 0.297,
+    "p75": 0.361,
+    "p90": 0.433
+   },
+   "largest_graphic_share": {
+    "n": 109,
+    "p10": 0.059,
+    "p25": 0.086,
+    "median": 0.131,
+    "p75": 0.217,
+    "p90": 0.29
+   },
+   "image_boxes": {
+    "n": 98,
+    "p10": 3.0,
+    "p25": 4.0,
+    "median": 6.0,
+    "p75": 13.75,
+    "p90": 18.3
+   },
+   "paper_share": {
+    "n": 109,
+    "p10": 0.388,
+    "p25": 0.444,
+    "median": 0.486,
+    "p75": 0.535,
+    "p90": 0.624
+   },
+   "saturated_share": {
+    "n": 109,
+    "p10": 0.044,
+    "p25": 0.076,
+    "median": 0.128,
+    "p75": 0.178,
+    "p90": 0.208
+   },
+   "dark_share": {
+    "n": 109,
+    "p10": 0.016,
+    "p25": 0.021,
+    "median": 0.037,
+    "p75": 0.064,
+    "p90": 0.089
+   },
+   "dominant_share": {
+    "n": 109,
+    "p10": 0.066,
+    "p25": 0.09,
+    "median": 0.132,
+    "p75": 0.217,
+    "p90": 0.29
+   },
+   "font_families": {
+    "n": 98,
+    "p10": 4.0,
+    "p25": 5.0,
+    "median": 6.0,
+    "p75": 7.0,
+    "p90": 10.0
+   },
+   "vector_rules": {
+    "n": 98,
+    "p10": 44.1,
+    "p25": 161.25,
+    "median": 783.0,
+    "p75": 2304.75,
+    "p90": 6603.0
+   },
+   "chars": {
+    "n": 109,
+    "p10": 2138.6,
+    "p25": 3266.0,
+    "median": 4700.0,
+    "p75": 9878.0,
+    "p90": 11926.6
+   },
+   "pages": 109,
+   "titles": 15
+  },
+  "daily_newspaper|front|region=Europe": {
+   "w_mm": {
+    "n": 206,
+    "p10": 270.0,
+    "p25": 286.8,
+    "median": 292.8,
+    "p75": 330.0,
+    "p90": 370.0
+   },
+   "h_mm": {
+    "n": 206,
+    "p10": 364.8,
+    "p25": 391.0,
+    "median": 415.0,
+    "p75": 492.4,
+    "p90": 530.0
+   },
+   "columns": {
+    "n": 39,
+    "p10": 0.0,
+    "p25": 1.0,
+    "median": 3.0,
+    "p75": 4.5,
+    "p90": 6.0
+   },
+   "column_pitch_mm": {
+    "n": 23,
+    "p10": 47.44,
+    "p25": 53.7,
+    "median": 59.3,
+    "p75": 87.25,
+    "p90": 139.94
+   },
+   "gutter_mm": {
+    "n": 23,
+    "p10": 4.0,
+    "p25": 4.2,
+    "median": 11.8,
+    "p75": 42.35,
+    "p90": 98.54
+   },
+   "body_pt": {
+    "n": 198,
+    "p10": 8.5,
+    "p25": 9.0,
+    "median": 9.5,
+    "p75": 11.5,
+    "p90": 20.0
+   },
+   "body_leading_pt": {
+    "n": 189,
+    "p10": 9.1,
+    "p25": 10.2,
+    "median": 11.0,
+    "p75": 11.7,
+    "p90": 21.16
+   },
+   "body_line_chars_median": {
+    "n": 39,
+    "p10": 23.4,
+    "p25": 28.0,
+    "median": 31.0,
+    "p75": 35.5,
+    "p90": 58.2
+   },
+   "headline_max_pt": {
+    "n": 198,
+    "p10": 36.7,
+    "p25": 45.0,
+    "median": 57.0,
+    "p75": 91.75,
+    "p90": 106.0
+   },
+   "headline_ratio": {
+    "n": 198,
+    "p10": 3.508,
+    "p25": 4.213,
+    "median": 5.11,
+    "p75": 6.992,
+    "p90": 11.125
+   },
+   "step2": {
+    "n": 191,
+    "p10": 0.38,
+    "p25": 0.5,
+    "median": 0.63,
+    "p75": 0.775,
+    "p90": 0.91
+   },
+   "step3": {
+    "n": 172,
+    "p10": 0.31,
+    "p25": 0.35,
+    "median": 0.47,
+    "p75": 0.593,
+    "p90": 0.728
+   },
+   "headline_blocks": {
+    "n": 198,
+    "p10": 2.0,
+    "p25": 4.0,
+    "median": 6.5,
+    "p75": 9.0,
+    "p90": 13.0
+   },
+   "largest_headline_width_share": {
+    "n": 198,
+    "p10": 0.347,
+    "p25": 0.47,
+    "median": 0.636,
+    "p75": 0.694,
+    "p90": 0.792
+   },
+   "largest_headline_y_share": {
+    "n": 198,
+    "p10": 0.121,
+    "p25": 0.208,
+    "median": 0.275,
+    "p75": 0.425,
+    "p90": 0.617
+   },
+   "text_area_share": {
+    "n": 198,
+    "p10": 0.185,
+    "p25": 0.227,
+    "median": 0.293,
+    "p75": 0.356,
+    "p90": 0.97
+   },
+   "graphic_share": {
+    "n": 206,
+    "p10": 0.195,
+    "p25": 0.267,
+    "median": 0.334,
+    "p75": 0.423,
+    "p90": 0.478
+   },
+   "largest_graphic_share": {
+    "n": 206,
+    "p10": 0.09,
+    "p25": 0.119,
+    "median": 0.159,
+    "p75": 0.252,
+    "p90": 0.317
+   },
+   "image_boxes": {
+    "n": 198,
+    "p10": 2.7,
+    "p25": 3.25,
+    "median": 6.0,
+    "p75": 11.0,
+    "p90": 20.0
+   },
+   "paper_share": {
+    "n": 206,
+    "p10": 0.31,
+    "p25": 0.415,
+    "median": 0.48,
+    "p75": 0.564,
+    "p90": 0.611
+   },
+   "saturated_share": {
+    "n": 206,
+    "p10": 0.051,
+    "p25": 0.086,
+    "median": 0.137,
+    "p75": 0.219,
+    "p90": 0.327
+   },
+   "dark_share": {
+    "n": 206,
+    "p10": 0.025,
+    "p25": 0.037,
+    "median": 0.073,
+    "p75": 0.131,
+    "p90": 0.202
+   },
+   "dominant_share": {
+    "n": 206,
+    "p10": 0.108,
+    "p25": 0.132,
+    "median": 0.183,
+    "p75": 0.27,
+    "p90": 0.326
+   },
+   "font_families": {
+    "n": 198,
+    "p10": 3.0,
+    "p25": 4.0,
+    "median": 5.0,
+    "p75": 7.0,
+    "p90": 8.0
+   },
+   "vector_rules": {
+    "n": 198,
+    "p10": 77.7,
+    "p25": 238.25,
+    "median": 397.5,
+    "p75": 1158.75,
+    "p90": 3064.6
+   },
+   "chars": {
+    "n": 206,
+    "p10": 900.5,
+    "p25": 1454.5,
+    "median": 2968.0,
+    "p75": 6081.75,
+    "p90": 9884.5
+   },
+   "pages": 206,
+   "titles": 33
+  },
+  "daily_newspaper|front|region=Middle East": {
+   "w_mm": {
+    "n": 42,
+    "p10": 315.0,
+    "p25": 330.0,
+    "median": 350.0,
+    "p75": 370.0,
+    "p90": 370.0
+   },
+   "h_mm": {
+    "n": 42,
+    "p10": 470.0,
+    "p25": 560.0,
+    "median": 560.0,
+    "p75": 560.0,
+    "p90": 570.0
+   },
+   "columns": {
+    "n": 10,
+    "p10": 5.8,
+    "p25": 6.0,
+    "median": 6.0,
+    "p75": 6.75,
+    "p90": 7.0
+   },
+   "column_pitch_mm": {
+    "n": 10,
+    "p10": 42.86,
+    "p25": 43.0,
+    "median": 45.4,
+    "p75": 48.025,
+    "p90": 54.51
+   },
+   "gutter_mm": {
+    "n": 7,
+    "p10": 3.4,
+    "p25": 3.5,
+    "median": 3.6,
+    "p75": 6.75,
+    "p90": 8.18
+   },
+   "body_pt": {
+    "n": 42,
+    "p10": 8.5,
+    "p25": 9.0,
+    "median": 9.0,
+    "p75": 9.5,
+    "p90": 10.0
+   },
+   "body_leading_pt": {
+    "n": 42,
+    "p10": 9.6,
+    "p25": 9.925,
+    "median": 10.4,
+    "p75": 10.5,
+    "p90": 11.6
+   },
+   "body_line_chars_median": {
+    "n": 10,
+    "p10": 27.9,
+    "p25": 28.0,
+    "median": 29.5,
+    "p75": 46.25,
+    "p90": 49.3
+   },
+   "headline_max_pt": {
+    "n": 42,
+    "p10": 46.0,
+    "p25": 50.25,
+    "median": 58.5,
+    "p75": 77.0,
+    "p90": 93.0
+   },
+   "headline_ratio": {
+    "n": 42,
+    "p10": 5.1,
+    "p25": 5.41,
+    "median": 6.265,
+    "p75": 8.15,
+    "p90": 10.33
+   },
+   "step2": {
+    "n": 42,
+    "p10": 0.53,
+    "p25": 0.65,
+    "median": 0.73,
+    "p75": 0.795,
+    "p90": 0.885
+   },
+   "step3": {
+    "n": 41,
+    "p10": 0.4,
+    "p25": 0.5,
+    "median": 0.52,
+    "p75": 0.55,
+    "p90": 0.65
+   },
+   "headline_blocks": {
+    "n": 42,
+    "p10": 6.0,
+    "p25": 7.0,
+    "median": 10.0,
+    "p75": 13.75,
+    "p90": 15.0
+   },
+   "largest_headline_width_share": {
+    "n": 42,
+    "p10": 0.334,
+    "p25": 0.609,
+    "median": 0.681,
+    "p75": 0.801,
+    "p90": 0.915
+   },
+   "largest_headline_y_share": {
+    "n": 42,
+    "p10": 0.021,
+    "p25": 0.141,
+    "median": 0.161,
+    "p75": 0.325,
+    "p90": 0.459
+   },
+   "text_area_share": {
+    "n": 42,
+    "p10": 0.288,
+    "p25": 0.333,
+    "median": 0.412,
+    "p75": 0.459,
+    "p90": 0.505
+   },
+   "graphic_share": {
+    "n": 42,
+    "p10": 0.218,
+    "p25": 0.261,
+    "median": 0.31,
+    "p75": 0.346,
+    "p90": 0.38
+   },
+   "largest_graphic_share": {
+    "n": 42,
+    "p10": 0.064,
+    "p25": 0.081,
+    "median": 0.143,
+    "p75": 0.16,
+    "p90": 0.202
+   },
+   "image_boxes": {
+    "n": 42,
+    "p10": 3.1,
+    "p25": 4.25,
+    "median": 9.0,
+    "p75": 14.0,
+    "p90": 18.9
+   },
+   "paper_share": {
+    "n": 42,
+    "p10": 0.43,
+    "p25": 0.472,
+    "median": 0.515,
+    "p75": 0.556,
+    "p90": 0.578
+   },
+   "saturated_share": {
+    "n": 42,
+    "p10": 0.045,
+    "p25": 0.062,
+    "median": 0.1,
+    "p75": 0.165,
+    "p90": 0.191
+   },
+   "dark_share": {
+    "n": 42,
+    "p10": 0.047,
+    "p25": 0.062,
+    "median": 0.073,
+    "p75": 0.093,
+    "p90": 0.126
+   },
+   "dominant_share": {
+    "n": 42,
+    "p10": 0.064,
+    "p25": 0.081,
+    "median": 0.143,
+    "p75": 0.16,
+    "p90": 0.202
+   },
+   "font_families": {
+    "n": 42,
+    "p10": 3.0,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 6.0,
+    "p90": 7.0
+   },
+   "vector_rules": {
+    "n": 42,
+    "p10": 20.1,
+    "p25": 211.5,
+    "median": 400.5,
+    "p75": 1062.75,
+    "p90": 3118.2
+   },
+   "chars": {
+    "n": 42,
+    "p10": 5590.9,
+    "p25": 6698.5,
+    "median": 7996.0,
+    "p75": 10476.75,
+    "p90": 11737.0
+   },
+   "pages": 42,
+   "titles": 6
+  },
+  "daily_newspaper|front|region=North America": {
+   "w_mm": {
+    "n": 3190,
+    "p10": 276.2,
+    "p25": 279.4,
+    "median": 279.4,
+    "p75": 279.4,
+    "p90": 279.4
+   },
+   "h_mm": {
+    "n": 3190,
+    "p10": 533.4,
+    "p25": 539.8,
+    "median": 539.8,
+    "p75": 552.4,
+    "p90": 571.5
+   },
+   "columns": {
+    "n": 780,
+    "p10": 2.0,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 5.0,
+    "p90": 6.0
+   },
+   "column_pitch_mm": {
+    "n": 723,
+    "p10": 33.9,
+    "p25": 49.95,
+    "median": 63.9,
+    "p75": 68.1,
+    "p90": 97.9
+   },
+   "gutter_mm": {
+    "n": 519,
+    "p10": 3.78,
+    "p25": 5.9,
+    "median": 6.7,
+    "p75": 25.8,
+    "p90": 64.8
+   },
+   "body_pt": {
+    "n": 3187,
+    "p10": 9.0,
+    "p25": 9.5,
+    "median": 9.5,
+    "p75": 9.5,
+    "p90": 10.0
+   },
+   "body_leading_pt": {
+    "n": 3173,
+    "p10": 10.0,
+    "p25": 10.5,
+    "median": 11.0,
+    "p75": 11.0,
+    "p90": 11.0
+   },
+   "body_line_chars_median": {
+    "n": 780,
+    "p10": 28.0,
+    "p25": 33.0,
+    "median": 36.0,
+    "p75": 37.0,
+    "p90": 44.0
+   },
+   "headline_max_pt": {
+    "n": 3187,
+    "p10": 42.0,
+    "p25": 47.0,
+    "median": 56.0,
+    "p75": 72.0,
+    "p90": 89.0
+   },
+   "headline_ratio": {
+    "n": 3187,
+    "p10": 4.42,
+    "p25": 4.95,
+    "median": 5.8,
+    "p75": 7.58,
+    "p90": 9.26
+   },
+   "step2": {
+    "n": 3171,
+    "p10": 0.47,
+    "p25": 0.62,
+    "median": 0.77,
+    "p75": 0.88,
+    "p90": 0.94
+   },
+   "step3": {
+    "n": 3119,
+    "p10": 0.36,
+    "p25": 0.47,
+    "median": 0.6,
+    "p75": 0.72,
+    "p90": 0.8
+   },
+   "headline_blocks": {
+    "n": 3187,
+    "p10": 5.0,
+    "p25": 6.0,
+    "median": 7.0,
+    "p75": 9.0,
+    "p90": 11.0
+   },
+   "largest_headline_width_share": {
+    "n": 3186,
+    "p10": 0.434,
+    "p25": 0.579,
+    "median": 0.661,
+    "p75": 0.72,
+    "p90": 0.899
+   },
+   "largest_headline_y_share": {
+    "n": 3186,
+    "p10": 0.123,
+    "p25": 0.199,
+    "median": 0.262,
+    "p75": 0.49,
+    "p90": 0.609
+   },
+   "text_area_share": {
+    "n": 3187,
+    "p10": 0.22,
+    "p25": 0.248,
+    "median": 0.283,
+    "p75": 0.334,
+    "p90": 0.413
+   },
+   "graphic_share": {
+    "n": 3190,
+    "p10": 0.219,
+    "p25": 0.249,
+    "median": 0.283,
+    "p75": 0.325,
+    "p90": 0.373
+   },
+   "largest_graphic_share": {
+    "n": 3190,
+    "p10": 0.109,
+    "p25": 0.129,
+    "median": 0.151,
+    "p75": 0.175,
+    "p90": 0.242
+   },
+   "image_boxes": {
+    "n": 3185,
+    "p10": 3.0,
+    "p25": 4.0,
+    "median": 5.0,
+    "p75": 7.0,
+    "p90": 10.0
+   },
+   "paper_share": {
+    "n": 3190,
+    "p10": 0.466,
+    "p25": 0.517,
+    "median": 0.553,
+    "p75": 0.581,
+    "p90": 0.606
+   },
+   "saturated_share": {
+    "n": 3190,
+    "p10": 0.055,
+    "p25": 0.081,
+    "median": 0.118,
+    "p75": 0.16,
+    "p90": 0.207
+   },
+   "dark_share": {
+    "n": 3190,
+    "p10": 0.035,
+    "p25": 0.051,
+    "median": 0.075,
+    "p75": 0.106,
+    "p90": 0.14
+   },
+   "dominant_share": {
+    "n": 3190,
+    "p10": 0.11,
+    "p25": 0.13,
+    "median": 0.152,
+    "p75": 0.175,
+    "p90": 0.242
+   },
+   "font_families": {
+    "n": 3185,
+    "p10": 2.0,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 6.0,
+    "p90": 7.0
+   },
+   "vector_rules": {
+    "n": 3185,
+    "p10": 12.0,
+    "p25": 118.0,
+    "median": 386.0,
+    "p75": 1010.0,
+    "p90": 3450.2
+   },
+   "chars": {
+    "n": 3190,
+    "p10": 3234.3,
+    "p25": 4207.0,
+    "median": 5165.0,
+    "p75": 6223.0,
+    "p90": 7427.7
+   },
+   "pages": 3190,
+   "titles": 445
+  },
+  "daily_newspaper|front|region=Oceania": {
+   "w_mm": {
+    "n": 28,
+    "p10": 283.0,
+    "p25": 283.0,
+    "median": 285.0,
+    "p75": 291.975,
+    "p90": 297.0
+   },
+   "h_mm": {
+    "n": 28,
+    "p10": 380.0,
+    "p25": 380.0,
+    "median": 405.0,
+    "p75": 419.25,
+    "p90": 420.2
+   },
+   "columns": {
+    "n": 6,
+    "p10": 2.5,
+    "p25": 3.25,
+    "median": 4.0,
+    "p75": 4.0,
+    "p90": 4.0
+   },
+   "column_pitch_mm": {
+    "n": 6,
+    "p10": 41.55,
+    "p25": 48.325,
+    "median": 66.4,
+    "p75": 68.2,
+    "p90": 90.15
+   },
+   "gutter_mm": {
+    "n": 6,
+    "p10": 4.05,
+    "p25": 4.1,
+    "median": 4.6,
+    "p75": 20.7,
+    "p90": 47.7
+   },
+   "body_pt": {
+    "n": 28,
+    "p10": 8.5,
+    "p25": 9.0,
+    "median": 9.0,
+    "p75": 9.0,
+    "p90": 9.0
+   },
+   "body_leading_pt": {
+    "n": 28,
+    "p10": 9.21,
+    "p25": 9.3,
+    "median": 10.1,
+    "p75": 10.125,
+    "p90": 10.2
+   },
+   "body_line_chars_median": {
+    "n": 6,
+    "p10": 22.5,
+    "p25": 24.25,
+    "median": 25.5,
+    "p75": 35.75,
+    "p90": 39.5
+   },
+   "headline_max_pt": {
+    "n": 27,
+    "p10": 55.2,
+    "p25": 61.5,
+    "median": 130.0,
+    "p75": 143.0,
+    "p90": 190.6
+   },
+   "headline_ratio": {
+    "n": 27,
+    "p10": 6.0,
+    "p25": 6.78,
+    "median": 12.0,
+    "p75": 16.12,
+    "p90": 20.712
+   },
+   "step2": {
+    "n": 26,
+    "p10": 0.195,
+    "p25": 0.23,
+    "median": 0.315,
+    "p75": 0.508,
+    "p90": 0.565
+   },
+   "step3": {
+    "n": 23,
+    "p10": 0.174,
+    "p25": 0.2,
+    "median": 0.22,
+    "p75": 0.31,
+    "p90": 0.392
+   },
+   "headline_blocks": {
+    "n": 28,
+    "p10": 2.0,
+    "p25": 3.0,
+    "median": 5.0,
+    "p75": 7.0,
+    "p90": 9.3
+   },
+   "largest_headline_width_share": {
+    "n": 27,
+    "p10": 0.428,
+    "p25": 0.553,
+    "median": 0.737,
+    "p75": 0.921,
+    "p90": 0.924
+   },
+   "largest_headline_y_share": {
+    "n": 27,
+    "p10": 0.132,
+    "p25": 0.249,
+    "median": 0.251,
+    "p75": 0.449,
+    "p90": 0.567
+   },
+   "text_area_share": {
+    "n": 28,
+    "p10": 0.244,
+    "p25": 0.292,
+    "median": 0.328,
+    "p75": 0.426,
+    "p90": 0.605
+   },
+   "graphic_share": {
+    "n": 28,
+    "p10": 0.268,
+    "p25": 0.339,
+    "median": 0.406,
+    "p75": 0.441,
+    "p90": 0.469
+   },
+   "largest_graphic_share": {
+    "n": 28,
+    "p10": 0.127,
+    "p25": 0.144,
+    "median": 0.169,
+    "p75": 0.242,
+    "p90": 0.259
+   },
+   "image_boxes": {
+    "n": 28,
+    "p10": 3.0,
+    "p25": 4.0,
+    "median": 7.5,
+    "p75": 11.0,
+    "p90": 16.2
+   },
+   "paper_share": {
+    "n": 28,
+    "p10": 0.36,
+    "p25": 0.389,
+    "median": 0.412,
+    "p75": 0.46,
+    "p90": 0.495
+   },
+   "saturated_share": {
+    "n": 28,
+    "p10": 0.118,
+    "p25": 0.14,
+    "median": 0.195,
+    "p75": 0.267,
+    "p90": 0.355
+   },
+   "dark_share": {
+    "n": 28,
+    "p10": 0.015,
+    "p25": 0.064,
+    "median": 0.098,
+    "p75": 0.156,
+    "p90": 0.179
+   },
+   "dominant_share": {
+    "n": 28,
+    "p10": 0.151,
+    "p25": 0.172,
+    "median": 0.234,
+    "p75": 0.265,
+    "p90": 0.288
+   },
+   "font_families": {
+    "n": 28,
+    "p10": 3.0,
+    "p25": 4.0,
+    "median": 4.0,
+    "p75": 5.0,
+    "p90": 6.0
+   },
+   "vector_rules": {
+    "n": 28,
+    "p10": 2.0,
+    "p25": 257.0,
+    "median": 1005.0,
+    "p75": 2981.75,
+    "p90": 10898.7
+   },
+   "chars": {
+    "n": 28,
+    "p10": 2016.4,
+    "p25": 2275.75,
+    "median": 2846.0,
+    "p75": 4387.25,
+    "p90": 4911.7
+   },
+   "pages": 28,
+   "titles": 4
+  },
+  "daily_newspaper|front|region=South America": {
+   "w_mm": {
+    "n": 62,
+    "p10": 267.0,
+    "p25": 273.8,
+    "median": 276.0,
+    "p75": 289.0,
+    "p90": 308.9
+   },
+   "h_mm": {
+    "n": 62,
+    "p10": 383.5,
+    "p25": 398.5,
+    "median": 422.4,
+    "p75": 535.2,
+    "p90": 580.0
+   },
+   "columns": {
+    "n": 16,
+    "p10": 1.0,
+    "p25": 2.0,
+    "median": 2.5,
+    "p75": 4.0,
+    "p90": 4.0
+   },
+   "column_pitch_mm": {
+    "n": 13,
+    "p10": 53.08,
+    "p25": 53.6,
+    "median": 87.2,
+    "p75": 123.7,
+    "p90": 195.88
+   },
+   "gutter_mm": {
+    "n": 13,
+    "p10": 7.72,
+    "p25": 8.0,
+    "median": 11.3,
+    "p75": 73.6,
+    "p90": 140.18
+   },
+   "body_pt": {
+    "n": 62,
+    "p10": 9.5,
+    "p25": 10.0,
+    "median": 10.5,
+    "p75": 11.0,
+    "p90": 14.0
+   },
+   "body_leading_pt": {
+    "n": 62,
+    "p10": 11.0,
+    "p25": 11.0,
+    "median": 11.9,
+    "p75": 12.9,
+    "p90": 14.0
+   },
+   "body_line_chars_median": {
+    "n": 16,
+    "p10": 25.5,
+    "p25": 26.875,
+    "median": 30.5,
+    "p75": 36.0,
+    "p90": 49.0
+   },
+   "headline_max_pt": {
+    "n": 62,
+    "p10": 42.0,
+    "p25": 44.25,
+    "median": 52.0,
+    "p75": 63.0,
+    "p90": 65.0
+   },
+   "headline_ratio": {
+    "n": 62,
+    "p10": 3.09,
+    "p25": 4.025,
+    "median": 4.765,
+    "p75": 5.572,
+    "p90": 6.89
+   },
+   "step2": {
+    "n": 59,
+    "p10": 0.4,
+    "p25": 0.445,
+    "median": 0.6,
+    "p75": 0.72,
+    "p90": 0.85
+   },
+   "step3": {
+    "n": 56,
+    "p10": 0.365,
+    "p25": 0.388,
+    "median": 0.46,
+    "p75": 0.52,
+    "p90": 0.66
+   },
+   "headline_blocks": {
+    "n": 62,
+    "p10": 2.0,
+    "p25": 5.0,
+    "median": 6.5,
+    "p75": 8.0,
+    "p90": 10.9
+   },
+   "largest_headline_width_share": {
+    "n": 62,
+    "p10": 0.469,
+    "p25": 0.536,
+    "median": 0.677,
+    "p75": 0.8,
+    "p90": 0.9
+   },
+   "largest_headline_y_share": {
+    "n": 62,
+    "p10": 0.134,
+    "p25": 0.205,
+    "median": 0.264,
+    "p75": 0.37,
+    "p90": 0.508
+   },
+   "text_area_share": {
+    "n": 62,
+    "p10": 0.218,
+    "p25": 0.25,
+    "median": 0.295,
+    "p75": 0.329,
+    "p90": 0.35
+   },
+   "graphic_share": {
+    "n": 62,
+    "p10": 0.24,
+    "p25": 0.263,
+    "median": 0.301,
+    "p75": 0.416,
+    "p90": 0.472
+   },
+   "largest_graphic_share": {
+    "n": 62,
+    "p10": 0.092,
+    "p25": 0.148,
+    "median": 0.18,
+    "p75": 0.249,
+    "p90": 0.312
+   },
+   "image_boxes": {
+    "n": 60,
+    "p10": 2.9,
+    "p25": 4.0,
+    "median": 5.0,
+    "p75": 8.0,
+    "p90": 9.0
+   },
+   "paper_share": {
+    "n": 62,
+    "p10": 0.376,
+    "p25": 0.435,
+    "median": 0.558,
+    "p75": 0.582,
+    "p90": 0.596
+   },
+   "saturated_share": {
+    "n": 62,
+    "p10": 0.055,
+    "p25": 0.082,
+    "median": 0.126,
+    "p75": 0.178,
+    "p90": 0.224
+   },
+   "dark_share": {
+    "n": 62,
+    "p10": 0.038,
+    "p25": 0.055,
+    "median": 0.072,
+    "p75": 0.103,
+    "p90": 0.133
+   },
+   "dominant_share": {
+    "n": 62,
+    "p10": 0.092,
+    "p25": 0.151,
+    "median": 0.183,
+    "p75": 0.254,
+    "p90": 0.319
+   },
+   "font_families": {
+    "n": 60,
+    "p10": 2.9,
+    "p25": 3.0,
+    "median": 4.0,
+    "p75": 11.0,
+    "p90": 15.0
+   },
+   "vector_rules": {
+    "n": 60,
+    "p10": 79.0,
+    "p25": 246.75,
+    "median": 1019.5,
+    "p75": 1830.25,
+    "p90": 3537.8
+   },
+   "chars": {
+    "n": 62,
+    "p10": 1080.6,
+    "p25": 2445.75,
+    "median": 3320.5,
+    "p75": 3802.75,
+    "p90": 4672.5
+   },
+   "pages": 62,
+   "titles": 9
+  }
+ },
+ "front_vs_inside": {
+  "consumer_magazine": {
+   "headline_ratio": {
+    "front": 5.305,
+    "inside": 4.14
+   },
+   "headline_blocks": {
+    "front": 3.0,
+    "inside": 2.0
+   },
+   "largest_graphic_share": {
+    "front": 0.699,
+    "inside": 0.161
+   },
+   "graphic_share": {
+    "front": 0.714,
+    "inside": 0.291
+   },
+   "text_area_share": {
+    "front": 0.174,
+    "inside": 0.287
+   },
+   "paper_share": {
+    "front": 0.171,
+    "inside": 0.47
+   },
+   "columns": {
+    "front": 0.0,
+    "inside": 3.0
+   },
+   "dominant_share": {
+    "front": 0.699,
+    "inside": 0.165
+   }
+  },
+  "free_commuter": {
+   "headline_ratio": {
+    "front": 6.22,
+    "inside": 5.89
+   },
+   "headline_blocks": {
+    "front": 4.5,
+    "inside": 5.0
+   },
+   "largest_graphic_share": {
+    "front": 0.18,
+    "inside": 0.145
+   },
+   "graphic_share": {
+    "front": 0.397,
+    "inside": 0.357
+   },
+   "text_area_share": {
+    "front": 0.257,
+    "inside": 0.272
+   },
+   "paper_share": {
+    "front": 0.453,
+    "inside": 0.476
+   },
+   "dominant_share": {
+    "front": 0.194,
+    "inside": 0.161
+   }
+  },
+  "modern_daily_full": {
+   "headline_ratio": {
+    "front": 10.415,
+    "inside": 6.47
+   },
+   "headline_blocks": {
+    "front": 13.0,
+    "inside": 9.0
+   },
+   "largest_graphic_share": {
+    "front": 0.134,
+    "inside": 0.145
+   },
+   "graphic_share": {
+    "front": 0.298,
+    "inside": 0.348
+   },
+   "text_area_share": {
+    "front": 0.419,
+    "inside": 0.355
+   },
+   "paper_share": {
+    "front": 0.427,
+    "inside": 0.402
+   },
+   "columns": {
+    "front": 5.0,
+    "inside": 4.0
+   },
+   "dominant_share": {
+    "front": 0.138,
+    "inside": 0.148
+   }
+  },
+  "news_magazine": {
+   "headline_ratio": {
+    "front": 4.205,
+    "inside": 2.86
+   },
+   "headline_blocks": {
+    "front": 1.0,
+    "inside": 1.0
+   },
+   "largest_graphic_share": {
+    "front": 0.818,
+    "inside": 0.308
+   },
+   "graphic_share": {
+    "front": 0.854,
+    "inside": 0.375
+   },
+   "text_area_share": {
+    "front": 0.1,
+    "inside": 0.278
+   },
+   "paper_share": {
+    "front": 0.078,
+    "inside": 0.471
+   },
+   "columns": {
+    "front": 0.0,
+    "inside": 2.0
+   },
+   "dominant_share": {
+    "front": 0.818,
+    "inside": 0.31
+   }
+  },
+  "pl_newspaper": {
+   "headline_ratio": {
+    "front": 5.88,
+    "inside": 3.14
+   },
+   "headline_blocks": {
+    "front": 2.5,
+    "inside": 2.0
+   },
+   "largest_graphic_share": {
+    "front": 0.502,
+    "inside": 0.323
+   },
+   "graphic_share": {
+    "front": 0.521,
+    "inside": 0.346
+   },
+   "text_area_share": {
+    "front": 0.3,
+    "inside": 0.362
+   },
+   "paper_share": {
+    "front": 0.088,
+    "inside": 0.268
+   },
+   "dominant_share": {
+    "front": 0.502,
+    "inside": 0.323
+   }
+  },
+  "pl_tv_guide": {
+   "headline_ratio": {
+    "front": 5.8,
+    "inside": 2.62
+   },
+   "headline_blocks": {
+    "front": 1.0,
+    "inside": 2.0
+   },
+   "largest_graphic_share": {
+    "front": 0.88,
+    "inside": 0.494
+   },
+   "graphic_share": {
+    "front": 0.882,
+    "inside": 0.685
+   },
+   "text_area_share": {
+    "front": 0.135,
+    "inside": 0.402
+   },
+   "paper_share": {
+    "front": 0.09,
+    "inside": 0.263
+   },
+   "dominant_share": {
+    "front": 0.88,
+    "inside": 0.494
+   }
+  },
+  "tabloid": {
+   "headline_ratio": {
+    "front": 8.12,
+    "inside": 5.0
+   },
+   "headline_blocks": {
+    "front": 0.0,
+    "inside": 3.0
+   },
+   "largest_graphic_share": {
+    "front": 0.825,
+    "inside": 0.104
+   },
+   "graphic_share": {
+    "front": 0.833,
+    "inside": 0.235
+   },
+   "text_area_share": {
+    "front": 0.004,
+    "inside": 0.333
+   },
+   "paper_share": {
+    "front": 0.155,
+    "inside": 0.499
+   },
+   "columns": {
+    "front": 0.0,
+    "inside": 5.0
+   },
+   "dominant_share": {
+    "front": 0.825,
+    "inside": 0.107
+   }
+  },
+  "tv_guide": {
+   "headline_ratio": {
+    "front": 3.085,
+    "inside": 3.0
+   },
+   "headline_blocks": {
+    "front": 1.0,
+    "inside": 1.0
+   },
+   "largest_graphic_share": {
+    "front": 0.8,
+    "inside": 0.29
+   },
+   "graphic_share": {
+    "front": 0.804,
+    "inside": 0.333
+   },
+   "text_area_share": {
+    "front": 0.102,
+    "inside": 0.392
+   },
+   "paper_share": {
+    "front": 0.116,
+    "inside": 0.319
+   },
+   "columns": {
+    "front": 0.0,
+    "inside": 2.0
+   },
+   "dominant_share": {
+    "front": 0.8,
+    "inside": 0.291
+   }
+  },
+  "uk_tabloid": {
+   "headline_ratio": {
+    "front": 14.095,
+    "inside": 8.4
+   },
+   "headline_blocks": {
+    "front": 6.5,
+    "inside": 5.0
+   },
+   "largest_graphic_share": {
+    "front": 0.239,
+    "inside": 0.234
+   },
+   "graphic_share": {
+    "front": 0.363,
+    "inside": 0.428
+   },
+   "text_area_share": {
+    "front": 0.494,
+    "inside": 0.388
+   },
+   "paper_share": {
+    "front": 0.376,
+    "inside": 0.377
+   },
+   "dominant_share": {
+    "front": 0.308,
+    "inside": 0.245
+   }
+  },
+  "us_local_newspaper": {
+   "headline_ratio": {
+    "front": 6.95,
+    "inside": 5.53
+   },
+   "headline_blocks": {
+    "front": 15.0,
+    "inside": 7.5
+   },
+   "largest_graphic_share": {
+    "front": 0.122,
+    "inside": 0.1
+   },
+   "graphic_share": {
+    "front": 0.257,
+    "inside": 0.281
+   },
+   "text_area_share": {
+    "front": 0.461,
+    "inside": 0.398
+   },
+   "paper_share": {
+    "front": 0.513,
+    "inside": 0.483
+   },
+   "columns": {
+    "front": 6.0,
+    "inside": 5.0
+   },
+   "dominant_share": {
+    "front": 0.122,
+    "inside": 0.103
+   }
+  },
+  "world_newspaper": {
+   "headline_ratio": {
+    "front": 4.74,
+    "inside": 4.44
+   },
+   "headline_blocks": {
+    "front": 4.0,
+    "inside": 4.0
+   },
+   "largest_graphic_share": {
+    "front": 0.316,
+    "inside": 0.179
+   },
+   "graphic_share": {
+    "front": 0.501,
+    "inside": 0.335
+   },
+   "text_area_share": {
+    "front": 0.216,
+    "inside": 0.328
+   },
+   "paper_share": {
+    "front": 0.354,
+    "inside": 0.442
+   },
+   "columns": {
+    "front": 1.0,
+    "inside": 4.0
+   },
+   "dominant_share": {
+    "front": 0.316,
+    "inside": 0.179
+   }
+  }
+ }
+}

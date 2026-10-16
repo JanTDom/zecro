@@ -14,10 +14,11 @@ export async function call<T = Data>(path: string, init: CallInit = {}): Promise
   let body = init.body;
   if (body !== undefined && !isForm && typeof body !== 'string') { body = JSON.stringify(body); headers['Content-Type'] = 'application/json'; }
   let response: Response;
-  try { response = await fetch(apiUrl(path), { ...init, headers, body }); }
+  try { response = await fetch(apiUrl(path), { ...init, headers, body, credentials: 'include' }); }
   catch { throw new Error('Usługa ZECRO API jest niedostępna.'); }
   const data = await response.json().catch(() => null);
   if (!response.ok) {
+    if (response.status === 401) window.dispatchEvent(new Event('zecro-session-expired'));
     const d = data?.detail;
     throw new Error(typeof d === 'string' ? d : d?.reason || (Array.isArray(d) ? d.map((x: Data) => x.msg).join('; ') : `Błąd API ${response.status}`));
   }
@@ -61,6 +62,7 @@ export const studio = {
   approveLogo: (projectId: string, body: Data) => post(`/projects/${projectId}/dna/logo/approve`, body),
   dna: (projectId: string) => call(`/projects/${projectId}/dna`),
   // settings
+  settingsOverview: () => call<{ integrations: Data[]; tasks: Record<string, Data> }>('/settings/overview'),
   integrations: () => call<Data[]>('/settings/integrations'),
   saveIntegration: (body: Data, id?: string) => call(id ? `/settings/integrations/${id}` : '/settings/integrations', { method: id ? 'PUT' : 'POST', body }),
   deleteIntegration: (id: string) => call(`/settings/integrations/${id}`, { method: 'DELETE' }),

@@ -54,20 +54,35 @@ class SVGRenderer:
             fr = elem.frame
             rot = fr.rotation_deg
             transform_attr = f' transform="rotate({rot:.1f} {fr.x + fr.w/2:.1f} {fr.y + fr.h/2:.1f})"' if abs(rot) > 0.1 else ""
+            if abs(getattr(fr, "skew_y_deg", 0) or 0) > .01:
+                import math as _m
+                _t = _m.tan(_m.radians(fr.skew_y_deg))
+                transform_attr = f' transform="matrix(1 {-_t:.5f} 0 1 0 {_t * fr.x:.3f})"' 
 
             svg_lines.append(f'<g id="elem-g-{elem.id}"{transform_attr}>')
+            from ..shapes import is_rect, shape_polygon, text_box
+            points = " ".join(f"{px:.2f},{py:.2f}" for px, py in shape_polygon(elem.shape, fr.x, fr.y, fr.w, fr.h))
+            if elem.style and elem.style.bg_color and elem.role != "photo":
+                if is_rect(elem.shape):
+                    svg_lines.append(f'<rect x="{fr.x:.1f}" y="{fr.y:.1f}" width="{fr.w:.1f}" height="{fr.h:.1f}" fill="{html.escape(elem.style.bg_color)}"/>')
+                else:
+                    svg_lines.append(f'<polygon points="{points}" fill="{html.escape(elem.style.bg_color)}"/>')
+            if elem.role == "photo" and not is_rect(elem.shape) and elem.treatment != "cutout":
+                svg_lines.append(f'<defs><clipPath id="shape-{elem.id}"><polygon points="{points}"/></clipPath></defs>')
 
             # Render Photos / Images
             if elem.role == "photo":
-                clip_attr = f' clip-path="url(#clip-{elem.id})"' if elem.treatment == "cutout" and elem.contour_points else ""
+                clip_attr = (f' clip-path="url(#clip-{elem.id})"' if elem.treatment == "cutout" and elem.contour_points
+                             else f' clip-path="url(#shape-{elem.id})"' if not is_rect(elem.shape) else "")
                 # Background placeholder rect
                 svg_lines.append(
                     f'<rect x="{fr.x:.1f}" y="{fr.y:.1f}" width="{fr.w:.1f}" height="{fr.h:.1f}" '
                     f'fill="#dcd8cd" rx="1.0"{clip_attr}/>'
                 )
 
-                if elem.image_url and (elem.image_url.startswith(("http", "/static/", "data:"))):
-                    href = html.escape(elem.image_url)
+                image_ref = elem.mask_ref if elem.treatment == "cutout" and elem.mask_ref else elem.image_url
+                if image_ref and (image_ref.startswith(("http", "/static/", "data:"))):
+                    href = html.escape(image_ref)
                     if elem.crop_box and elem.source_width_px and elem.source_height_px:
                         l, t, r, b = elem.crop_box
                         sw, sh = elem.source_width_px, elem.source_height_px
@@ -104,11 +119,22 @@ class SVGRenderer:
                 if elem.image_url:
                     svg_lines.append(f'<image xlink:href="{html.escape(elem.image_url)}" x="{fr.x:.1f}" y="{fr.y:.1f}" width="{fr.w:.1f}" height="{fr.h:.1f}" preserveAspectRatio="xMidYMid meet"/>')
                 else:
-                    svg_lines.append(
-                        f'<text x="{fr.x + fr.w/2:.1f}" y="{fr.y + fr.h*0.75:.1f}" font-size="{fr.h*0.7:.1f}" '
-                        f'font-weight="900" font-family="Playfair Display, Georgia, serif" text-anchor="middle" '
-                        f'letter-spacing="0.8" fill="{elem.style.color or "#111"}">{html.escape(elem.text_content or "")}</text>'
-                    )
+                    st = elem.style
+                    size_mm = ((st.font_size_pt if st else None) or 24.0) * 0.3528
+                    family = html.escape((st.font_family if st else None) or "sans-serif", quote=True)
+                    align = (st.align if st else None) or "left"
+                    anchor = {"left": "start", "center": "middle", "right": "end"}.get(align, "start")
+                    xx = fr.x + (0 if align == "left" else fr.w / 2 if align == "center" else fr.w)
+                    rows = (elem.text_content or "").split("\n")
+                    lead_mm = ((st.line_height_pt if st else None) or (st.font_size_pt if st else 24.0) * 1.06) * 0.3528
+                    first = fr.y + fr.h / 2 + size_mm * .36 - lead_mm * (len(rows) - 1) / 2
+                    for row_index, row_text in enumerate(rows):
+                        svg_lines.append(
+                            f'<text x="{xx:.1f}" y="{first + row_index * lead_mm:.1f}" font-size="{size_mm:.1f}" '
+                            f'font-weight="{html.escape((st.font_weight if st else None) or "normal", quote=True)}" '
+                            f'font-family="{family}, sans-serif" text-anchor="{anchor}" '
+                            f'fill="{html.escape((st.color if st else None) or "#111", quote=True)}">{html.escape(row_text)}</text>'
+                        )
 
             # Render Folio Bar & Rules
             elif elem.role == "folio":
@@ -157,19 +183,34 @@ class SVGRenderer:
                 weight = st.font_weight or "normal"
                 case = "uppercase" if st.case == "upper" else "none"
                 col_count = st.columns or 1
+                outline = (f'-webkit-text-stroke: {st.outline_width_pt * .3528:.2f}px {st.outline_color}; '
+                           if st.outline_color and st.outline_width_pt else '')
+                shadow = (f'text-shadow: {float(st.shadow_offset_x_pt or 0) * .3528:.2f}px '
+                          f'{float(st.shadow_offset_y_pt or 0) * .3528:.2f}px 0 {st.shadow_color}; '
+                          if st.shadow_color else '')
 
+                bx, by, bw, bh = text_box(elem)
+                justify = {"center": "center", "bottom": "flex-end"}.get(st.valign or "top", "flex-start")
                 svg_lines.append(
-                    f'<foreignObject x="{fr.x:.1f}" y="{fr.y:.1f}" width="{fr.w:.1f}" height="{fr.h:.1f}">'
-                    f'<div xmlns="http://www.w3.org/1999/xhtml" style="'
+                    f'<foreignObject x="{bx:.2f}" y="{by:.2f}" width="{bw:.2f}" height="{bh:.2f}">'
+                    f'<div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; flex-direction: column; '
+                    f'justify-content: {justify}; height: 100%; overflow: hidden; margin: 0; padding: 0;">'
+                    f'<div style="'
                     f'font-family: {font_fam}; font-size: {font_mm:.2f}px; line-height: {line_h_mm:.2f}px; '
-                    f'color: {text_col}; font-weight: {weight}; text-transform: {case}; text-align: {align}; '
-                    f'column-count: {col_count}; column-gap: 3.5px; height: 100%; overflow: hidden; '
+                    f'color: {text_col}; font-weight: {weight}; text-transform: {case}; text-align: {align}; {outline}{shadow}'
+                    f'letter-spacing: {float((st.tracking_em if st else None) or 0):.3f}em; '
+                    f'font-style: {(st.font_style if st else None) or "normal"}; '
+                    f'font-stretch: {(st.font_stretch if st else None) or "normal"}; '
+                    f'column-count: {col_count}; column-gap: 3.5px; '
                     f'margin: 0; padding: 0; box-sizing: border-box;">'
                     f'{html.escape(elem.text_content or "").replace(chr(10), "<br/>")}'
-                    f'</div>'
+                    f'</div></div>'
                     f'</foreignObject>'
                 )
 
+            if elem.style and elem.style.border_width_mm and elem.style.border_color and elem.role not in {"rule", "photo"}:
+                svg_lines.append(f'<polygon points="{points}" fill="none" stroke="{html.escape(elem.style.border_color)}" '
+                                 f'stroke-width="{elem.style.border_width_mm:.2f}" stroke-linejoin="round"/>')
             label = advertorial_labels.get(elem.id) if isinstance(advertorial_labels, dict) else None
             if label:
                 svg_lines.append(f'<rect x="{fr.x + 1:.1f}" y="{fr.y + 1:.1f}" width="{max(12.0, min(max(12.0, fr.w - 2), 40.0)):.1f}" height="4.5" fill="#111" opacity="0.9"/>')

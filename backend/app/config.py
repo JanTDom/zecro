@@ -21,7 +21,7 @@ def _load_environment_files() -> None:
     # Provider credentials are safe to load for local AI discovery regardless
     # of the remote database opt-in.  The flag below only gates database and
     # Supabase settings.
-    ai_keys = {"GEMINI_API_KEY", "GEMINI_MODEL_TEXT_PRO", "GEMINI_MODEL_TEXT_FAST", "GEMINI_MODEL_IMAGE", "GEMINI_MODEL_EMBED", "GEMINI_TIMEOUT_S", "GEMINI_MAX_RETRIES", "AI_MONTHLY_BUDGET_USD", "ZECRO_SECRETS_KEY", "ZECRO_ADMIN_TOKEN"}
+    ai_keys = {"GEMINI_API_KEY", "GEMINI_MODEL_TEXT_PRO", "GEMINI_MODEL_TEXT_FAST", "GEMINI_MODEL_SEGMENTATION", "GEMINI_MODEL_IMAGE", "GEMINI_MODEL_EMBED", "GEMINI_TIMEOUT_S", "GEMINI_MAX_RETRIES", "AI_MONTHLY_BUDGET_USD", "ZECRO_SECRETS_KEY", "ZECRO_ADMIN_TOKEN"}
     # `.env.supabase` is intentionally opt-in through ZECRO_LOAD_ENV_FILES;
     # it is useful for an explicit remote smoke test, while the ordinary test
     # and local-development path must keep using SQLite unless requested.
@@ -83,11 +83,18 @@ class Settings(BaseModel):
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
     gemini_model_text_pro: str = os.getenv("GEMINI_MODEL_TEXT_PRO", "gemini-3.1-pro-preview")
     gemini_model_text_fast: str = os.getenv("GEMINI_MODEL_TEXT_FAST", "gemini-3.8-flash")
+    gemini_model_segmentation: str = os.getenv("GEMINI_MODEL_SEGMENTATION", "gemini-2.5-flash")
     gemini_model_image: str = os.getenv("GEMINI_MODEL_IMAGE", "gemini-3-pro-image")
     gemini_model_embed: str = os.getenv("GEMINI_MODEL_EMBED", "gemini-embedding-2")
     gemini_timeout_s: float = float(os.getenv("GEMINI_TIMEOUT_S", "90"))
     gemini_max_retries: int = int(os.getenv("GEMINI_MAX_RETRIES", "3"))
     ai_monthly_budget_usd: float | None = (float(os.getenv("AI_MONTHLY_BUDGET_USD")) if os.getenv("AI_MONTHLY_BUDGET_USD") else None)
+    # Optional server-to-server YourQuantum solver.  It is deliberately
+    # disabled when either value is missing, so the normal local generator
+    # remains deterministic and does not make an unexpected paid request.
+    yourquantum_api_url: str = os.getenv("YOURQUANTUM_API_URL", "")
+    yourquantum_api_key: str = os.getenv("YOURQUANTUM_API_KEY", "")
+    yourquantum_timeout_s: float = float(os.getenv("YOURQUANTUM_TIMEOUT_S", "12"))
     secrets_key: str = os.getenv("ZECRO_SECRETS_KEY", "")
     admin_token: str = os.getenv("ZECRO_ADMIN_TOKEN", "")
     postgres_url: str = os.getenv("POSTGRES_URL", os.getenv("DATABASE_URL", os.getenv("POSTGRES_PRISMA_URL", "")))

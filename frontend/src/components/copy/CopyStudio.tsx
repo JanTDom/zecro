@@ -104,7 +104,7 @@ export const CopyStudio: React.FC = () => {
     <div className="p-6 max-w-[1500px] mx-auto space-y-5">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-editorial-crimson font-mono font-bold">Content Studio / Copyfit</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-editorial-crimson font-mono font-bold">Dopasowanie tekstu</p>
           <h1 className="mt-1 text-3xl font-headline font-black text-ink-100">Otekstowywanie strony</h1>
           <p className="mt-2 text-sm text-ink-400 max-w-2xl">Pracujesz na rzeczywistych ramach wybranego wariantu. System mierzy tekst w milimetrach i może skracać wyłącznie materiał źródłowy; nie dopisuje faktów.</p>
         </div>

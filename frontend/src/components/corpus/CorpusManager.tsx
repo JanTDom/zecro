@@ -33,7 +33,7 @@ export const CorpusManager: React.FC = () => {
       api.getCorpusPages(activeProject.id).then((pages) => {
         setCorpusPages(pages);
         setSelectedPage(pages[0] || null);
-      }).catch((error) => addToast({ type: 'error', title: 'Błąd korpusu', message: error instanceof Error ? error.message : 'Nie udało się pobrać stron.' }));
+      }).catch((error) => addToast({ type: 'error', title: 'Nie udało się wczytać przykładów', message: error instanceof Error ? error.message : 'Nie udało się pobrać stron.' }));
     }
   }, [activeProject, addToast]);
 
@@ -52,8 +52,8 @@ export const CorpusManager: React.FC = () => {
       }
       addToast({
         type: 'success',
-        title: 'Strona dodana do korpusu',
-        message: 'Cechy i linie siatki zostały zmierzone.',
+        title: 'Przykładowa strona dodana',
+        message: 'Program przeanalizował jej układ.',
       });
     } catch (err) {
       addToast({
@@ -74,12 +74,12 @@ export const CorpusManager: React.FC = () => {
       await reloadDNA();
       addToast({
         type: 'success',
-        title: 'DNA tytułu skalibrowane',
-        message: 'Reguły zaktualizowano na podstawie korpusu.',
+        title: 'Styl gazety zaktualizowany',
+        message: 'Program uwzględni teraz dodane przykłady.',
       });
       setActiveTab('dna');
     } catch (error) {
-      addToast({ type: 'error', title: 'Nie udało się nauczyć DNA', message: error instanceof Error ? error.message : 'Błąd kalibracji.' });
+      addToast({ type: 'error', title: 'Nie udało się zastosować przykładów', message: error instanceof Error ? error.message : 'Spróbuj ponownie.' });
     } finally {
       setIsLearning(false);
     }
@@ -95,7 +95,7 @@ export const CorpusManager: React.FC = () => {
     addToast({
       type: 'info',
       title: 'Strona usunięta',
-      message: 'Próbka usunięta z zestawu uczącego.',
+      message: 'Przykład usunięty z listy.',
     });
   };
 
@@ -108,14 +108,14 @@ export const CorpusManager: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] uppercase font-mono tracking-widest text-blue-400 font-bold">
-              Ekstrakcja cech i anty-kopiowanie
+              Krok opcjonalny · pokaż styl
             </span>
           </div>
           <h1 className="text-3xl font-headline font-black text-ink-100 tracking-tight">
-            Menedżer korpusu stron
+            Przykładowe strony
           </h1>
           <p className="text-sm text-ink-400 mt-1 max-w-2xl">
-            Wgraj strony gazet. Ekstraktor mierzy bloki, podziały kolumn i wektor odległości od korpusu.
+            Dodaj 2–10 stron, których wygląd Ci się podoba. Program rozpozna ich styl, ale ułoży nową stronę od podstaw.
           </p>
         </div>
 
@@ -145,7 +145,7 @@ export const CorpusManager: React.FC = () => {
             leftIcon={<RefreshCw className={`w-4 h-4 ${isLearning ? 'animate-spin' : ''}`} />}
             onClick={handleLearnDNA}
           >
-            Ucz DNA z korpusu
+            Zastosuj styl z przykładów
           </Button>
         </div>
       </div>
@@ -156,7 +156,7 @@ export const CorpusManager: React.FC = () => {
         <div className="lg:col-span-4 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono uppercase text-ink-400 font-semibold">
-              Corpus Samples ({corpusPages.length})
+              Dodane przykłady ({corpusPages.length})
             </span>
             <span className="text-[10px] text-ink-500 font-mono">Projekt {activeProject.name}</span>
           </div>
@@ -185,11 +185,11 @@ export const CorpusManager: React.FC = () => {
                     <div>
                       <p className="text-xs font-bold text-ink-100 line-clamp-1">{page.fileName}</p>
                       <p className="text-[10px] text-ink-400 font-mono">
-                        Page {page.pageNumber} • {page.fileType.toUpperCase()} • {(page.fileSize / 1024 / 1024).toFixed(1)} MB
+                        Strona {page.pageNumber} • {page.fileType.toUpperCase()} • {(page.fileSize / 1024 / 1024).toFixed(1)} MB
                       </p>
                       <div className="flex items-center gap-1.5 mt-1">
                         <Badge variant="success" size="sm">
-                          {page.features.detectedColumns} COLS DETECTED
+                          {page.features.detectedColumns} kolumn
                         </Badge>
                       </div>
                     </div>
@@ -212,7 +212,7 @@ export const CorpusManager: React.FC = () => {
               <div className="p-8 border-2 border-dashed border-ink-800 rounded-xl text-center text-ink-400">
                 <Upload className="w-8 h-8 mx-auto mb-2 text-ink-500" />
                 <p className="text-xs font-medium">Brak wgranych stron</p>
-                <p className="text-[10px] text-ink-500 mt-1">Wgraj 2–10 stron, aby skalibrować DNA tytułu</p>
+                <p className="text-[10px] text-ink-500 mt-1">Dodaj 2–10 stron, aby pokazać programowi ulubiony styl.</p>
               </div>
             )}
           </div>
@@ -226,7 +226,7 @@ export const CorpusManager: React.FC = () => {
                 <div className="flex items-center justify-between pb-4 border-b border-ink-800 mb-4">
                   <div>
                     <h3 className="font-headline font-bold text-base text-ink-100">
-                      Segmentacja strony i cechy
+                      Jak zbudowana jest ta strona
                     </h3>
                     <p className="text-xs text-ink-400 font-mono">{selectedPage.fileName}</p>
                   </div>
@@ -251,7 +251,7 @@ export const CorpusManager: React.FC = () => {
                     <div className="h-full min-w-[260px] flex flex-col items-center justify-center gap-2 px-6 text-center text-ink-700">
                       <FileStack className="w-8 h-8" />
                       <p className="text-sm">Podgląd tej strony jest niedostępny.</p>
-                      <p className="text-xs">Dane ekstrakcji są widoczne poniżej.</p>
+                      <p className="text-xs">Podsumowanie układu jest widoczne poniżej.</p>
                     </div>
                   ) : (
                     <img
@@ -283,28 +283,28 @@ export const CorpusManager: React.FC = () => {
               {/* Tabela zmierzonych cech */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <Card className="text-center p-3">
-                  <span className="text-[10px] font-mono uppercase text-ink-400 block">Detected Grid</span>
+                  <span className="text-[10px] font-mono uppercase text-ink-400 block">Podział na kolumny</span>
                   <span className="text-lg font-mono font-bold text-ink-100">
-                    {selectedPage.features.detectedColumns} Cols ({selectedPage.features.detectedGutterMm}mm)
+                    {selectedPage.features.detectedColumns} kolumn ({selectedPage.features.detectedGutterMm} mm)
                   </span>
                 </Card>
 
                 <Card className="text-center p-3">
-                  <span className="text-[10px] font-mono uppercase text-ink-400 block">Max Headline Kegel</span>
+                  <span className="text-[10px] font-mono uppercase text-ink-400 block">Największy nagłówek</span>
                   <span className="text-lg font-mono font-bold text-editorial-ochre">
                     {selectedPage.features.maxHeadlineSizePt} pt
                   </span>
                 </Card>
 
                 <Card className="text-center p-3">
-                  <span className="text-[10px] font-mono uppercase text-ink-400 block">Photo / Text Ratio</span>
+                  <span className="text-[10px] font-mono uppercase text-ink-400 block">Udział zdjęć</span>
                   <span className="text-lg font-mono font-bold text-ink-100">
-                    {(selectedPage.features.photoRatio * 100).toFixed(0)}% Photo
+                    {(selectedPage.features.photoRatio * 100).toFixed(0)}% zdjęć
                   </span>
                 </Card>
 
                 <Card className="text-center p-3">
-                  <span className="text-[10px] font-mono uppercase text-ink-400 block">WhiteSpace Tension</span>
+                  <span className="text-[10px] font-mono uppercase text-ink-400 block">Wolna przestrzeń</span>
                   <span className="text-lg font-mono font-bold text-emerald-300">
                     {(selectedPage.features.whiteSpaceRatio * 100).toFixed(0)}%
                   </span>
@@ -313,7 +313,7 @@ export const CorpusManager: React.FC = () => {
             </div>
           ) : (
             <Card className="p-12 text-center text-ink-400">
-              Select a corpus page from the list to view its segmentation graph and detected grammar.
+              Wybierz przykładową stronę z listy, aby zobaczyć analizę jej układu.
             </Card>
           )}
         </div>

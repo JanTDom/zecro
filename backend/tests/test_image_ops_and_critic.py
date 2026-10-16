@@ -8,8 +8,8 @@ from backend.app.engine.image_ops import (
 )
 from backend.app.engine.grammar import create_default_broadsheet_dna
 from backend.app.engine.solver import GridSolver
-from backend.app.engine.critic import LayoutCritic
-from backend.app.models.schemas import PageInputMaterial, StoryInput
+from backend.app.engine.critic import LayoutCritic, effective_print_dpi, cutout_geometry_issue
+from backend.app.models.schemas import Element, Frame, PageInputMaterial, StoryInput
 
 
 def _akimbo_mask(path):
@@ -47,6 +47,33 @@ def test_no_synthetic_silhouette_anywhere(tmp_path):
     assert not hasattr(image_ops, "generate_default_silhouette_contour")
     assert extract_alpha_contour(str(tmp_path / "missing.png"), 50, 50) == []
     assert offset_contour_polygon([], 3.0) == []
+
+
+def test_print_dpi_uses_weakest_axis_after_crop():
+    photo = Element(role="photo", frame=Frame(x=10, y=10, w=200, h=250),
+                    source_width_px=3000, source_height_px=1000,
+                    crop_box=[.25, 0, .75, 1])
+    assert effective_print_dpi(photo) == pytest.approx(101.6, rel=.01)
+    photo.crop_box = [0, 0, 1, 1]
+    assert effective_print_dpi(photo) == pytest.approx(101.6, rel=.01)
+    photo.crop_box = [.4, 0, .6, 1]
+    assert effective_print_dpi(photo) == pytest.approx(76.2, rel=.01)
+
+
+def test_cutout_geometry_rejects_fragments_and_rectangular_masks():
+    fragment = Element(id="fragment", role="photo", treatment="cutout",
+                       frame=Frame(x=0, y=0, w=100, h=150),
+                       contour_points=[[45, 55], [55, 55], [55, 95], [45, 95]])
+    rectangle = Element(id="box", role="photo", treatment="cutout",
+                        frame=Frame(x=0, y=0, w=100, h=150),
+                        contour_points=[[0, 0], [100, 0], [100, 150], [0, 150]])
+    subject = Element(id="person", role="photo", treatment="cutout",
+                      frame=Frame(x=0, y=0, w=100, h=150),
+                      contour_points=[[38, 5], [62, 5], [75, 55], [68, 145],
+                                      [32, 145], [25, 55]])
+    assert "fragment" in cutout_geometry_issue(fragment)
+    assert "rectangular" in cutout_geometry_issue(rectangle)
+    assert cutout_geometry_issue(subject) is None
 
 
 def test_critic_evaluation_on_valid_page():

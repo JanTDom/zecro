@@ -36,6 +36,16 @@ def _style_kw(dna, element) -> dict:
 
 def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGraph:
     genes = genes or {}
+    if getattr(material, "tv_schedule", None) and (
+            material.page_zone != "front_page" or not material.stories):
+        from .tv_listing import compose_tv_listing
+        return compose_tv_listing(dna, material, genes)
+    if (material.page_zone == "spread" and genes.get("cover_morphology") == "opening_spread"
+            and material.stories):
+        from .magazine_morphologies import compose_opening_spread, is_magazine
+        lead = max(material.stories, key=lambda story: story.importance)
+        if is_magazine(dna) and lead.images:
+            return compose_opening_spread(dna, material, genes)
     ranked = any(getattr(s, "rank", None) not in (None, "second") for s in material.stories)
     # One-story pages keep the single-module architectures (they differ in
     # measure and photo placement); multi-story pages are composed from ranks.
@@ -455,7 +465,7 @@ def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGra
         if story.images and f"{story.id}.image" not in rendered_refs:
             missing_content_refs.append(f"{story.id}.image")
 
-    return SceneGraph(page=PageMeta(trim=[page_w,page_h],bleed_mm=fmt.bleed_mm,safe_margin_mm=min(left,top),
+    scene = SceneGraph(page=PageMeta(trim=[page_w,page_h],bleed_mm=fmt.bleed_mm,safe_margin_mm=min(left,top),
         grid={"cols":grid.columns*page_count,"gutter_mm":gutter,"baseline_mm":grid.baseline_grid_pt*.352778,"rows":grid.rows},title_dna_ref=dna.id,page_zone=zone),
         elements=elements,relations=relations,reading_order=reading_order,metadata={
             "generator":"zone_constraint_solver","page_zone":zone,"page_count":page_count,"single_page_width_mm":single_w,
@@ -466,3 +476,5 @@ def compose_page(dna, material, genes: dict[str, Any] | None = None) -> SceneGra
             "missing_content_refs": missing_content_refs,
             "fit_adjustments": fit_adjustments,
         })
+    from .plan_composer import _polish_display_headlines
+    return _polish_display_headlines(scene, dna)

@@ -6,6 +6,7 @@ import { TasteModelMetrics, PreferenceSignal } from '../types/taste';
 import { IntakeData, PhotoMaterial } from '../types/material';
 import { ExportArtifact, ExportOptions } from '../types/export';
 import { ElementDelta, SceneGraph, SceneGraphElement } from '../types/sceneGraph';
+import { editorialStyle } from '../editorialStyles';
 
 // The API is the source of truth. A disconnected backend is a visible error,
 // never a successful local simulation.
@@ -25,12 +26,19 @@ export function errorMessage(error: unknown): string {
 
 const API_REQUEST_TIMEOUT_MS = 120_000;
 
+/** API error that keeps a structured backend verdict (e.g. ``photo_needed``). */
+export class ApiError extends Error {
+  code?: string;
+  data?: Data;
+  constructor(message: string, code?: string, data?: Data) { super(message); this.code = code; this.data = data; }
+}
+
 async function request<T = Data>(path: string, init?: RequestInit): Promise<T> {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
   let response: Response;
   try {
-    response = await fetch(apiUrl(path), { ...init, signal: init?.signal || controller.signal });
+    response = await fetch(apiUrl(path), { ...init, credentials: 'include', signal: init?.signal || controller.signal });
   } catch {
     if (controller.signal.aborted) {
       throw new Error('Generowanie trwało zbyt długo. Wyłącz ocenę wizualną AI albo spróbuj z mniejszą liczbą wariantów.');
@@ -40,8 +48,12 @@ async function request<T = Data>(path: string, init?: RequestInit): Promise<T> {
     window.clearTimeout(timeout);
   }
   if (!response.ok) {
+    if (response.status === 401) window.dispatchEvent(new Event('zecro-session-expired'));
     const body = await response.json().catch(() => null);
     const detail = body?.detail;
+    if (detail && typeof detail === 'object' && !Array.isArray(detail) && typeof detail.message === 'string') {
+      throw new ApiError(detail.message, detail.code, detail);
+    }
     const message = typeof detail === 'string' ? detail : Array.isArray(detail)
       ? detail.map((item: Data) => `${item.loc?.join('.')}: ${item.msg}`).join('; ')
       : `Błąd API (${response.status} ${response.statusText})`;
@@ -57,14 +69,15 @@ const json = (method: string, body: unknown): RequestInit => ({
 function projectFromApi(raw: Data): Project {
   return {
     id: raw.id, name: raw.name, slug: raw.name.toLowerCase().replace(/\s+/g, '-'),
-    newspaperTitle: raw.name.toUpperCase(), editionCode: 'ZECRO', format: 'custom',
-    dimensions: { widthMm: 280, heightMm: 400, columnsCount: 6, gutterMm: 4.5,
+    newspaperTitle: raw.name.toUpperCase(), editionCode: 'ZECRO', format: raw.format_name || 'custom',
+    dimensions: raw.dimensions || { widthMm: 280, heightMm: 400, columnsCount: 6, gutterMm: 4.5,
       marginTopMm: 15, marginBottomMm: 15, marginLeftMm: 12, marginRightMm: 12, bleedMm: 3 },
     description: raw.description || '', status: raw.status === 'active' ? 'ready' : raw.status,
     corpusCount: raw.corpus_count || 0, generationRunsCount: raw.generation_runs_count || 0,
     tasteSignalsCount: raw.taste_signals_count || 0, tasteModelWinRate: raw.taste_model_win_rate || 0,
     avgTimeToApproveSec: raw.avg_time_to_approve_sec || 0, dnaVersion: raw.dna_version || 1,
     createdAt: raw.created_at, updatedAt: raw.updated_at, themeColor: '#2451f5', accentFont: 'Fraunces',
+    editorialCharacter: raw.editorial_character || undefined,
   };
 }
 
@@ -195,6 +208,51 @@ function sceneToApi(scene: SceneGraph): Data {
   };
 }
 
+const MORPHOLOGY_LABELS: Record<string, string> = {
+  asymmetric_hero_rail: 'Duże zdjęcie z boczną szyną',
+  diagonal_hero_entry: 'Ukośne wejście tytułu w zdjęcie',
+  dual_scale_collage: 'Kolaż dwóch zdjęć w różnej skali',
+  portrait_cover: 'Okładka portretowa z tekstem w wolnej przestrzeni',
+  detail_still_life: 'Detal z przestrzenią negatywną',
+  reportage_cover: 'Okładka reportażowa',
+  typographic_cover: 'Okładka typograficzna',
+  opening_spread: 'Rozkładówka otwierająca',
+  listing_pick_top: 'Ramówka z programem dnia na górze',
+  listing_pick_bottom: 'Ramówka z programem dnia na dole',
+  photo_dominant_strip: 'Dominujące zdjęcie z nieregularnym paskiem',
+  directional_tension: 'Kompozycja prowadzona spojrzeniem',
+  type_behind_subject: 'Tytuł za wyciętą postacią',
+};
+
+export interface PhotoCheckRow {
+  story_ref: string; lead?: boolean; status: string; verdict?: string; message?: string; reason?: string;
+  score?: number; headline_match?: number; emotion?: string; image_ref?: string;
+  alternatives?: { image_ref: string; score: number; reason: string }[];
+}
+export interface PhotoCheckResult { ready: boolean; message: string; photo_selection: PhotoCheckRow[]; stop: PhotoCheckRow | null }
+
+function buildMaterial(intake: IntakeData, mastheadTitle: string): Data {
+  const toStory = (story: IntakeData['leadStory'], lead: boolean) => ({ id: story.id, kicker: story.kicker,
+    headline: story.headline, deck: story.deck, lead: story.lead, body: story.body, importance: story.importance / 5,
+    images: intake.photos.filter(photo => photo.storyId === story.id || (!photo.storyId && lead)).map(photo => ({
+      id: photo.id, url: photo.url.startsWith('/api/') ? photo.url.slice(4) : photo.url, caption: photo.caption,
+      credit: photo.credit, focal_point: photo.focalPoint || [0.5, 0.5],
+      width_px: photo.widthPx, height_px: photo.heightPx, dpi: photo.dpi })) });
+  return { masthead_title: mastheadTitle, page_zone: intake.pageZone || 'front_page',
+    editorial_mood: intake.editorialMood || 'auto',
+    stories: [toStory(intake.leadStory, true), ...intake.secondaryStories.map(story => toStory(story, false))] };
+}
+
+function layoutStoryFromMetadata(meta: Data): Candidate['layoutStory'] {
+  const lead = (meta.photo_selection || []).find((row: Data) => row.lead && row.status === 'selected');
+  const decisions = (meta.photo_driven_decisions || [])
+    .map((row: Data) => row.reason || (row.decision === 'headline_zone' ? `tytuł w strefie: ${row.zone === 'top' ? 'górnej' : 'dolnej'}` : ''))
+    .filter(Boolean);
+  const morphology = meta.cover_morphology ? MORPHOLOGY_LABELS[meta.cover_morphology] || 'Układ generatywny' : undefined;
+  if (!morphology && !lead && !decisions.length) return undefined;
+  return { morphology, photoReason: lead?.reason, photoScore: lead?.score, decisions };
+}
+
 function candidateFromApi(raw: Data): Candidate {
   const critic = raw.critic;
   const violations: string[] = critic.hard_gate.violations || [];
@@ -202,6 +260,9 @@ function candidateFromApi(raw: Data): Candidate {
   return { id: raw.id, runId: raw.run_id, candidateNumber: raw.rank, sceneGraph: scene,
     thumbnailSvg: raw.svg_thumbnail, previewImageUrl: apiUrl(raw.html_preview_url || `/candidates/${raw.id}/preview`),
     criticScore: critic.total_fitness, tasteScore: critic.preference_score ?? critic.total_fitness,
+    visualReview: raw.scene_graph?.metadata?.visual_critique,
+    styleReadiness: raw.scene_graph?.metadata?.style_readiness,
+    layoutStory: layoutStoryFromMetadata(raw.scene_graph?.metadata || {}),
     passHardGates: critic.hard_gate.passed,
     hardGatesReport: { passed: critic.hard_gate.passed, details: violations,
       collisionsFound: violations.filter(v => /colli|overlap/i.test(v)).length,
@@ -268,16 +329,41 @@ export const api = {
   async createProject(data: Partial<Project>): Promise<Project> {
     const project = projectFromApi(await request('/projects', json('POST', { name: data.newspaperTitle || data.name,
       description: data.description || '', status: 'ready' })));
-    if (data.dimensions) {
+    const style = data.editorialCharacter ? editorialStyle(data.editorialCharacter) : undefined;
+    if (data.dimensions || data.editorialCharacter) {
+      if (style) {
+        // Use measured, editable corpus DNA as the base. A local style record
+        // below remains a safe fallback if the profile endpoint is unavailable.
+        try { await request(`/projects/${project.id}/dna/archetype/${style.archetype}`, { method: 'POST' }); }
+        catch { /* the explicit style values below still define the newspaper */ }
+      }
       const dna = await this.getTitleDNA(project.id);
-      dna.canonical = { ...dna.canonical, format: { ...dna.canonical?.format,
-        trim_w_mm: data.dimensions.widthMm, trim_h_mm: data.dimensions.heightMm, bleed_mm: data.dimensions.bleedMm } };
-      dna.grid = { ...dna.grid, columns: data.dimensions.columnsCount, gutterMm: data.dimensions.gutterMm,
-        marginTopMm: data.dimensions.marginTopMm, marginBottomMm: data.dimensions.marginBottomMm,
-        marginLeftMm: data.dimensions.marginLeftMm, marginRightMm: data.dimensions.marginRightMm };
+      if (data.dimensions) {
+        dna.canonical = { ...dna.canonical, format: { ...dna.canonical?.format,
+          trim_w_mm: data.dimensions.widthMm, trim_h_mm: data.dimensions.heightMm, bleed_mm: data.dimensions.bleedMm } };
+        dna.grid = { ...dna.grid, columns: data.dimensions.columnsCount, gutterMm: data.dimensions.gutterMm,
+          marginTopMm: data.dimensions.marginTopMm, marginBottomMm: data.dimensions.marginBottomMm,
+          marginLeftMm: data.dimensions.marginLeftMm, marginRightMm: data.dimensions.marginRightMm };
+      }
+      if (style) {
+        dna.archetype = style.archetype;
+        dna.styleBlend = { ...style.blend };
+        dna.typography.headlinePrimary.fontFamily = style.headlineFont;
+        dna.typography.superHeadline.fontFamily = style.headlineFont;
+        dna.typography.headlineSecondary.fontFamily = style.headlineFont;
+        dna.typography.body.fontFamily = style.bodyFont;
+        dna.pageEnergyBudget.maxTensionScore = style.energy;
+        dna.pageEnergyBudget.targetTensionScore = style.energy;
+      }
+      if (data.accentFont) {
+        const family = `${data.accentFont}, ${style?.headlineFont || 'Georgia, serif'}`;
+        dna.typography.headlinePrimary.fontFamily = family;
+        dna.typography.headlineSecondary.fontFamily = family;
+        dna.typography.superHeadline.fontFamily = family;
+      }
       await this.updateTitleDNA(project.id, dna);
     }
-    return project;
+    return { ...project, editorialCharacter: style?.id, accentFont: data.accentFont || '' };
   },
   async deleteProject(id: string): Promise<boolean> { await request(`/projects/${id}`, { method: 'DELETE' }); return true; },
   async getTitleDNA(projectId: string): Promise<TitleDNA> { return dnaFromApi(await request(`/projects/${projectId}/dna`), projectId); },
@@ -313,7 +399,13 @@ export const api = {
     return { id: raw.id, url: apiUrl(raw.url), previewUrl: apiUrl(raw.alpha_mask_url || raw.url), caption: '', credit: file.name,
       importance: 5, autoCutout: !!raw.is_cutout_candidate, hasCutoutMask: !!raw.alpha_mask_url, alphaMaskUrl: raw.alpha_mask_url,
       cutoutContourPoints: raw.contour_polygon, aspectRatio: raw.width_px && raw.height_px ? raw.width_px / raw.height_px : undefined,
-      placementHint: 'lead-hero', allowTextWrap: true, sourceFile: file, widthPx: raw.width_px ?? undefined, heightPx: raw.height_px ?? undefined, dpi: raw.dpi ?? undefined };
+      placementHint: 'lead-hero', allowTextWrap: true, sourceFile: file, widthPx: raw.width_px ?? undefined,
+      heightPx: raw.height_px ?? undefined, dpi: raw.dpi ?? undefined, focalPoint: raw.focal_point || [0.5, 0.5],
+      focalStatus: raw.focal_status || 'unavailable', focalSubjectKind: raw.subject_kind || 'uncertain' };
+  },
+  async checkPhotos(projectId: string, intake: IntakeData): Promise<PhotoCheckResult> {
+    const project = await this.getProject(projectId);
+    return request(`/projects/${projectId}/photo-check`, json('POST', { material: buildMaterial(intake, project.newspaperTitle) }));
   },
   async generateCandidates(projectId: string, intake: IntakeData): Promise<GenerationRun> {
     const toStory = (story: IntakeData['leadStory'], lead: boolean) => ({ id: story.id, kicker: story.kicker,
@@ -323,19 +415,24 @@ export const api = {
         id: photo.id, url: photo.url.startsWith('/api/') ? photo.url.slice(4) : photo.url, caption: photo.caption, credit: photo.credit, importance: photo.importance / 5,
         is_cutout_candidate: intake.generationConfig.allowCutouts && photo.autoCutout,
         alpha_mask_url: photo.alphaMaskUrl, has_alpha_mask: photo.hasCutoutMask || false,
-        contour_polygon: photo.cutoutContourPoints, aspect_ratio: photo.aspectRatio, width_px: photo.widthPx, height_px: photo.heightPx, dpi: photo.dpi })) });
+        contour_polygon: photo.cutoutContourPoints, aspect_ratio: photo.aspectRatio, focal_point: photo.focalPoint || [0.5, 0.5],
+        width_px: photo.widthPx, height_px: photo.heightPx, dpi: photo.dpi })) });
     const project = await this.getProject(projectId);
     return runFromApi(await request(`/projects/${projectId}/generate`, json('POST', {
       material: { issue_date: intake.editionDate, issue_number: String(intake.pageNumber), section_name: intake.section,
         masthead_title: project.newspaperTitle, stories: [toStory(intake.leadStory, true), ...intake.secondaryStories.map(story => toStory(story, false))],
-        page_zone: intake.pageZone || 'front_page', style_blend: intake.styleBlend },
+        page_zone: intake.pageZone || 'front_page', page_topic: intake.pageTopic || 'general',
+        editorial_mood: intake.editorialMood || 'auto', style_blend: intake.styleBlend,
+        tv_schedule: intake.tvSchedule || [],
+        copy_mode: intake.generationConfig.placeholderCopy ? 'placeholder' : 'source' },
       num_candidates: intake.generationConfig.candidateCount, energy_budget_override: intake.generationConfig.tensionTarget,
-      population_size: Math.round(10 + intake.generationConfig.explorationTemp * 40), generations: 6,
+      population_size: Math.round(12 + intake.generationConfig.explorationTemp * 14), generations: 3,
       allow_transgressions: intake.generationConfig.tensionTarget > 0,
       prioritize_novelty: intake.generationConfig.prioritizeNovelty,
-      // Visual review is an external, potentially slow call. Keep the
-      // deterministic generator responsive unless the editor opts in.
+      // The editor can turn off the external visual review in the form.
       visual_review: intake.generationConfig.visualReview ?? false,
+      copy_review: intake.generationConfig.copyReview ?? true,
+      accept_weak_photos: intake.generationConfig.acceptWeakPhotos ?? false,
       style_blend: intake.styleBlend, page_zone: intake.pageZone || 'front_page', seed: intake.seed,
     })));
   },

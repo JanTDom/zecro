@@ -23,12 +23,12 @@ class TasteLoopTrainer:
         num_features = 10
         weights = [0.0] * num_features
 
-        # Initialize from existing model if present
-        if existing_model and existing_model.feature_weights:
-            for idx in range(num_features):
-                weights[idx] = existing_model.feature_weights.get(f"feat_{idx}", 0.0)
+        # Rebuild from the recorded history.  Initializing from the previous
+        # model and replaying all old choices would count them repeatedly.
 
-        # Prepare pairwise training examples: (delta_vector, label=1)
+        # Prepare pairwise training examples: (delta_vector, label=1).  Keep
+        # their order so the newest feedback can be held out for a truthful
+        # generalisation metric.
         pairs: List[Tuple[List[float], int]] = []
 
         for sig in signals:
@@ -53,13 +53,29 @@ class TasteLoopTrainer:
                 feature_weights={f"feat_{i}": round(weights[i], 4) for i in range(num_features)},
                 sample_count=0,
                 human_preference_win_rate=0.0,
-                time_to_approve_avg_iterations=1.0
+                time_to_approve_avg_iterations=0.0,
+                held_out_win_rate=0.0,
+                evaluated_sample_count=0,
+                feedback_count=len(signals),
             )
 
-        # Gradient descent optimization on Bradley-Terry logistic loss
+        # Reserve the newest quarter for evaluation once there is enough data
+        # to make that split meaningful.  With fewer than four choices we
+        # train on all available feedback and explicitly report that no
+        # held-out estimate exists.
+        held_out: List[Tuple[List[float], int]] = []
+        train_pairs = pairs
+        if len(pairs) >= 4:
+            heldout_count = max(1, len(pairs) // 4)
+            train_pairs = pairs[:-heldout_count]
+            held_out = pairs[-heldout_count:]
+
+        # Gradient descent optimization on Bradley-Terry logistic loss.
+        # This is intentionally bounded: the endpoint is an online feedback
+        # surface and must stay responsive as the archive grows.
         epochs = 60
         for _ in range(epochs):
-            for delta, target in pairs:
+            for delta, target in train_pairs:
                 # Dot product w^T * delta
                 score = sum(w * d for w, d in zip(weights, delta))
                 # Sigmoid prob
@@ -72,16 +88,25 @@ class TasteLoopTrainer:
 
         # Evaluate win rate on training pairs
         correct_predictions = 0
-        for delta, target in pairs:
+        for delta, target in train_pairs:
             score = sum(w * d for w, d in zip(weights, delta))
             if score >= 0.0:  # predicted winner > loser
                 correct_predictions += 1
 
-        win_rate = round(correct_predictions / len(pairs), 3)
+        win_rate = round(correct_predictions / len(train_pairs), 3)
 
-        # Approximate time to approve (decreases as more feedback is gathered)
+        held_out_correct = sum(
+            1 for delta, target in held_out
+            if (sum(w * d for w, d in zip(weights, delta)) >= 0.0) == bool(target)
+        )
+        held_out_rate = round(held_out_correct / len(held_out), 3) if held_out else 0.0
+
+        # Approval time is measured by the UI and carried by each signal.  Do
+        # not invent a duration when older signals do not have one.
         sample_count = len(pairs)
-        time_to_approve = round(max(1.1, 4.5 - math.log1p(sample_count) * 0.8), 2)
+        durations = [float(getattr(sig, "review_duration_sec", 0.0) or 0.0) for sig in signals]
+        durations = [value for value in durations if value > 0]
+        time_to_approve = round(sum(durations) / len(durations), 2) if durations else 0.0
 
         return TasteModel(
             project_id=self.project_id,
@@ -89,5 +114,8 @@ class TasteLoopTrainer:
             feature_weights={f"feat_{i}": round(weights[i], 4) for i in range(num_features)},
             sample_count=sample_count,
             human_preference_win_rate=win_rate,
-            time_to_approve_avg_iterations=time_to_approve
+            time_to_approve_avg_iterations=time_to_approve,
+            held_out_win_rate=held_out_rate,
+            evaluated_sample_count=len(held_out),
+            feedback_count=len(signals),
         )

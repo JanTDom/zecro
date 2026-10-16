@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import Any
 import hashlib
 import json
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFilter
+from pydantic import BaseModel, Field
 from .image_ops import extract_alpha_contour, extract_alpha_rings
 
 @dataclass
@@ -26,17 +27,92 @@ class SegmentationResult:
 def mask_quality(mask_path: str) -> dict[str, Any]:
     with Image.open(mask_path).convert("RGBA") as im:
         alpha = im.getchannel("A")
-        values = list(alpha.getdata())
-        semi = sum(0 < value < 255 for value in values)
-        opaque = sum(value >= 128 for value in values)
+        histogram = alpha.histogram()
+        semi = sum(histogram[1:255])
+        opaque = sum(histogram[128:])
+        pixel_count = alpha.width * alpha.height
         return {
-            "semi_transparent_ratio": round(semi / max(1, len(values)), 4),
-            "coverage_ratio": round(opaque / max(1, len(values)), 4),
-            "status": "clean" if opaque and semi / max(1, len(values)) < .35 else "minor_issues" if opaque else "unusable",
+            "semi_transparent_ratio": round(semi / max(1, pixel_count), 4),
+            "coverage_ratio": round(opaque / max(1, pixel_count), 4),
+            "status": "clean" if opaque and semi / max(1, pixel_count) < .35 else "minor_issues" if opaque else "unusable",
         }
 
 
 _SESSIONS: dict[str, Any] = {}
+
+
+class _SegmentedSubject(BaseModel):
+    label: str
+    box_2d: list[int] = Field(default_factory=list)
+    mask: list[list[int]]
+
+
+class _SubjectSegmentation(BaseModel):
+    objects: list[_SegmentedSubject] = Field(default_factory=list)
+
+
+def _polygon_area(points: list[list[float]]) -> float:
+    return abs(sum(points[i][0] * points[(i + 1) % len(points)][1] -
+                   points[(i + 1) % len(points)][0] * points[i][1]
+                   for i in range(len(points))) / 2)
+
+
+def _gemini_segment(source_path: Path, output_path: Path) -> SegmentationResult:
+    """Use a model-returned polygon, then make the alpha locally from pixels.
+
+    This is the production fallback when the heavyweight local ONNX adapter
+    is unavailable.  A missing or box-like polygon never becomes a cutout.
+    """
+    from ..ai.runtime import run_task
+    try:
+        import io
+        with Image.open(source_path) as original:
+            original = original.convert("RGB")
+            preview = original.copy()
+            preview.thumbnail((1024, 1024))
+            buffer = io.BytesIO()
+            preview.save(buffer, format="JPEG", quality=85)
+            response = run_task(
+                "subject_segmentation", "subject_segmentation",
+                {"target": "najważniejsza osoba lub zwierzę na pierwszym planie"},
+                _SubjectSegmentation,
+                images=[{"data": buffer.getvalue(), "mime_type": "image/jpeg"}],
+                timeout_s=60, max_retries=1,
+            )
+            valid = []
+            for item in response.data.get("objects") or []:
+                raw = item.get("mask") or []
+                if len(raw) < 8 or len(raw) > 256 or any(len(point) != 2 for point in raw):
+                    continue
+                if any(not all(isinstance(v, (int, float)) and 0 <= v <= 1000 for v in point) for point in raw):
+                    continue
+                ring = [[float(x) / 10, float(y) / 10] for x, y in raw]
+                area = _polygon_area(ring)
+                if not 350 <= area <= 8500:
+                    continue
+                valid.append((area, ring))
+            if not valid:
+                return SegmentationResult(status="unavailable", reason="Gemini returned no usable foreground contour", provider="gemini")
+            _, ring = max(valid, key=lambda pair: pair[0])
+            # Reject an axis-aligned rectangle presented as segmentation.
+            if len({round(p[0], 1) for p in ring}) <= 2 and len({round(p[1], 1) for p in ring}) <= 2:
+                return SegmentationResult(status="unavailable", reason="Gemini returned a bounding box rather than a contour", provider="gemini")
+            mask = Image.new("L", original.size, 0)
+            draw = ImageDraw.Draw(mask)
+            draw.polygon([(round(x * original.width / 100), round(y * original.height / 100))
+                          for x, y in ring], fill=255)
+            mask = mask.filter(ImageFilter.GaussianBlur(radius=max(.7, min(original.size) / 1300)))
+            cutout = original.convert("RGBA")
+            cutout.putalpha(mask)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            cutout.save(output_path)
+            quality = mask_quality(str(output_path))
+            quality.update({"polygon_points": len(ring), "coverage_ratio": round(_polygon_area(ring) / 10000, 4)})
+            return SegmentationResult(status="ready", mask_path=str(output_path), contour=ring,
+                                      holes=[], quality=quality,
+                                      provider="gemini:" + str(response.provenance.get("model") or "unknown"))
+    except Exception as exc:
+        return SegmentationResult(status="unavailable", reason=f"Gemini segmentation unavailable: {str(exc)[:240]}", provider="gemini")
 
 
 def default_model() -> str:
@@ -56,7 +132,7 @@ def segment_image(source_path: str | Path, output_path: str | Path, *, model: st
     try:
         from rembg import remove
     except Exception as exc:
-        return SegmentationResult(status="unavailable", reason=f"rembg is not installed: {exc}")
+        return _gemini_segment(source_path, output_path)
     try:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with source_path.open("rb") as source:

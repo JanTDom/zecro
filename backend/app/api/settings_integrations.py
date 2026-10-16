@@ -17,6 +17,37 @@ def _admin(x_zecro_admin_token: str | None = Header(default=None)) -> None:
         raise HTTPException(status_code=403, detail="Administrator role required")
 
 router = APIRouter(prefix="/settings", tags=["settings", "integrations"], dependencies=[Depends(_admin)])
+public_router = APIRouter(prefix="/settings", tags=["settings"])
+
+
+@public_router.get("/overview")
+def public_overview():
+    """Read-only, secret-free status for the ordinary studio user."""
+    from ..ai.integration_registry import TASK_DEFAULTS, registry
+
+    integrations = [
+        {
+            "provider": item.get("provider"),
+            "label": item.get("label") or item.get("provider"),
+            "kind": item.get("kind"),
+            "enabled": bool(item.get("enabled")),
+            "configured": bool(item.get("secret_ref")) or (
+                item.get("provider") == "gemini" and bool(settings.gemini_api_key)
+            ),
+        }
+        for item in db.list_integrations()
+    ]
+    if settings.gemini_api_key and not any(item["provider"] == "gemini" for item in integrations):
+        integrations.append({"provider": "gemini", "label": "Gemini", "kind": "ai_provider", "enabled": True, "configured": True})
+    tasks = {}
+    for task in TASK_DEFAULTS:
+        resolved = registry.resolve(task)
+        tasks[task] = {
+            "provider": resolved.provider,
+            "model": resolved.model,
+            "status": resolved.status,
+        }
+    return {"integrations": integrations, "tasks": tasks}
 
 class IntegrationPayload(BaseModel):
     kind: str = "other"

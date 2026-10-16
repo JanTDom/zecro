@@ -35,7 +35,15 @@ class HTMLRenderer:
             st = elem.style
 
             # Box styling
+            from ..shapes import is_rect, shape_polygon, text_box
+            shape_css = ""
+            if not is_rect(elem.shape):
+                pts = ", ".join(f"{(px - fr.x) / fr.w * 100:.2f}% {(py - fr.y) / fr.h * 100:.2f}%"
+                                for px, py in shape_polygon(elem.shape, fr.x, fr.y, fr.w, fr.h))
+                shape_css = f"clip-path: polygon({pts}); -webkit-clip-path: polygon({pts}); "
             transform = f"transform: rotate({fr.rotation_deg}deg);" if abs(fr.rotation_deg) > 0.1 else ""
+            if abs(getattr(fr, "skew_y_deg", 0) or 0) > .01:
+                transform = f"transform: skewY({-fr.skew_y_deg}deg); transform-origin: left top;"
             pos_style = (
                 f"position: absolute; left: {fr.x:.2f}mm; top: {fr.y:.2f}mm; "
                 f"width: {fr.w:.2f}mm; height: {fr.h:.2f}mm; z-index: {elem.z}; {transform}"
@@ -66,7 +74,8 @@ class HTMLRenderer:
                     py = 50.0 if (1 - (b - t)) < 1e-6 else t / (1 - (b - t)) * 100
                     position_css = f"object-position: {px:.2f}% {py:.2f}%;"
 
-                img_src = elem.image_url if elem.image_url else ""
+                img_src = (elem.mask_ref if elem.treatment == "cutout" and elem.mask_ref
+                           else elem.image_url) or ""
                 if img_src:
                     content_html = f'<img src="{html.escape(img_src)}" style="width: 100%; height: 100%; object-fit: cover; {position_css} {clip_css} {wrap_css}" alt="Photo"/>{clip_svg}'
                 else:
@@ -74,7 +83,7 @@ class HTMLRenderer:
 
                 label = advertorial_labels.get(elem.id) if isinstance(advertorial_labels, dict) else None
                 badge = f'<span class="advertorial-label">{html.escape(str(label))}</span>' if label else ''
-                html_elements.append(f'<div id="{elem.id}" class="element photo-element" style="{pos_style}">{badge}{content_html}</div>')
+                html_elements.append(f'<div id="{elem.id}" class="element photo-element" style="{pos_style} {shape_css if elem.treatment != "cutout" else ""}">{badge}{content_html}</div>')
 
             elif elem.role == "logo":
                 font_fam = (st.font_family if st else None) or "Playfair Display, Georgia, serif"
@@ -86,7 +95,7 @@ class HTMLRenderer:
                 html_elements.append(
                     f'<div id="{elem.id}" class="element masthead" style="{pos_style} '
                     f'font-family: {font_fam}; font-size: {font_pt:.1f}pt; font-weight: bold; '
-                    f'text-align: center; color: {color_val}; letter-spacing: 1px; '
+                    f'text-align: center; color: {color_val}; background: {(st.bg_color if st else None) or "transparent"}; letter-spacing: 1px; '
                     f'border-bottom: 2px solid #111; display: flex; align-items: center; justify-content: center;">'
                     f'{badge}{logo_content}'
                     f'</div>'
@@ -125,6 +134,12 @@ class HTMLRenderer:
                 case = f"text-transform: {st.case};" if (st and st.case and st.case != "normal") else ""
                 align = f"text-align: {st.align};" if (st and st.align) else "text-align: left;"
                 col = f"color: {st.color};" if (st and st.color) else f"color: {text_col};"
+                outline = (f"-webkit-text-stroke: {st.outline_width_pt:.2f}pt {st.outline_color}; "
+                           if st and st.outline_color and st.outline_width_pt else "")
+                shadow = (f"text-shadow: {float(st.shadow_offset_x_pt or 0):.2f}pt "
+                          f"{float(st.shadow_offset_y_pt or 0):.2f}pt 0 {st.shadow_color}; "
+                          if st and st.shadow_color else "")
+                preserve_breaks = "white-space: pre-line; " if elem.role == "headline" else ""
 
                 # Text content formatting with paragraphs
                 paragraphs = (elem.text_content or "").split("\n\n")
@@ -136,11 +151,21 @@ class HTMLRenderer:
                 label = advertorial_labels.get(elem.id) if isinstance(advertorial_labels, dict) else None
                 badge = f'<span class="advertorial-label">{html.escape(str(label))}</span>' if label else ''
 
+                bx, by, bw, bh = text_box(elem)
+                pad = f"padding: {by - fr.y:.2f}mm {fr.x + fr.w - bx - bw:.2f}mm {fr.y + fr.h - by - bh:.2f}mm {bx - fr.x:.2f}mm; "
+                justify = {"center": "center", "bottom": "flex-end"}.get((st.valign if st else None) or "top", "flex-start")
+                border = (f"outline: {st.border_width_mm:.2f}mm solid {st.border_color}; outline-offset: -{st.border_width_mm:.2f}mm; "
+                          if st and st.border_width_mm and st.border_color and is_rect(elem.shape) else "")
                 html_elements.append(
-                    f'<div id="{elem.id}" class="element text-block {elem.role}" style="{pos_style} '
+                    f'<div id="{elem.id}" class="element text-block {elem.role}" style="{pos_style} {shape_css}{pad}{border}'
+                    f'display: flex; flex-direction: column; justify-content: {justify}; '
                     f'font-family: {font_fam}; font-size: {font_pt:.1f}pt; line-height: {line_h_pt:.1f}pt; '
-                    f'{weight}; {case} {align} {col} {col_css} overflow: hidden; box-sizing: border-box;">'
-                    f'{badge}{inner_text_html}'
+                    f'font-weight: {weight}; {case} {align} {col} {outline}{shadow}{preserve_breaks}'
+                    f'letter-spacing: {float((st.tracking_em if st else None) or 0):.3f}em; '
+                    f'font-style: {(st.font_style if st else None) or "normal"}; '
+                    f'font-stretch: {(st.font_stretch if st else None) or "normal"}; '
+                    f'background: {(st.bg_color if st else None) or "transparent"}; overflow: hidden; box-sizing: border-box;">'
+                    f'{badge}<div style="{col_css}">{inner_text_html}</div>'
                     f'</div>'
                 )
 
@@ -154,7 +179,7 @@ class HTMLRenderer:
     <title>{html.escape(sg.metadata.get("title", "Newspaper Page Layout"))}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     <style>
         @page {{
             size: {pw:.1f}mm {ph:.1f}mm;

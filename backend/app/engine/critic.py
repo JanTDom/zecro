@@ -6,6 +6,7 @@ from ..models.schemas import (
 )
 from .transgressions import TransgressionManager
 from .copyfit import estimate_text_capacity
+from .display_headline import has_stranded_headline_word
 
 
 def _is_locked_ad(elem: Element) -> bool:
@@ -19,16 +20,172 @@ def effective_print_dpi(elem: Element) -> Optional[float]:
     raster.  Preflight must use pixels divided by the placed frame size; the
     metadata value is only a fallback when dimensions are unavailable.
     """
-    if elem.frame.w > 0 and elem.source_width_px:
-        return float(elem.source_width_px) / (elem.frame.w / 25.4)
+    if elem.frame.w > 0 and elem.frame.h > 0 and elem.source_width_px:
+        crop = elem.crop_box or [0.0, 0.0, 1.0, 1.0]
+        x_fraction = max(0.0, float(crop[2]) - float(crop[0])) if len(crop) >= 4 else 1.0
+        width_dpi = float(elem.source_width_px) * x_fraction / (elem.frame.w / 25.4)
+        if elem.source_height_px:
+            y_fraction = max(0.0, float(crop[3]) - float(crop[1])) if len(crop) >= 4 else 1.0
+            height_dpi = float(elem.source_height_px) * y_fraction / (elem.frame.h / 25.4)
+            return min(width_dpi, height_dpi)
+        return width_dpi
     return elem.source_dpi
 
+
+def _face_args(style) -> Optional[dict]:
+    """Exact face (weight/italic/width) only when the style asks for one."""
+    if style is None or not (getattr(style, "font_style", None) or getattr(style, "font_stretch", None)
+                             or str(getattr(style, "font_weight", "") or "").isdigit()):
+        return None
+    from .fonts import style_face_args
+    return style_face_args(style)
+
+
+def cutout_geometry_issue(elem: Element) -> Optional[str]:
+    """Reject masks that cannot carry a deliberate editorial silhouette.
+
+    A contour may be technically valid while containing only a tiny fragment
+    of the subject.  Such masks previously produced a mostly empty colour
+    field and still passed preflight.  Measure the visible contour in its
+    placed frame; this is deterministic and works for local and remote assets.
+    """
+    points = elem.contour_points or []
+    if elem.treatment != "cutout" or len(points) < 3:
+        return None
+    frame_area = max(1e-6, elem.frame.w * elem.frame.h)
+    # Stored contours are transformed after cover cropping and may extend
+    # beyond the visible frame.  Evaluate the visible portion only.
+    visible = [[max(0.0, min(elem.frame.w, p[0])),
+                max(0.0, min(elem.frame.h, p[1]))] for p in points]
+    area = abs(sum(visible[i][0] * visible[(i + 1) % len(visible)][1]
+                   - visible[(i + 1) % len(visible)][0] * visible[i][1]
+                   for i in range(len(visible))) / 2)
+    xs, ys = [p[0] for p in visible], [p[1] for p in visible]
+    width_ratio = (max(xs) - min(xs)) / max(1e-6, elem.frame.w)
+    height_ratio = (max(ys) - min(ys)) / max(1e-6, elem.frame.h)
+    coverage = area / frame_area
+    if coverage < .06 or width_ratio < .18 or height_ratio < .30:
+        return (f"Cutout photo {elem.id} contains only a subject fragment "
+                f"(coverage {coverage:.0%}, span {width_ratio:.0%} × {height_ratio:.0%}).")
+    if coverage > .88:
+        return f"Cutout photo {elem.id} is effectively a rectangular image ({coverage:.0%} opaque)."
+    return None
+
+
+def _frame_polygon(frame, shape: str = "rect"):
+    """Frame outline after rotation about its centre (same as every renderer)."""
+    import math
+    from .shapes import shape_polygon
+    x, y, w, h = frame.x, frame.y, frame.w, frame.h
+    corners = shape_polygon(shape, x, y, w, h)
+    skew = float(getattr(frame, "skew_y_deg", 0.0) or 0.0)
+    if abs(skew) > 0.01:
+        t = math.tan(math.radians(skew))
+        corners = [(px, py - (px - x) * t) for px, py in corners]
+    angle = float(getattr(frame, "rotation_deg", 0.0) or 0.0)
+    if abs(angle) <= 0.05:
+        return corners
+    r = math.radians(angle)
+    cx, cy = x + w / 2, y + h / 2
+    cos, sin = math.cos(r), math.sin(r)
+    return [(cx + (px - cx) * cos - (py - cy) * sin, cy + (px - cx) * sin + (py - cy) * cos) for px, py in corners]
+
+
+def _frame_bounds(frame) -> Tuple[float, float, float, float]:
+    points = _frame_polygon(frame)
+    xs, ys = [p[0] for p in points], [p[1] for p in points]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def _overlap_extent(f1, f2, s1: str = "rect", s2: str = "rect") -> Tuple[float, float, float]:
+    """(width, height, area) of the true overlap of two possibly rotated/shaped frames."""
+    if (abs(float(f1.rotation_deg or 0)) <= .05 and abs(float(f2.rotation_deg or 0)) <= .05
+            and abs(float(getattr(f1, "skew_y_deg", 0) or 0)) <= .01 and abs(float(getattr(f2, "skew_y_deg", 0) or 0)) <= .01
+            and s1 in (None, "rect") and s2 in (None, "rect")):
+        ox = max(0.0, min(f1.x + f1.w, f2.x + f2.w) - max(f1.x, f2.x))
+        oy = max(0.0, min(f1.y + f1.h, f2.y + f2.h) - max(f1.y, f2.y))
+        return ox, oy, ox * oy
+    from shapely.geometry import Polygon
+    inter = Polygon(_frame_polygon(f1, s1 or "rect")).intersection(Polygon(_frame_polygon(f2, s2 or "rect")))
+    if inter.is_empty:
+        return 0.0, 0.0, 0.0
+    minx, miny, maxx, maxy = inter.bounds
+    return maxx - minx, maxy - miny, float(inter.area)
+
+
+def _photo_inset_allowed(inset: Element, base: Element) -> Optional[str]:
+    """A deliberate photo-over-photo collage is legal only when the inset
+    keeps the covered photograph's subject visible.  Returns a violation."""
+    ow, oh, area = _overlap_extent(inset.frame, base.frame)
+    base_area = max(1e-6, base.frame.w * base.frame.h)
+    if area / base_area > .20:
+        return f"Photo inset {inset.id} covers {area / base_area:.0%} of {base.id} (max 20%)."
+    fx, fy = (base.focal_point or [.5, .5])[:2]
+    px, py = base.frame.x + base.frame.w * float(fx), base.frame.y + base.frame.h * float(fy)
+    x0, y0, x1, y1 = _frame_bounds(inset.frame)
+    margin = 6.0
+    if x0 - margin <= px <= x1 + margin and y0 - margin <= py <= y1 + margin:
+        return f"Photo inset {inset.id} covers the subject of {base.id}."
+    return None
+
+
+def _largest_empty_editorial_region(sg: SceneGraph, dna: TitleDNA) -> Tuple[float, float, float]:
+    """Return largest empty rectangle as (area, width, height) ratios.
+
+    This is deliberately a coarse structural gate.  It sees frames rather
+    than pixels, so intentional quiet space inside a photograph or a text box
+    remains part of the composition, while a forgotten page quadrant does
+    not.  A 40 x 60 grid is stable across newspaper formats and inexpensive
+    enough to run for every generated candidate.
+    """
+    page_w, page_h = float(sg.page.trim[0]), float(sg.page.trim[1])
+    left = float(dna.format.margin_left_mm)
+    top = float(dna.format.margin_top_mm)
+    right = page_w - float(dna.format.margin_right_mm)
+    bottom = page_h - float(dna.format.margin_bottom_mm)
+    usable_w, usable_h = max(1.0, right - left), max(1.0, bottom - top)
+    cols, rows = 40, 60
+    occupied = [[False] * cols for _ in range(rows)]
+    ignored_roles = {"rule", "folio"}
+    for elem in sg.elements:
+        if elem.role in ignored_roles or "decorative_background" in (elem.constraints or []):
+            continue
+        f = elem.frame
+        x0 = max(0, min(cols, int(math.floor((f.x - left) / usable_w * cols))))
+        x1 = max(0, min(cols, int(math.ceil((f.x + f.w - left) / usable_w * cols))))
+        y0 = max(0, min(rows, int(math.floor((f.y - top) / usable_h * rows))))
+        y1 = max(0, min(rows, int(math.ceil((f.y + f.h - top) / usable_h * rows))))
+        for yy in range(y0, y1):
+            for xx in range(x0, x1):
+                occupied[yy][xx] = True
+
+    heights = [0] * cols
+    best_area = best_w = best_h = 0
+    for yy in range(rows):
+        for xx in range(cols):
+            heights[xx] = 0 if occupied[yy][xx] else heights[xx] + 1
+        stack: list[int] = []
+        for xx in range(cols + 1):
+            height = heights[xx] if xx < cols else 0
+            while stack and heights[stack[-1]] > height:
+                idx = stack.pop()
+                h = heights[idx]
+                start = stack[-1] + 1 if stack else 0
+                w = xx - start
+                area = w * h
+                if area > best_area:
+                    best_area, best_w, best_h = area, w, h
+            stack.append(xx)
+    return best_area / (cols * rows), best_w / cols, best_h / rows
+
 class LayoutCritic:
-    def __init__(self, dna: TitleDNA, corpus_features: Optional[List[Dict[str, Any]]] = None, preference_weights: Optional[Dict[str, float]] = None, corpus_guidance: Optional[Dict[str, Any]] = None):
+    def __init__(self, dna: TitleDNA, corpus_features: Optional[List[Dict[str, Any]]] = None, preference_weights: Optional[Dict[str, float]] = None, corpus_guidance: Optional[Dict[str, Any]] = None, novelty_priority: float = 1.0):
         self.dna = dna
         self.corpus_features = corpus_features or []
         self.preference_weights = preference_weights or {}
+        self.use_calibration = True
         self.corpus_guidance = corpus_guidance or {}
+        self.novelty_priority = max(0.0, min(2.0, float(novelty_priority)))
         self.trans_mgr = TransgressionManager(dna.transgressions, dna.page_energy_budget)
 
     # ---------------------------------------------------------
@@ -80,7 +237,11 @@ class LayoutCritic:
             (e.story_ref or (e.content_ref.split(".", 1)[0] if e.content_ref and "." in e.content_ref else e.id))
             for e in lead_elements
         }
-        if len(lead_elements) < 1:
+        listing_without_pick = ((sg.metadata or {}).get("architecture") == "tv_listing"
+                                and any("navigation" in (e.constraints or []) for e in sg.elements))
+        if len(lead_elements) < 1 and not listing_without_pick:
+            # A schedule page without a programme of the day is navigated by
+            # station tabs and hour bands; every other page needs a dominant.
             violations.append("Page lacks a clear dominant editorial element (no headline or photo with importance >= 0.85).")
         elif len(dominant_clusters) > 1:
             violations.append("Page has more than one dominant editorial story; hierarchy must have a single focal point.")
@@ -91,10 +252,13 @@ class LayoutCritic:
             if f.w <= 0 or f.h <= 0:
                 violations.append(f"Element {elem.id} has a non-positive frame ({f.w:.1f}x{f.h:.1f}mm).")
             # Check if text element exceeds safe margin boundaries
-            if elem.role in ["headline", "body", "lead", "deck", "caption", "byline", "kicker", "band"] and not _is_locked_ad(elem):
-                if f.x < fmt.margin_left_mm - 2.0 or (f.x + f.w) > (page_w - fmt.margin_right_mm + 2.0):
+            colour_plane = elem.role == "band" and not elem.text_content  # a plate may bleed
+            if (elem.role in ["headline", "body", "lead", "deck", "caption", "byline", "kicker", "band"]
+                    and not _is_locked_ad(elem) and not colour_plane):
+                bx0, by0, bx1, by1 = _frame_bounds(f)
+                if bx0 < fmt.margin_left_mm - 2.0 or bx1 > (page_w - fmt.margin_right_mm + 2.0):
                     violations.append(f"Text element {elem.id} ({elem.role}) breaches trim safe margins (x={f.x:.1f}, w={f.w:.1f}).")
-                if f.y < fmt.margin_top_mm - 2.0 or (f.y + f.h) > (page_h - fmt.margin_bottom_mm + 2.0):
+                if by0 < fmt.margin_top_mm - 2.0 or by1 > (page_h - fmt.margin_bottom_mm + 2.0):
                     violations.append(f"Text element {elem.id} ({elem.role}) breaches vertical safe margins (y={f.y:.1f}, h={f.h:.1f}).")
 
             # Photos can bleed if treatment allows, otherwise must stay within trim + bleed
@@ -106,26 +270,35 @@ class LayoutCritic:
             # A newspaper column narrower than 30 mm is not printable as a
             # readable text measure.  Check the actual column measure after
             # internal gutters, not just the outer frame width.
-            if elem.role in ["headline", "body", "lead", "deck", "caption", "byline", "kicker", "band"] and elem.style and not _is_locked_ad(elem):
+            if (elem.role in ["headline", "body", "lead", "deck", "caption", "byline", "kicker", "band"] and elem.style
+                    and not _is_locked_ad(elem) and not colour_plane):
                 column_count = max(1, int(elem.style.columns or 1))
                 inner_gutters = max(0, column_count - 1) * fmt.margin_left_mm * 0.0
                 gutter = self.dna.grid.gutter_mm
                 measure = (f.w - (column_count - 1) * gutter) / column_count
-                if measure < 30.0:
+                short_label = ("label" in (elem.constraints or []) and elem.role in {"kicker", "headline", "band"}
+                               and len((elem.text_content or "").split()) <= 6)
+                if measure < 30.0 and not short_label:
+                    # 30 mm is the minimum measure for running text; a short
+                    # sticker/stamp label (≤ 6 words) is not a text column.
                     violations.append(
                         f"Text element {elem.id} has a {measure:.1f}mm column measure below the 30mm minimum."
                     )
                 if elem.text_content:
+                    from .shapes import text_box
+                    _, _, inner_w, inner_h = text_box(elem)
                     report = estimate_text_capacity(
                         elem.text_content,
-                        f.w,
-                        f.h,
+                        inner_w,
+                        inner_h,
                         column_count,
                         elem.style.font_size_pt or self.dna.typography.scales.body,
                         elem.style.line_height_pt,
                         font_family=elem.style.font_family,
                         bold=str(elem.style.font_weight) in ("bold", "600", "700", "800", "900"),
                         gutter_mm=self.dna.grid.gutter_mm,
+                        face_args=_face_args(elem.style),
+                        tracking_em=elem.style.tracking_em or 0.0,
                     )
                     if not report.passes:
                         reason = (
@@ -136,6 +309,19 @@ class LayoutCritic:
                         violations.append(
                             f"Text element {elem.id} failed copyfit: {reason}."
                         )
+                    if elem.role == "headline" and elem.importance >= .95:
+                        from .fonts import resolve_font
+                        from .shaper import shape_text
+                        display_text = elem.text_content.upper() if elem.style.case == "upper" else elem.text_content
+                        fa = _face_args(elem.style) or {"weight": 700, "italic": False, "width": None}
+                        path = resolve_font(elem.style.font_family, text=display_text, weight=max(700, fa["weight"]),
+                                            italic=fa["italic"], width=fa["width"])
+                        shaped = shape_text(display_text, width_pt=f.w * 72 / 25.4,
+                                            font_size_pt=elem.style.font_size_pt or 14,
+                                            font_path=path, hyphenate=False,
+                                            tracking_em=elem.style.tracking_em or 0.0)
+                        if has_stranded_headline_word([line.text for line in shaped.lines]):
+                            violations.append(f"Headline {elem.id} leaves a single word on its final line.")
 
             # Source image metadata is carried by the scene graph so the
             # critic can perform a deterministic prepress gate before export.
@@ -147,40 +333,132 @@ class LayoutCritic:
             if elem.role == "photo" and elem.treatment == "cutout":
                 if not elem.contour_points or len(elem.contour_points) < 3:
                     violations.append(f"Cutout photo {elem.id} has no valid clipping contour.")
+                else:
+                    geometry_issue = cutout_geometry_issue(elem)
+                    if geometry_issue:
+                        violations.append(geometry_issue)
                 if elem.text_wrap and elem.text_wrap.mode != "contour":
                     violations.append(f"Cutout photo {elem.id} must use contour text wrap.")
 
-        # 4. Collision check outside allowed overlap scrim
-        for i in range(len(sg.elements)):
+        # 4. Collision check outside allowed overlap scrim. A composed
+        # multi-line display title is one editorial treatment: its first
+        # line carries the transgression budget for the whole flow group.
+        overlap_groups = {e.flow_group for e in sg.elements
+                          if e.flow_group and "overlap-scrim" in (e.transgressions or [])}
+        layered = (sg.metadata or {}).get("composition") == "layered"
+        if layered:
+            # Layered covers: overlap is the norm; measured rules replace
+            # the box-collision test (engine/layered_rules.py).
+            from .layered_rules import layered_violations
+            violations.extend(layered_violations(sg))
+        for i in range(0 if layered else len(sg.elements)):
             for j in range(i + 1, len(sg.elements)):
                 e1 = sg.elements[i]
                 e2 = sg.elements[j]
+                if "decorative_background" in (e1.constraints or []) or "decorative_background" in (e2.constraints or []):
+                    continue
                 # Skip if same element or folios/rules
                 if e1.role in ["rule", "folio", "logo"] or e2.role in ["rule", "folio", "logo"]:
                     continue
 
-                # Check bounding box overlap
+                # Check the real (rotation-aware) overlap
                 f1, f2 = e1.frame, e2.frame
-                overlap_x = max(0.0, min(f1.x + f1.w, f2.x + f2.w) - max(f1.x, f2.x))
-                overlap_y = max(0.0, min(f1.y + f1.h, f2.y + f2.h) - max(f1.y, f2.y))
+                overlap_x, overlap_y, _ = _overlap_extent(f1, f2, e1.shape, e2.shape)
 
                 if overlap_x > 5.0 and overlap_y > 5.0:
                     if _is_locked_ad(e1) or _is_locked_ad(e2):
+                        continue
+                    if e1.role == "photo" and e2.role == "photo":
+                        inset = e1 if "intentional_photo_inset" in (e1.constraints or []) else \
+                            e2 if "intentional_photo_inset" in (e2.constraints or []) else None
+                        if inset is not None:
+                            base = e2 if inset is e1 else e1
+                            problem = _photo_inset_allowed(inset, base) if inset.z > base.z else \
+                                f"Photo inset {inset.id} must sit above {base.id}."
+                            if problem:
+                                violations.append(problem)
+                            continue
+                    if ("intentional_photo_badge" in (e1.constraints or [])
+                            or "intentional_photo_badge" in (e2.constraints or [])):
+                        # Source-bound labels may deliberately sit on a photo.
+                        # They remain bounded, copyfitted scene elements; this
+                        # exception does not permit arbitrary text collisions.
+                        if e1.role == "photo" or e2.role == "photo":
+                            continue
+                    negative = e1 if "photo_negative_space" in (e1.constraints or []) else \
+                        e2 if "photo_negative_space" in (e2.constraints or []) else None
+                    if negative is not None and {e1.role, e2.role} & {"photo"}:
+                        photo_el = e2 if negative is e1 else e1
+                        ratio = float(((sg.metadata or {}).get("negative_space_contrast") or {}).get(negative.id, 0.0))
+                        fx, fy = (photo_el.focal_point or [.5, .5])[:2]
+                        crop = photo_el.crop_box or [0, 0, 1, 1]
+                        px = photo_el.frame.x + photo_el.frame.w * (float(fx) - crop[0]) / max(1e-6, crop[2] - crop[0])
+                        py = photo_el.frame.y + photo_el.frame.h * (float(fy) - crop[1]) / max(1e-6, crop[3] - crop[1])
+                        nx0, ny0, nx1, ny1 = _frame_bounds(negative.frame)
+                        subject = ((sg.metadata or {}).get("photo_subject_boxes") or {}).get(photo_el.id)
+                        covered = 0.0
+                        if subject:
+                            ix = max(0.0, min(nx1, subject[2]) - max(nx0, subject[0]))
+                            iy = max(0.0, min(ny1, subject[3]) - max(ny0, subject[1]))
+                            covered = ix * iy / max(1e-6, (nx1 - nx0) * (ny1 - ny0))
+                        if ratio < 3.0:
+                            violations.append(f"Cover line {negative.id} on a photo lacks measured contrast ({ratio:.1f}:1).")
+                        elif covered > .15:
+                            violations.append(f"Cover line {negative.id} covers the subject of {photo_el.id} ({covered:.0%}).")
+                        elif nx0 - 8 <= px <= nx1 + 8 and ny0 - 8 <= py <= ny1 + 8:
+                            violations.append(f"Cover line {negative.id} covers the subject of {photo_el.id}.")
                         continue
                     # Allow overlap if one is photo with cutout/scrim and other is text with overlap transgression
                     is_allowed_overlap = (
                         (e1.role == "photo" or e2.role == "photo") and
                         ("overlap-scrim" in (e1.transgressions or []) or "overlap-scrim" in (e2.transgressions or []) or
-                         e1.treatment == "cutout" or e2.treatment == "cutout")
+                         e1.treatment == "cutout" or e2.treatment == "cutout" or
+                         ((e1.role == "headline" and e2.role == "photo" and e1.story_ref == e2.story_ref
+                           and e1.flow_group in overlap_groups) or
+                          (e2.role == "headline" and e1.role == "photo" and e2.story_ref == e1.story_ref
+                           and e2.flow_group in overlap_groups)))
                     )
                     if not is_allowed_overlap:
                         violations.append(f"Severe collision between elements '{e1.id}' ({e1.role}) and '{e2.id}' ({e2.role}).")
 
-        # 5. Energy Budget Check
+        # 4b. Frame fill: the layout decides, the copy must fill it.  Only
+        # scenes that went through the fill pass carry the contract; pending
+        # AI expansions are reported as copy work, not as a finished page.
+        fill_meta = (sg.metadata or {}).get("frame_fill")
+        if isinstance(fill_meta, dict):
+            from .frame_fill import FILL_MIN, fill_ratio
+            pending = {row.get("element_id") for row in (sg.metadata or {}).get("copy_requests") or []}
+            for elem in sg.elements:
+                if elem.id not in fill_meta or elem.id in pending or not elem.text_content:
+                    continue
+                if elem.role in {"body", "deck", "lead"}:
+                    ratio = fill_ratio(elem, gutter_mm=self.dna.grid.gutter_mm)
+                    if ratio < FILL_MIN - .03:
+                        violations.append(f"Text frame {elem.id} is only {ratio:.0%} filled (min {FILL_MIN:.0%}).")
+                elif elem.role == "headline" and elem.style and (elem.style.bg_color or elem.shape not in (None, "rect")):
+                    row = fill_meta.get(elem.id) or {}
+                    if row.get("status") == "fitted" and max(row.get("width_fill", 1), row.get("height_fill", 1)) < .80:
+                        violations.append(f"Headline {elem.id} leaves its plate under-filled.")
+
+        # 5. Energy Budget Check (box layouts; a layered cover is governed
+        # by the title kit and the measured rules above)
         violations.extend(self.trans_mgr.validate(sg))
         within_budget, used_energy, max_budget = self.trans_mgr.is_within_budget(sg)
-        if not within_budget:
+        if not within_budget and (sg.metadata or {}).get("composition") != "layered":
             violations.append(f"Page energy budget exceeded: {used_energy:.2f} > max allowed {max_budget:.2f}.")
+
+        # Popular covers are intentionally dense.  A forgotten quadrant is a
+        # production defect, not tasteful whitespace.  Keep this in the hard
+        # gate so a numerically balanced but visibly unfinished page can never
+        # be labelled as a correct composition.
+        architecture = str((sg.metadata or {}).get("architecture", ""))
+        if architecture in {"popular_collage", "popular_poster", "popular_type"}:
+            empty_area, empty_w, empty_h = _largest_empty_editorial_region(sg, self.dna)
+            if empty_area > 0.16 and empty_w > 0.28 and empty_h > 0.30:
+                violations.append(
+                    "Popular cover contains a large uncomposed empty region "
+                    f"({empty_area * 100:.0f}% of the printable area)."
+                )
 
         # Near duplicates are a hard anti-copying failure, rather than a
         # soft score that can be outweighed by visual heuristics.
@@ -413,6 +691,35 @@ class LayoutCritic:
             is_cutout, round(used_energy, 3)
         ]
 
+    def extract_strategy_feature_vector(self, sg: SceneGraph) -> List[float]:
+        """Semantic fingerprint used for diversity selection.
+
+        The preference model keeps its compact ten-feature contract stable.
+        Diversity needs a separate representation so a different reading
+        architecture is not mistaken for a rotated copy of the same page.
+        """
+        metadata = sg.metadata or {}
+        mode = str(metadata.get("layout_mode", ""))
+        placement = str(metadata.get("photo_placement", ""))
+        photo = next((e for e in sg.elements if e.role == "photo"), None)
+        treatment = str(photo.treatment if photo else "none")
+        dominant = next((e for e in sg.elements if e.role == "headline" and e.importance >= .95), None)
+        page_w, page_h = sg.page.trim
+        modes = ["dominant-left", "dominant-right", "stacked", "photo-top", "type-led", "modular-grid"]
+        placements = ["top_hero", "inline_side", "bottom_anchor", "cutout_overlap"]
+        treatments = ["crop", "cutout", "framed"]
+        used_energy, _ = self.trans_mgr.calculate_page_energy(sg)
+        return (
+            [1.0 if mode == item else 0.0 for item in modes]
+            + [1.0 if placement == item else 0.0 for item in placements]
+            + [1.0 if treatment == item else 0.0 for item in treatments]
+            + [round(min(1.0, max(0.0, used_energy / max(0.1, self.dna.page_energy_budget))), 3)]
+            + [round(photo.frame.x / page_w, 3) if photo else 0.0,
+               round(photo.frame.w / page_w, 3) if photo else 0.0,
+               round(dominant.frame.y / page_h, 3) if dominant else 0.0,
+               round(dominant.frame.w / page_w, 3) if dominant else 0.0]
+        )
+
     def compute_novelty_vs_corpus(self, feature_vector: List[float]) -> float:
         """
         Computes minimum Euclidean distance to all corpus page feature vectors.
@@ -453,6 +760,14 @@ class LayoutCritic:
                 pref_score += self.preference_weights.get(key, 0.0) * w
             pref_score = 1.0 / (1.0 + math.exp(-pref_score))  # Sigmoid 0..1
 
+        # Archetype calibration learned from A/B pairs (see critic_calibration).
+        calibration_value = None
+        if hard_gate.passed and self.use_calibration:
+            from .critic_calibration import calibrated_score, calibration_features, load_calibration
+            calibration = load_calibration(getattr(self.dna, "archetype", None))
+            if calibration:
+                calibration_value = calibrated_score(calibration, calibration_features(sg, self))
+
         # Total fitness score: If hard gate fails, fitness is 0.0
         if not hard_gate.passed:
             total_fitness = 0.0
@@ -460,10 +775,16 @@ class LayoutCritic:
         else:
             w_heur = 0.60
             w_pref = 0.25 if self.preference_weights else 0.0
-            w_nov = 0.15 + (0.25 if not self.preference_weights else 0.0)
+            w_nov = (0.15 + (0.25 if not self.preference_weights else 0.0)) * self.novelty_priority
 
+            w_cal = 0.0
+            if calibration_value is not None:
+                # The calibrated preference replaces most of the hand-written
+                # prior; the prior keeps a voice for what pairs never covered.
+                w_heur, w_cal = 0.30, 0.30
             total_fitness = (
                 w_heur * heuristics.composite_soft_score +
+                w_cal * (calibration_value or 0.0) +
                 w_nov * novelty +
                 w_pref * pref_score
             )
@@ -473,6 +794,7 @@ class LayoutCritic:
             hard_gate=hard_gate,
             heuristics=heuristics,
             preference_score=round(pref_score, 3) if self.preference_weights else None,
+            calibrated_score=calibration_value,
             novelty_vs_corpus=round(novelty, 3),
             total_fitness=round(total_fitness, 3),
             explanation=explanation

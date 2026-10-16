@@ -84,7 +84,9 @@ def test_health_ai_reports_missing_key(monkeypatch):
     from fastapi.testclient import TestClient
     from backend.app.main import app
     from backend.app.config import settings
+    from backend.app.ai import integration_registry
     monkeypatch.setattr(settings, 'gemini_api_key', '')
+    monkeypatch.setattr(integration_registry.db, 'list_integrations', lambda project_id=None: [])
     response = TestClient(app).get('/health/ai')
     assert response.status_code == 503
     assert response.json()['detail']['status'] == 'unavailable'

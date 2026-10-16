@@ -80,13 +80,13 @@ def _check_budget() -> None:
 
 
 # ---------------------------------------------------------------- providers
-def _call_gemini(route: Route, system: str, user: str, schema: Any, images: list, temperature, max_tokens) -> tuple[Any, int | None, int | None]:
+def _call_gemini(route: Route, system: str, user: str, schema: Any, images: list, temperature, max_tokens, *, timeout_s: Optional[float] = None) -> tuple[Any, int | None, int | None]:
     try:
         from google import genai
         from google.genai import types
     except Exception as exc:
         raise AIUnavailable(f"google-genai is not installed: {exc}")
-    client = genai.Client(api_key=route.api_key, http_options={"timeout": int(settings.gemini_timeout_s * 1000)})
+    client = genai.Client(api_key=route.api_key, http_options={"timeout": int((timeout_s or settings.gemini_timeout_s) * 1000)})
     parts: list[Any] = [user]
     for item in images:
         data, mime = _image_bytes(item)
@@ -103,7 +103,7 @@ def _call_gemini(route: Route, system: str, user: str, schema: Any, images: list
     return _strip_json(response.text or ""), getattr(meta, "prompt_token_count", None), getattr(meta, "candidates_token_count", None)
 
 
-def _call_openai_compatible(route: Route, system: str, user: str, schema: Any, images: list, temperature, max_tokens):
+def _call_openai_compatible(route: Route, system: str, user: str, schema: Any, images: list, temperature, max_tokens, *, timeout_s: Optional[float] = None):
     import requests
     base = (route.base_url or ("https://api.mistral.ai/v1" if route.provider == "mistral" else "https://api.openai.com/v1")).rstrip("/")
     content: list[dict] = [{"type": "text", "text": user}]
@@ -120,7 +120,7 @@ def _call_openai_compatible(route: Route, system: str, user: str, schema: Any, i
     headers = {"Content-Type": "application/json"}
     if route.api_key:
         headers["Authorization"] = f"Bearer {route.api_key}"
-    r = requests.post(f"{base}/chat/completions", json=body, headers=headers, timeout=settings.gemini_timeout_s)
+    r = requests.post(f"{base}/chat/completions", json=body, headers=headers, timeout=timeout_s or settings.gemini_timeout_s)
     if r.status_code >= 400:
         raise RuntimeError(f"{route.provider} HTTP {r.status_code}: {r.text[:300]}")
     j = r.json()
@@ -128,7 +128,7 @@ def _call_openai_compatible(route: Route, system: str, user: str, schema: Any, i
     return _strip_json(j["choices"][0]["message"]["content"]), usage.get("prompt_tokens"), usage.get("completion_tokens")
 
 
-def _call_anthropic(route: Route, system: str, user: str, schema: Any, images: list, temperature, max_tokens):
+def _call_anthropic(route: Route, system: str, user: str, schema: Any, images: list, temperature, max_tokens, *, timeout_s: Optional[float] = None):
     import requests
     content: list[dict] = []
     for item in images:
@@ -140,7 +140,7 @@ def _call_anthropic(route: Route, system: str, user: str, schema: Any, images: l
     if temperature is not None:
         body["temperature"] = float(temperature)
     r = requests.post((route.base_url or "https://api.anthropic.com").rstrip("/") + "/v1/messages", json=body,
-                      headers={"x-api-key": route.api_key or "", "anthropic-version": "2023-06-01", "content-type": "application/json"}, timeout=settings.gemini_timeout_s)
+                      headers={"x-api-key": route.api_key or "", "anthropic-version": "2023-06-01", "content-type": "application/json"}, timeout=timeout_s or settings.gemini_timeout_s)
     if r.status_code >= 400:
         raise RuntimeError(f"anthropic HTTP {r.status_code}: {r.text[:300]}")
     j = r.json()
@@ -149,7 +149,7 @@ def _call_anthropic(route: Route, system: str, user: str, schema: Any, images: l
     return _strip_json(text), usage.get("input_tokens"), usage.get("output_tokens")
 
 
-def _call_custom(route: Route, system: str, user: str, schema: Any, images: list, temperature, max_tokens):
+def _call_custom(route: Route, system: str, user: str, schema: Any, images: list, temperature, max_tokens, *, timeout_s: Optional[float] = None):
     from ..integrations.connector import call_custom_ai
     return call_custom_ai(route, system, user, schema)
 
@@ -160,7 +160,8 @@ PROVIDERS = {"gemini": _call_gemini, "openai": _call_openai_compatible, "mistral
 
 # ---------------------------------------------------------------- entry point
 def run_task(task: str, prompt_id: str, inputs: Any, schema: Any = None, *, images: Optional[Iterable[Any]] = None,
-             project_id: Optional[str] = None, use_cache: bool = True) -> TaskResult:
+             project_id: Optional[str] = None, use_cache: bool = True,
+             timeout_s: Optional[float] = None, max_retries: Optional[int] = None) -> TaskResult:
     resolved = registry.resolve(task, project_id)
     if resolved.status != "ready":
         raise AIUnavailable(resolved.reason or f"task {task} has no provider")
@@ -186,9 +187,11 @@ def run_task(task: str, prompt_id: str, inputs: Any, schema: Any = None, *, imag
             attempts.append({"provider": route.provider, "model": route.model, "error": "no adapter"})
             continue
         last: Exception | None = None
-        for attempt in range(max(1, settings.gemini_max_retries)):
+        retry_count = max(1, max_retries if max_retries is not None else settings.gemini_max_retries)
+        for attempt in range(retry_count):
             try:
-                raw, tin, tout = call(route, system, user, schema, image_list, resolved.temperature, resolved.max_tokens)
+                args = (route, system, user, schema, image_list, resolved.temperature, resolved.max_tokens)
+                raw, tin, tout = call(*args, timeout_s=timeout_s) if timeout_s is not None else call(*args)
                 data = _validate(schema, raw)
                 db.save_ai_call({"cache_key": cache_key, "provider": route.provider, "model": route.model or "", "prompt_id": prompt_id,
                                  "prompt_version": version, "input_sha256": input_sha, "status": "draft", "input_tokens": tin,
@@ -200,7 +203,7 @@ def run_task(task: str, prompt_id: str, inputs: Any, schema: Any = None, *, imag
                 break
             except Exception as exc:  # retry transient / validation errors, then fall back
                 last = exc
-                if attempt + 1 < max(1, settings.gemini_max_retries):
+                if attempt + 1 < retry_count:
                     time.sleep(min(6.0, 0.6 * (2 ** attempt)))
         attempts.append({"provider": route.provider, "model": route.model, "error": str(last)[:400]})
         db.save_ai_call({"cache_key": cache_key, "provider": route.provider, "model": route.model or "", "prompt_id": prompt_id,

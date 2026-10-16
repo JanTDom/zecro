@@ -14,9 +14,11 @@ keeps uploads such as a small/invalid PDF from breaking the API.
 from __future__ import annotations
 
 import json
+import hashlib
 import math
 import re
 import statistics
+from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
@@ -203,6 +205,16 @@ def _format_prior(format_preset: str, archetype: str) -> Dict[str, float]:
 def _pdf_dimensions(path: Path) -> Tuple[Optional[float], Optional[float]]:
     """Read the first PDF MediaBox in points without requiring a PDF package."""
     try:
+        import pypdfium2 as pdfium
+        document = pdfium.PdfDocument(str(path))
+        page = document[0]
+        dimensions = page.get_size()
+        page.close()
+        document.close()
+        return float(dimensions[0]), float(dimensions[1])
+    except Exception:
+        pass
+    try:
         data = path.read_bytes()[:2_000_000]
         match = re.search(rb"/MediaBox\s*\[\s*[-+0-9.]+\s+[-+0-9.]+\s+([-+0-9.]+)\s+([-+0-9.]+)\s*\]", data)
         if not match:
@@ -212,9 +224,76 @@ def _pdf_dimensions(path: Path) -> Tuple[Optional[float], Optional[float]]:
         return None, None
 
 
+def _pdf_vector_metrics(path: Path) -> Dict[str, Any]:
+    """Read actual type sizes, font names and object geometry from a PDF.
+
+    PDF text objects do not identify editorial roles. The distribution is
+    evidence about visible type scale, not a claim that the largest text is a
+    headline rather than the masthead.
+    """
+    try:
+        import pypdfium2 as pdfium
+        document = pdfium.PdfDocument(str(path))
+        page = document[0]
+        text_sizes: list[float] = []
+        font_names: Counter[str] = Counter()
+        image_regions: list[dict[str, float]] = []
+        page_w, page_h = page.get_size()
+        for obj in page.get_objects():
+            if isinstance(obj, pdfium.PdfTextObj):
+                bounds = obj.get_bounds()
+                matrix = obj.get_matrix()
+                size = math.hypot(matrix.c, matrix.d) * obj.get_font_size()
+                if 4 <= size <= 200 and bounds[2] - bounds[0] > 5:
+                    text_sizes.append(round(size * 2) / 2)
+                    try:
+                        font_names[obj.get_font().get_family_name()] += 1
+                    except Exception:
+                        pass
+            elif isinstance(obj, pdfium.PdfImage):
+                bounds = obj.get_bounds()
+                x0, y0, x1, y1 = bounds
+                area = max(0.0, x1 - x0) * max(0.0, y1 - y0) / max(1.0, page_w * page_h)
+                if area >= .004:
+                    image_regions.append({"x": round(max(0.0, x0 / page_w), 4),
+                                          "y": round(max(0.0, 1 - y1 / page_h), 4),
+                                          "w": round(min(1.0, (x1 - x0) / page_w), 4),
+                                          "h": round(min(1.0, (y1 - y0) / page_h), 4)})
+        page.close()
+        document.close()
+        body = Counter(size for size in text_sizes if 7 <= size <= 14)
+        display = sorted(size for size in text_sizes if 18 <= size <= 100)
+        body_mode = body.most_common(1)[0][0] if body else None
+        display_p75 = display[min(len(display) - 1, int(len(display) * .75))] if display else None
+        return {"evidence_level": "measured-vector", "text_object_count": len(text_sizes),
+                "body_mode_pt": body_mode, "display_p75_pt": display_p75,
+                "font_families": dict(font_names.most_common(16)),
+                "type_histogram_pt": dict(Counter(str(size) for size in text_sizes).most_common()),
+                "image_regions": image_regions[:64], "image_object_count": len(image_regions)}
+    except Exception:
+        return {"evidence_level": "unavailable", "text_object_count": 0,
+                "font_families": {}, "type_histogram_pt": {}, "image_regions": []}
+
+
 def _load_thumbnail(path: Path) -> Tuple[Any, Optional[int], Optional[int], Optional[float]]:
     """Return a small grayscale image and source dimensions/dpi."""
-    if Image is None or path.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}:
+    if Image is None:
+        return None, None, None, None
+    if path.suffix.lower() == ".pdf":
+        try:
+            import pypdfium2 as pdfium
+            document = pdfium.PdfDocument(str(path))
+            page = document[0]
+            width_pt, height_pt = page.get_size()
+            scale = min(640 / width_pt, 900 / height_pt)
+            bitmap = page.render(scale=scale)
+            image = bitmap.to_pil().convert("RGB")
+            page.close()
+            document.close()
+            return image, image.width, image.height, None
+        except Exception:
+            return None, None, None, None
+    if path.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}:
         return None, None, None, None
     try:
         with Image.open(path) as original:
@@ -231,12 +310,12 @@ def _load_thumbnail(path: Path) -> Tuple[Any, Optional[int], Optional[int], Opti
                 # This is substantially cheaper than materialising a multi-
                 # megapixel scan before thumbnailing it.
                 try:
-                    original.draft("L", (640, 900))
+                    original.draft("RGB", (640, 900))
                 except Exception:
                     pass
             image = original.copy()
             image.thumbnail((640, 900), Image.Resampling.BILINEAR, reducing_gap=3.0)
-            image = ImageOps.exif_transpose(image).convert("L")
+            image = ImageOps.exif_transpose(image).convert("RGB")
             return image, width, height, dpi
     except Exception:
         return None, None, None, None
@@ -246,7 +325,7 @@ def _array_from_image(image: Any) -> Any:
     if image is None or np is None:
         return None
     try:
-        return np.asarray(image, dtype=np.float32) / 255.0
+        return np.asarray(image.convert("L"), dtype=np.float32) / 255.0
     except Exception:
         return None
 
@@ -462,6 +541,14 @@ def infer_page_strategy(
         relations.append("white-space:active")
     if columns >= 6:
         relations.append("body:dense-column-rhythm")
+    topology = structure.get("relations") or []
+    relation_counts = Counter(str(item.get("relation")) for item in topology if isinstance(item, Mapping))
+    if relation_counts.get("stacked", 0) > relation_counts.get("side_by_side", 0):
+        relations.append("topology:stacked")
+    elif relation_counts.get("side_by_side", 0) > 0:
+        relations.append("topology:split")
+    if relation_counts.get("overlap", 0) > 0:
+        relations.append("topology:overlap")
     return {
         "id": strategy_id,
         "intent": intent,
@@ -484,6 +571,7 @@ def infer_page_strategy(
             "zone": zone,
             "region_count": region_count,
             "occupied_lower_half_ratio": round(lower_half, 4),
+            "topology_relations": dict(relation_counts),
         },
     }
 
@@ -509,9 +597,24 @@ def extract_page_features(path: Path | str, file_type: Optional[str] = None, *, 
     if width_px is None and pdf_w and pdf_h:
         width_px, height_px = int(round(pdf_w)), int(round(pdf_h))
     array = _array_from_image(image)
+    from .corpus_visual import measure_visual_signature
+    visual_signature = measure_visual_signature(image)
+    pdf_vector = _pdf_vector_metrics(source) if source.suffix.lower() == ".pdf" else None
 
     columns, gutter, grid_confidence = _detect_columns(array, prior)
     type_metrics = _detect_type_metrics(array, prior)
+    if pdf_vector and pdf_vector.get("body_mode_pt") and pdf_vector.get("display_p75_pt"):
+        body = float(pdf_vector["body_mode_pt"])
+        type_metrics["body_size_pt"] = body
+        type_metrics["headline_scale_ratio"] = round(float(pdf_vector["display_p75_pt"]) / body, 3)
+        type_metrics["histogram_pt"] = pdf_vector["type_histogram_pt"]
+        type_metrics["confidence"] = 1.0
+        type_metrics["evidence_level"] = "measured-vector"
+    else:
+        # Raster projections locate bands but cannot identify a true font
+        # point size or distinguish a masthead from the story headline.
+        type_metrics["evidence_level"] = "format-prior"
+        type_metrics["confidence"] = 0.0
     photo_coverage, photo_confidence = _estimate_photo_coverage(array, prior)
     text_coverage = round(max(0.0, min(100.0, 100.0 - photo_coverage - 8.0)), 2)
     if array is None:
@@ -569,6 +672,11 @@ def extract_page_features(path: Path | str, file_type: Optional[str] = None, *, 
         "text_coverage_pct": text_coverage,
         "photo_detection_confidence": photo_confidence,
         "avg_transgressions_per_page": round(0.35 + photo_coverage / 100.0 * 1.65, 3),
+        "pdf_vector": pdf_vector,
+        "visual_signature": visual_signature,
+        "measurement_evidence": {"typography": type_metrics["evidence_level"],
+                                 "structure": "measured-coarse" if array is not None else "unavailable",
+                                 "semantic_roles_verified": False},
     }
     record["vector"] = _feature_vector(columns, gutter, baseline, headline_ratio, body_size, photo_coverage, canonical_zone, text_coverage)
     # Preserve spatial evidence separately from the ten-dimensional novelty
@@ -598,21 +706,40 @@ def extract_page_features(path: Path | str, file_type: Optional[str] = None, *, 
 
 
 def _iter_corpus_pages(root: Path) -> Iterable[Path]:
-    """Yield only canonical five-category page assets.
+    """Yield audited publication pages from the canonical five categories.
 
     The repository also contains raw Wukadka production assets under
     ``corpus/wukadka``.  Those are source materials, not the 1041-page style
     corpus, so indexing is restricted to the five catalogued category folders.
     """
+    audit_path = root / "CORPUS_AUDIT.json"
+    audited: dict[str, dict] | None = None
+    if audit_path.is_file():
+        try:
+            manifest = json.loads(audit_path.read_text(encoding="utf-8"))
+            audited = {str(row["path"]): row for row in manifest.get("rows", []) if isinstance(row, dict) and row.get("path")}
+        except (OSError, ValueError, TypeError):
+            audited = None
     for category in sorted(CATEGORY_TO_ARCHETYPE):
         category_dir = root / category
         if not category_dir.is_dir():
             continue
         for path in sorted(category_dir.rglob("*")):
-            if path.is_file() and path.suffix.lower() in SUPPORTED_EXTENSIONS:
+            if path.is_file() and path.suffix.lower() in SUPPORTED_EXTENSIONS - {".idml", ".svg"}:
                 # A page belongs to an explicit zone.  Files such as metadata
                 # or unrelated source assets are skipped.
                 if any(part in ZONE_ALIASES for part in path.parts):
+                    if audited is not None:
+                        row = audited.get(path.relative_to(root).as_posix())
+                        if not row or row.get("verdict") != "accepted" or row.get("title_matches_folder") != "yes":
+                            continue
+                        if _canonical_zone(row.get("page_zone_guess")) != _zone_for(path):
+                            continue
+                        # The audit correctly describes this as a promotional
+                        # supplement. It is not a Daily Mirror front-page
+                        # exemplar even though the folder was marked "yes".
+                        if "daily_mirror/1_pierwsza_strona/wwd-mirror-promo-mag" in path.as_posix():
+                            continue
                     yield path
 
 
@@ -653,7 +780,7 @@ def _make_dna(archetype: str, stats: Optional[Mapping[str, Any]] = None) -> Titl
     spec: Dict[str, Any] = {
         "quality_press": {"name": "Dziennik opinii", "format": "broadsheet", "cols": 6, "gutter": 4.5, "baseline": 10.5, "body": 9.5, "headline": 36.0, "photo": 24, "energy": 0.65, "fonts": ("headline", "body")},
         "editorial_magazine": {"name": "Magazyn redakcyjny", "format": "magazine", "cols": 4, "gutter": 5.0, "baseline": 10.5, "body": 10.0, "headline": 42.0, "photo": 48, "energy": 1.0, "fonts": ("headline", "body")},
-        "tv_guide": {"name": "TV guide", "format": "tv_guide", "cols": 8, "gutter": 2.5, "baseline": 9.0, "body": 8.3, "headline": 25.0, "photo": 35, "energy": 0.7, "fonts": ("sans", "body")},
+        "tv_guide": {"name": "Program TV i poradnik", "format": "tv_guide", "cols": 8, "gutter": 2.5, "baseline": 9.0, "body": 8.3, "headline": 25.0, "photo": 35, "energy": 0.7, "fonts": ("sans", "body")},
         "tabloid": {"name": "Tabloid", "format": "tabloid", "cols": 5, "gutter": 4.0, "baseline": 9.5, "body": 9.0, "headline": 48.0, "photo": 52, "energy": 1.2, "fonts": ("sans", "sans")},
         "mass_market": {"name": "Prasa masowa / pośrednia", "format": "compact", "cols": 5, "gutter": 4.0, "baseline": 9.5, "body": 9.0, "headline": 34.0, "photo": 36, "energy": 0.85, "fonts": ("headline", "body")},
     }[archetype]
@@ -670,7 +797,7 @@ def _make_dna(archetype: str, stats: Optional[Mapping[str, Any]] = None) -> Titl
     )
     headline_font, body_font = spec["fonts"]
     typo = TypographyDNA(
-        fonts={"headline": "Playfair Display, Georgia, serif" if headline_font == "headline" else "Inter, Helvetica Neue, sans-serif", "body": "PT Serif, Times New Roman, serif" if body_font == "body" else "Inter, Helvetica Neue, sans-serif", "sans": "Inter, Helvetica Neue, sans-serif"},
+        fonts={"headline": "Playfair Display, Georgia, serif" if headline_font == "headline" else "Roboto Condensed, Arial Narrow, sans-serif" if archetype == "tabloid" else "Inter, Helvetica Neue, sans-serif", "body": "PT Serif, Times New Roman, serif" if body_font == "body" else "Inter, Helvetica Neue, sans-serif", "sans": "Inter, Helvetica Neue, sans-serif"},
         scales=scales,
     )
     # The page-level coverage is kept in metadata for downstream blending; the
@@ -681,7 +808,7 @@ def _make_dna(archetype: str, stats: Optional[Mapping[str, Any]] = None) -> Titl
         format=FormatDNA(trim_w_mm=prior["w"], trim_h_mm=prior["h"], bleed_mm=3.0, margin_top_mm=15.0 if archetype != "tabloid" else 12.0, margin_bottom_mm=15.0, margin_left_mm=12.0, margin_right_mm=12.0),
         grid=GridDNA(columns=max(1, min(24, cols)), gutter_mm=max(0.5, gutter), baseline_grid_pt=max(3.0, baseline), rows=14 if archetype in {"quality_press", "mass_market"} else 12, row_gutter_mm=3.5 if archetype in {"tabloid", "tv_guide"} else 4.0),
         typography=typo,
-        palette=PaletteDNA(primary="#111111", secondary="#c91818" if archetype in {"tabloid", "mass_market"} else "#52616b", accent="#d4af37", background="#fcfbf7", text="#1f1f1f", tint_bg="#f3efe6", scrim="rgba(0,0,0,0.65)"),
+        palette=(PaletteDNA(primary="#172b4d", secondary="#e1262f", accent="#f7d735", background="#ffffff", text="#17212b", tint_bg="#fff1c1", scrim="rgba(0,0,0,0.65)") if archetype == "tabloid" else PaletteDNA(primary="#111111", secondary="#c91818" if archetype == "mass_market" else "#52616b", accent="#d4af37", background="#fcfbf7", text="#1f1f1f", tint_bg="#f3efe6", scrim="rgba(0,0,0,0.65)")),
         photo_rules=PhotoRulesDNA(allow_cutout=archetype != "tv_guide", allow_full_bleed=archetype in {"editorial_magazine", "tabloid"}, default_treatment="cutout" if archetype == "tabloid" else "crop", min_dpi=220 if archetype == "quality_press" else 180, max_photos_per_page=2 if archetype == "tv_guide" else 5, text_wrap_offset_mm=3.0 if archetype == "tv_guide" else 3.5),
         transgressions=_transgressions_for(archetype),
         page_energy_budget=max(0.0, min(2.0, _safe_float(stats.get("energy_budget"), spec["energy"]))),
@@ -699,6 +826,51 @@ def _make_dna(archetype: str, stats: Optional[Mapping[str, Any]] = None) -> Titl
     dna.archetype = archetype
     dna.style_blend = blend
     dna.corpus_stats = dict(stats)
+    dna.cover_grammar = {
+        "tabloid": {"family": "popular_collage", "masthead_band_mm": 39, "teaser_share": 0.15, "hero_photo_share": 0.47,
+                    "headline_band_share": 0.17, "hero_photo_width_share": 0.55, "card_colors": ["#f7d735", "#b9dce8"],
+                    "headline_color": "#ffffff", "display_color": "#e1262f", "information_density": "teaser_led",
+                    "poster_morphology": "asymmetric_hero_rail", "poster_skyline_height_mm": 36,
+                    "poster_rail_width_share": .285, "poster_headline_max_height_mm": 77,
+                    "poster_teaser_font_candidates": ["Gotham XNarrow", "Nimbus Sans D", "Roboto Condensed"],
+                    "poster_portrait_focal_y": .34,
+                    "type_led_skyline_height_mm": 38,
+                    "type_led_masthead_height_mm": 39,
+                    "type_led_photo_width_share": .41,
+                    "type_led_bottom_height_mm": 47,
+                    "type_led_skyline_split": .54,
+                    "type_led_bottom_split": .43,
+                    "type_led_headline_color": "#17212b",
+                    "display_font_candidates": ["Gotham XNarrow", "Tungsten", "AmsiProNarw-Black", "Heading Compressed Pro",
+                                                "TitlingGothicFB Comp", "Nimbus Sans D", "Roboto Condensed", "Oswald"],
+                    "display_case_options": ["normal", "upper"],
+                    "display_outline_color": "#172b4d", "display_outline_width_pt": .5,
+                    "display_shadow_color": "#4b1420", "display_shadow_offset_x_pt": .8,
+                    "display_shadow_offset_y_pt": .8,
+                    # Story colour planes per emotion; masthead stays brand-owned.
+                    "mood_palettes": {
+                        "entertainment": {"strong": "#d81b72", "deep": "#24124a", "light": "#ffd23f"},
+                        "celebratory": {"strong": "#e1262f", "deep": "#172b4d", "light": "#f2b705"},
+                    },
+                    "morphology_catalog": ["diagonal_hero_entry", "dual_scale_collage", "photo_dominant_strip",
+                                           "directional_tension", "type_behind_subject", "stacked_rail_cover", "dense_mosaic"],
+                    "display_wide_font_candidates": ["Arial Black", "Helvetica Neue LT Pro", "Nimbus Sans D",
+                                                     "Myriad Pro"],
+                    "morphologies": {
+                        "diagonal_hero_entry": {"skyline_mm": 30, "strip_mm": 60, "strip_shares": [.40, .27, .33]},
+                        "dual_scale_collage": {"major_share": .64, "minor_height_share": .62, "overlap_mm": 14},
+                        "photo_dominant_strip": {"skyline_mm": 30, "strip_mm": 60, "step_mm": [9, 3, 6]},
+                        "directional_tension": {"photo_share": .58, "strip_mm": 58},
+                        "type_behind_subject": {"type_share": .34, "cover_share": .45},
+                    }},
+        "editorial_magazine": {"family": "editorial_cover", "photo_dominance": 0.68, "cover_line_count": 3, "negative_space": 0.20},
+        "tv_guide": {"family": "service_grid", "module_count": 6, "navigation_band": True, "accent_count": 3,
+                     "navigation_colors": ["#d62828", "#1d4e89", "#2a9d8f", "#e9a800", "#7b2cbf", "#ef6f00"],
+                     "hour_bands": [[6, 12, "Rano"], [12, 18, "Popołudnie"], [18, 24, "Wieczór"], [24, 30, "Noc"]],
+                     "max_stations": 5},
+        "quality_press": {"family": "hierarchical_grid", "photo_dominance": 0.24, "column_rhythm": "dense"},
+        "mass_market": {"family": "balanced_grid", "photo_dominance": 0.36, "column_rhythm": "mixed"},
+    }[archetype]
     return dna
 
 
@@ -734,20 +906,30 @@ def aggregate_archetype_features(pages: Iterable[Mapping[str, Any]]) -> Dict[str
                 "columns_mean": round(_mean([_safe_float(row.get("columns"), 5.0) for row in strategy_rows], 5.0), 3),
                 "zones": _distribution([str(row.get("zone", "inside")) for row in strategy_rows]),
             }
+        base = _make_dna(key)
+        vector_type_rows = [row for row in rows if (row.get("measurement_evidence") or {}).get("typography") == "measured-vector"]
+        # A single title's PDF fonts cannot define a whole genre. Keep its
+        # measurements available per title, but use the explicit base prior
+        # until at least three independent titles have vector type evidence.
+        calibrated_type = len({row.get("title_id") for row in vector_type_rows}) >= 3
+        type_rows = vector_type_rows if calibrated_type else []
         stats = {
             "page_count": len(rows),
             "title_count": len({row.get("title_id") for row in rows if row.get("title_id")}),
             "columns_mean": round(_mean([_safe_float(row.get("columns"), 5.0) for row in rows], _FORMAT_PRIORS["compact"]["columns"]), 3),
             "gutter_mm_mean": round(_mean([_safe_float(row.get("gutter_mm"), 4.0) for row in rows], 4.0), 3),
             "baseline_grid_pt_mean": round(_mean([_safe_float(row.get("baseline_grid_pt"), 10.0) for row in rows], 10.0), 3),
-            "body_size_pt_mean": round(_mean([_safe_float(row.get("body_size_pt"), 9.0) for row in rows], 9.0), 3),
-            "headline_scale_ratio_mean": round(_mean([_safe_float(row.get("headline_scale_ratio"), 4.5) for row in rows], 4.5), 3),
-            "headline_size_pt_mean": round(_mean([_safe_float(row.get("body_size_pt"), 9.0) * _safe_float(row.get("headline_scale_ratio"), 4.5) for row in rows], 40.0), 3),
+            "body_size_pt_mean": round(_mean([_safe_float(row.get("body_size_pt"), 9.0) for row in type_rows], base.typography.scales.body), 3),
+            "headline_scale_ratio_mean": round(_mean([_safe_float(row.get("headline_scale_ratio"), 4.5) for row in type_rows], base.typography.scales.headline_l / base.typography.scales.body), 3),
+            "headline_size_pt_mean": round(_mean([_safe_float(row.get("body_size_pt"), 9.0) * _safe_float(row.get("headline_scale_ratio"), 4.5) for row in type_rows], base.typography.scales.headline_l), 3),
             "photo_coverage_pct_mean": round(_mean([_safe_float(row.get("photo_coverage_pct"), 30.0) for row in rows], 30.0), 3),
             "text_coverage_pct_mean": round(_mean([_safe_float(row.get("text_coverage_pct"), 60.0) for row in rows], 60.0), 3),
-            "avg_transgressions_per_page": round(_mean([_safe_float(row.get("avg_transgressions_per_page"), 1.0) for row in rows], 1.0), 3),
+            "avg_transgressions_per_page": None,
+            "typography_evidence": "measured-vector" if calibrated_type else "editorial-prior",
+            "typography_title_count": len({row.get("title_id") for row in vector_type_rows}),
+            "transgression_evidence": "editorial-prior",
         }
-        stats["energy_budget"] = max(0.4, min(1.5, stats["avg_transgressions_per_page"] * 0.65))
+        stats["energy_budget"] = base.page_energy_budget
         profiles[key] = {
             "id": key,
             "name": _make_dna(key).name,
@@ -775,7 +957,7 @@ def build_generation_guidance(
     templates.  Filtering by the project's archetype and page zone keeps a
     front page from inheriting the density of an unrelated TV-guide interior.
     """
-    rows = [page for page in pages if isinstance(page, Mapping)]
+    rows = [page for page in pages if isinstance(page, Mapping) and page.get("style_eligible", True)]
     wanted_arch = _canonical_archetype(archetype) if archetype else None
     wanted_zone = _canonical_zone(zone) if zone else None
     filtered = []
@@ -787,14 +969,14 @@ def build_generation_guidance(
         if wanted_zone and page_zone != wanted_zone:
             continue
         filtered.append(page)
-    # A sparse project-specific corpus should fall back to the global pool,
-    # while still recording that the fallback happened for UI diagnostics.
-    used_fallback = False
-    if not filtered and (wanted_arch or wanted_zone):
-        filtered = rows
-        used_fallback = True
     if not filtered:
-        return {"sample_count": 0, "used_fallback": False}
+        # A TV-guide interior or another genre cannot stand in for a missing
+        # tabloid front. Surface the evidence gap instead of laundering an
+        # unrelated average into a precise style rule.
+        return {"sample_count": 0, "used_fallback": False,
+                "archetype": wanted_arch, "zone": wanted_zone,
+                "evidence_gap": "no_matching_verified_pages"}
+    used_fallback = False
 
     def mean(key: str, default: float) -> float:
         values = [_safe_float(page.get(key), default) for page in filtered]
@@ -803,7 +985,15 @@ def build_generation_guidance(
     columns = mean("columns", mean("dominant_columns", 5.0))
     photo_pct = mean("photo_coverage_pct", mean("photo_coverage", 35.0))
     text_pct = mean("text_coverage_pct", 60.0)
-    transgression_rate = mean("avg_transgressions_per_page", 1.0)
+    type_rows = [page for page in filtered if (page.get("measurement_evidence") or {}).get("typography") == "measured-vector"]
+    type_titles = len({page.get("title_id") for page in type_rows})
+    calibrated_type = type_titles >= 3
+    base = _make_dna(wanted_arch or "mass_market")
+    body_size = round(_mean([_safe_float(page.get("body_size_pt"), base.typography.scales.body) for page in type_rows],
+                            base.typography.scales.body), 4) if calibrated_type else base.typography.scales.body
+    headline_ratio = round(_mean([_safe_float(page.get("headline_scale_ratio"), 4.5) for page in type_rows],
+                                 base.typography.scales.headline_l / base.typography.scales.body), 4) if calibrated_type else round(base.typography.scales.headline_l / base.typography.scales.body, 4)
+    transgression_rate = None
     strategy_distribution = _distribution([
         str((page.get("strategy") or {}).get("id") or page.get("strategy_id") or "balanced-grid")
         for page in filtered
@@ -838,13 +1028,16 @@ def build_generation_guidance(
         "columns_mean": columns,
         "gutter_mm_mean": mean("gutter_mm", 4.0),
         "baseline_grid_pt_mean": mean("baseline_grid_pt", 10.0),
-        "body_size_pt_mean": mean("body_size_pt", 9.0),
-        "headline_scale_ratio_mean": mean("headline_scale_ratio", 4.5),
+        "body_size_pt_mean": body_size,
+        "headline_scale_ratio_mean": headline_ratio,
         "photo_coverage_pct_mean": photo_pct,
         "text_coverage_pct_mean": text_pct,
         "whitespace_ratio_mean": round(max(0.0, 1.0 - (photo_pct + text_pct) / 100.0), 4),
         "avg_transgressions_per_page": transgression_rate,
-        "energy_budget": round(max(0.4, min(1.5, transgression_rate * 0.65)), 4),
+        "energy_budget": base.page_energy_budget,
+        "typography_evidence": "measured-vector" if calibrated_type else "editorial-prior",
+        "typography_title_count": type_titles,
+        "transgression_evidence": "editorial-prior",
         "strategy_distribution": strategy_distribution,
         "strategy_profiles": strategy_profiles,
         "evidence_levels": _distribution([
@@ -897,14 +1090,39 @@ class CorpusIndexer:
         self.root = Path(root).expanduser().resolve()
 
     def scan(self) -> List[Dict[str, Any]]:
-        return [extract_page_features(path) for path in _iter_corpus_pages(self.root)]
+        audit_path = self.root / "CORPUS_AUDIT.json"
+        audit = {}
+        if audit_path.is_file():
+            manifest = json.loads(audit_path.read_text(encoding="utf-8"))
+            audit = {str(row.get("path")): row for row in manifest.get("rows", []) if isinstance(row, dict)}
+        pages = []
+        for path in _iter_corpus_pages(self.root):
+            page = extract_page_features(path)
+            evidence = audit.get(path.relative_to(self.root).as_posix(), {})
+            era = evidence.get("era")
+            modern = era in {"2000s", "2010s", "2020s"}
+            reason = str(evidence.get("reason") or "").lower()
+            special_issue = any(term in reason for term in (
+                "dodatku", "wydania specjalnego", "special edition", "magazynu promocyjnego",
+            ))
+            page["source_audit"] = {"verdict": evidence.get("verdict"), "title_matches_folder": evidence.get("title_matches_folder"),
+                                     "era": era, "page_zone_guess": evidence.get("page_zone_guess"),
+                                     "special_issue": special_issue, "reason": evidence.get("reason")}
+            page["style_eligible"] = modern and not special_issue if audit else True
+            pages.append(page)
+        return pages
 
     def build(self, *, persist_path: Optional[Path | str] = None) -> Dict[str, Any]:
         pages = self.scan()
-        profiles = aggregate_archetype_features(pages)
+        for page in pages:
+            # The snapshot is bundled with production. Developer-machine
+            # absolute paths are neither portable nor suitable for API data.
+            page["path"] = Path(page["path"]).relative_to(self.root).as_posix()
+        profiles = aggregate_archetype_features([page for page in pages if page.get("style_eligible", True)])
         index: Dict[str, Any] = {
-            "version": "2.0.0",
+            "version": "3.0.0",
             "root": self.root.as_posix(),
+            "source_digest": hashlib.sha256(json.dumps(pages, ensure_ascii=False, sort_keys=True).encode()).hexdigest(),
             "page_count": len(pages),
             "title_count": len({p.get("title_id") for p in pages if p.get("title_id")}),
             "categories": {category: sum(1 for p in pages if p.get("category") == category) for category in sorted(CATEGORY_TO_ARCHETYPE)},

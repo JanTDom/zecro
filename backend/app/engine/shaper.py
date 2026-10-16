@@ -83,15 +83,16 @@ def glyph_offsets(text: str, path: str) -> list[float]:
     return out
 
 
-def width_pt(text: str, size: float, path: Optional[str]) -> float:
+def width_pt(text: str, size: float, path: Optional[str], tracking_em: float = 0.0) -> float:
+    track = (tracking_em or 0.0) * size * len(text)
     if path and Path(path).exists():
         try:
-            return advance(text, path) * size
+            return advance(text, path) * size + track
         except (ImportError, ModuleNotFoundError, OSError, RuntimeError):
             # HarfBuzz is optional for local previews. Keep the same
             # deterministic estimate used by the explicit estimate mode.
-            return len(text) * size * 0.48
-    return len(text) * size * 0.48
+            return len(text) * size * 0.48 + track
+    return len(text) * size * 0.48 + track
 
 
 def chars_per_line(width_mm: float, size_pt: float, font_path: Optional[str]) -> int:
@@ -113,6 +114,8 @@ def hyphen_points(word: str) -> tuple[int, ...]:
     lead, body, _ = core.groups() if core else ("", word, "")
     if len(body) < 6 or not body.isalpha() or body.isupper():
         return ()
+    if body[0].isupper():
+        return ()  # U5: proper names (and sentence openers) are not hyphenated
     try:
         return tuple(len(lead) + p for p in _pyphen().positions(body))
     except Exception:
@@ -134,26 +137,29 @@ class _Item:
 INF = 10_000
 
 
-def _items(paragraph: str, size: float, path: Optional[str], hyphenate: bool) -> list[_Item]:
-    space = width_pt(" ", size, path)
-    hyph = width_pt("-", size, path)
+def _items(paragraph: str, size: float, path: Optional[str], hyphenate: bool, tracking_em: float = 0.0) -> list[_Item]:
+    space = width_pt(" ", size, path, tracking_em)
+    hyph = width_pt("-", size, path, tracking_em)
     items: list[_Item] = []
     words = [w for w in re.split(r"[ \t]+", paragraph.strip()) if w]
     for i, word in enumerate(words):
         points = hyphen_points(word) if hyphenate else ()
         start = 0
         for p in points:
-            bw = width_pt(word[start:p], size, path)
+            bw = width_pt(word[start:p], size, path, tracking_em)
             items.append(_Item("box", bw, stretch=bw * LETTER_STRETCH, shrink=bw * LETTER_SHRINK, text=word[start:p]))
             items.append(_Item("penalty", hyph, penalty=50, flagged=True, text="-"))
             start = p
-        bw = width_pt(word[start:], size, path)
+        bw = width_pt(word[start:], size, path, tracking_em)
         items.append(_Item("box", bw, stretch=bw * LETTER_STRETCH, shrink=bw * LETTER_SHRINK, text=word[start:]))
         if i < len(words) - 1:
             items.append(_Item("glue", space, stretch=space * 0.5, shrink=space * 0.2, text=" "))
     items.append(_Item("glue", 0, stretch=INF))
     items.append(_Item("penalty", 0, penalty=-INF))
     return items
+
+
+MAX_HYPHEN_RUN = 2  # rulebook U5 / D14
 
 
 def _break(items: list[_Item], line_w: float, tolerance: float = 2.5) -> Optional[list[int]]:
@@ -193,7 +199,11 @@ def _break(items: list[_Item], line_w: float, tolerance: float = 2.5) -> Optiona
                 badness = 100 * abs(r) ** 3
                 p = it.penalty if it.kind == "penalty" else 0
                 d = (1 + badness + (p if p > 0 else 0)) ** 2 - (p ** 2 if -INF < p < 0 else 0)
+                if line == 0 and it.kind == "penalty" and it.flagged:
+                    continue  # U5: no hyphen at the end of a paragraph's first line
                 if fl and it.kind == "penalty" and it.flagged:
+                    if fl >= MAX_HYPHEN_RUN:
+                        continue  # U5: never more than two hyphenated lines in a row
                     d += 3000
                 total = dem + d
                 if line not in best or total < best[line][0]:
@@ -202,7 +212,8 @@ def _break(items: list[_Item], line_w: float, tolerance: float = 2.5) -> Optiona
                 pass
         active_idx = still
         for line, (total, ai) in best.items():
-            nodes.append((b, line + 1, total, ai, bool(it.kind == "penalty" and it.flagged)))
+            hyph = it.kind == "penalty" and it.flagged
+            nodes.append((b, line + 1, total, ai, (int(nodes[ai][4]) + 1) if hyph else 0))
             active_idx.append(len(nodes) - 1)
         if not active_idx:
             return None
@@ -262,8 +273,9 @@ def _lines_from(items: list[_Item], breaks: list[int], line_w: float) -> list[Sh
 
 
 @lru_cache(maxsize=4096)
-def _shape_paragraph(paragraph: str, width: float, size: float, path: Optional[str], hyphenate: bool) -> tuple:
-    items = _items(paragraph, size, path, hyphenate)
+def _shape_paragraph(paragraph: str, width: float, size: float, path: Optional[str], hyphenate: bool,
+                     tracking_em: float = 0.0) -> tuple:
+    items = _items(paragraph, size, path, hyphenate, tracking_em)
     breaks = None
     for tol in (1.5, 3.0, 6.0, 20.0):
         breaks = _break(items, width, tol)
@@ -275,7 +287,8 @@ def _shape_paragraph(paragraph: str, width: float, size: float, path: Optional[s
 
 def shape_text(text: str, *, width_pt: float, font_size_pt: float = 9.5, leading_pt: Optional[float] = None,
                font_path: Optional[str] = None, language: str = "pl", max_lines: Optional[int] = None,
-               widow_lines: int = 0, orphan_lines: int = 0, hyphenate: bool = True) -> ShapeResult:
+               widow_lines: int = 0, orphan_lines: int = 0, hyphenate: bool = True,
+               tracking_em: float = 0.0) -> ShapeResult:
     if width_pt <= 0:
         return ShapeResult(status="unavailable", warnings=["width must be positive"])
     measured = bool(font_path and Path(font_path).exists())
@@ -288,7 +301,8 @@ def shape_text(text: str, *, width_pt: float, font_size_pt: float = 9.5, leading
     lines: list[ShapedLine] = []
     widows = orphans = 0
     for paragraph in [p for p in re.split(r"\n\s*\n|\n", text or "") if p.strip()]:
-        plines = list(_shape_paragraph(paragraph, float(width_pt), float(font_size_pt), path, hyphenate and language.startswith("pl")))
+        plines = list(_shape_paragraph(paragraph, float(width_pt), float(font_size_pt), path, hyphenate and language.startswith("pl"),
+                                       float(tracking_em or 0.0)))
         if len(plines) > 1 and len(plines[-1].text.split()) == 1 and len(plines[-1].text) < 6:
             widows += 1
         lines.extend(plines)
@@ -310,17 +324,20 @@ def hyphenate_for(size_pt: float) -> bool:
 
 
 def measure_text(text: str, width_mm: float, *, font_size_pt: float = 9.5, leading_pt: Optional[float] = None,
-                 font_path: Optional[str] = None, language: str = "pl", height_mm: Optional[float] = None) -> ShapeResult:
+                 font_path: Optional[str] = None, language: str = "pl", height_mm: Optional[float] = None,
+                 tracking_em: float = 0.0) -> ShapeResult:
     leading = leading_pt or font_size_pt * 1.2
     max_lines = int(float(height_mm) * PT_PER_MM / leading + 1e-6) if height_mm else None
     return shape_text(text, width_pt=float(width_mm) * PT_PER_MM, font_size_pt=font_size_pt, leading_pt=leading,
-                      font_path=font_path, language=language, max_lines=max_lines, hyphenate=hyphenate_for(font_size_pt))
+                      font_path=font_path, language=language, max_lines=max_lines, hyphenate=hyphenate_for(font_size_pt),
+                      tracking_em=tracking_em)
 
 
 def fill_columns(text: str, *, width_mm: float, height_mm: float, columns: int, gutter_mm: float, font_size_pt: float,
-                 leading_pt: float, font_path: Optional[str]) -> dict:
+                 leading_pt: float, font_path: Optional[str], tracking_em: float = 0.0) -> dict:
     col_w = (width_mm - (columns - 1) * gutter_mm) / max(1, columns)
-    shaped = measure_text(text, col_w, font_size_pt=font_size_pt, leading_pt=leading_pt, font_path=font_path)
+    shaped = measure_text(text, col_w, font_size_pt=font_size_pt, leading_pt=leading_pt, font_path=font_path,
+                          tracking_em=tracking_em)
     per_col = max(1, int(height_mm * PT_PER_MM / leading_pt + 1e-6))
     capacity = per_col * columns
     return {"column_width_mm": col_w, "lines_per_column": per_col, "capacity": capacity, "lines": shaped.line_count,

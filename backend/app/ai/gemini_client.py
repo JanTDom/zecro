@@ -141,5 +141,6 @@ def list_models(api_key: Optional[str] = None) -> tuple[str, list[str]]:
         models = [str(getattr(item, "name", "")).split("models/")[-1] for item in client.models.list()]
     except Exception:
         return "unavailable", []
-    configured = [settings.gemini_model_text_pro, settings.gemini_model_text_fast, settings.gemini_model_image, settings.gemini_model_embed]
+    configured = [settings.gemini_model_text_pro, settings.gemini_model_text_fast,
+                  settings.gemini_model_segmentation, settings.gemini_model_image, settings.gemini_model_embed]
     return ("warning" if [m for m in configured if m not in models] else "ready"), models

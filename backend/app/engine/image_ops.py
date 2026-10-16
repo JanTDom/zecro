@@ -42,6 +42,91 @@ def simplify_douglas_peucker(points: List[Tuple[float, float]], tolerance: float
 Ring = List[List[float]]
 
 
+def _portable_alpha_rings(image_path: str, target_w_mm: float, target_h_mm: float,
+                          threshold: int, tolerance_mm: float,
+                          min_component_ratio: float, min_hole_ratio: float) -> List[dict]:
+    """Trace real alpha edges without OpenCV (the production serverless path)."""
+    with Image.open(image_path) as source:
+        alpha = source.convert("RGBA").getchannel("A")
+        alpha.thumbnail((512, 512), Image.Resampling.LANCZOS)
+    binary = np.asarray(alpha) >= threshold
+    height, width = binary.shape
+    if not binary.any():
+        return []
+    # Each foreground pixel contributes only its exposed clockwise edges.
+    # Chaining those edges gives exact outer rings and enclosed holes before
+    # simplification; a bounding rectangle would destroy the cutout.
+    next_edges: dict[tuple[int, int], list[tuple[int, int]]] = {}
+
+    def edge(start: tuple[int, int], end: tuple[int, int]) -> None:
+        next_edges.setdefault(start, []).append(end)
+
+    for y, x in np.argwhere(binary):
+        y, x = int(y), int(x)
+        if y == 0 or not binary[y - 1, x]:
+            edge((x, y), (x + 1, y))
+        if x == width - 1 or not binary[y, x + 1]:
+            edge((x + 1, y), (x + 1, y + 1))
+        if y == height - 1 or not binary[y + 1, x]:
+            edge((x + 1, y + 1), (x, y + 1))
+        if x == 0 or not binary[y, x - 1]:
+            edge((x, y + 1), (x, y))
+
+    def signed_area(ring: list[tuple[int, int]]) -> float:
+        return sum(ring[i][0] * ring[(i + 1) % len(ring)][1] -
+                   ring[(i + 1) % len(ring)][0] * ring[i][1]
+                   for i in range(len(ring))) / 2
+
+    def contains(ring: list[tuple[int, int]], point: tuple[int, int]) -> bool:
+        px, py = point
+        inside = False
+        for a, b in zip(ring, ring[1:] + ring[:1]):
+            if (a[1] > py) != (b[1] > py) and px < (b[0] - a[0]) * (py - a[1]) / (b[1] - a[1]) + a[0]:
+                inside = not inside
+        return inside
+
+    loops: list[tuple[float, list[tuple[int, int]]]] = []
+    edge_count = sum(map(len, next_edges.values()))
+    while next_edges:
+        start = next(iter(next_edges))
+        ring = [start]
+        current = start
+        for _ in range(edge_count + 1):
+            choices = next_edges.get(current)
+            if not choices:
+                break
+            nxt = choices.pop()
+            if not choices:
+                del next_edges[current]
+            if nxt == start:
+                if len(ring) >= 3:
+                    loops.append((signed_area(ring), ring))
+                break
+            ring.append(nxt)
+            current = nxt
+
+    sx, sy = float(target_w_mm) / width, float(target_h_mm) / height
+    tol = max(.5, tolerance_mm / max(sx, sy))
+
+    def scale(ring: list[tuple[int, int]]) -> Ring:
+        simple = simplify_douglas_peucker(ring + [ring[0]], tol)[:-1]
+        return [[round(x * sx, 2), round(y * sy, 2)] for x, y in simple]
+
+    polygons = []
+    total = width * height
+    for area, outer in loops:
+        if area <= 0 or area / total < min_component_ratio:
+            continue
+        holes = [scale(inner) for inner_area, inner in loops
+                 if inner_area < 0 and abs(inner_area) / total >= min_hole_ratio and contains(outer, inner[0])]
+        ring = scale(outer)
+        if len(ring) >= 3:
+            polygons.append({"outer": ring, "holes": [h for h in holes if len(h) >= 3],
+                             "area_mm2": round(area * sx * sy, 2)})
+    polygons.sort(key=lambda item: item["area_mm2"], reverse=True)
+    return polygons
+
+
 def extract_alpha_rings(
     image_path: str,
     target_w_mm: float,
@@ -61,6 +146,13 @@ def extract_alpha_rings(
     """
     try:
         import cv2
+    except ImportError:
+        try:
+            return _portable_alpha_rings(image_path, target_w_mm, target_h_mm,
+                                         threshold, tolerance_mm, min_component_ratio, min_hole_ratio)
+        except Exception:
+            return []
+    try:
         with Image.open(image_path) as source:
             img = source.convert("RGBA")
         alpha = np.asarray(img.getchannel("A"))

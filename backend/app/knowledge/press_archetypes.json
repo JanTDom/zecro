@@ -1,0 +1,428 @@
+[
+ {
+  "cluster": 3,
+  "pages": 1603,
+  "median": {
+   "headline_ratio": 5.05,
+   "headline_blocks": 6.0,
+   "largest_graphic_share": 0.149,
+   "graphic_share": 0.272,
+   "text_area_share": 0.277,
+   "paper_share": 0.567,
+   "saturated_share": 0.106,
+   "largest_headline_width_share": 0.663,
+   "columns": 4.0,
+   "body_pt": 9.5,
+   "headline_max_pt": 48.0
+  },
+  "kinds": [
+   [
+    "daily_newspaper",
+    1594
+   ],
+   [
+    "world_newspaper",
+    3
+   ],
+   [
+    "pl_newspaper",
+    2
+   ],
+   [
+    "tabloid",
+    1
+   ],
+   [
+    "uk_tabloid",
+    1
+   ],
+   [
+    "free_commuter",
+    1
+   ]
+  ],
+  "formats": [
+   [
+    "broadsheet",
+    1486
+   ],
+   [
+    "tabloid",
+    70
+   ],
+   [
+    "berliner",
+    33
+   ],
+   [
+    "magazine",
+    8
+   ]
+  ],
+  "exemplars": [
+   "The Spectrum (daily_newspaper)",
+   "Northwest Florida Daily News (daily_newspaper)",
+   "Ocala StarBanner (daily_newspaper)",
+   "McDonough County Voice (daily_newspaper)",
+   "McDonough County Voice (daily_newspaper)",
+   "The Augusta Chronicle (daily_newspaper)",
+   "Star Courier (daily_newspaper)",
+   "Daily Ledger (daily_newspaper)"
+  ]
+ },
+ {
+  "cluster": 4,
+  "pages": 919,
+  "median": {
+   "headline_ratio": 8.0,
+   "headline_blocks": 10.0,
+   "largest_graphic_share": 0.133,
+   "graphic_share": 0.256,
+   "text_area_share": 0.369,
+   "paper_share": 0.555,
+   "saturated_share": 0.102,
+   "largest_headline_width_share": 0.676,
+   "columns": 5.0,
+   "body_pt": 9.5,
+   "headline_max_pt": 75.0
+  },
+  "kinds": [
+   [
+    "daily_newspaper",
+    867
+   ],
+   [
+    "modern_daily_full",
+    26
+   ],
+   [
+    "us_local_newspaper",
+    22
+   ],
+   [
+    "uk_tabloid",
+    2
+   ],
+   [
+    "pl_newspaper",
+    1
+   ],
+   [
+    "world_newspaper",
+    1
+   ]
+  ],
+  "formats": [
+   [
+    "broadsheet",
+    862
+   ],
+   [
+    "tabloid",
+    29
+   ],
+   [
+    "berliner",
+    17
+   ],
+   [
+    "magazine",
+    11
+   ]
+  ],
+  "exemplars": [
+   "Fort Collins Coloradoan (daily_newspaper)",
+   "Pasadena Star-News (daily_newspaper)",
+   "Ravalli Republic (daily_newspaper)",
+   "Oshkosh Northwestern (daily_newspaper)",
+   "The News Herald (daily_newspaper)",
+   "Tulsa World (daily_newspaper)",
+   "Whittier Daily News (daily_newspaper)",
+   "Journal News (daily_newspaper)"
+  ]
+ },
+ {
+  "cluster": 1,
+  "pages": 714,
+  "median": {
+   "headline_ratio": 6.53,
+   "headline_blocks": 6.0,
+   "largest_graphic_share": 0.219,
+   "graphic_share": 0.372,
+   "text_area_share": 0.249,
+   "paper_share": 0.479,
+   "saturated_share": 0.189,
+   "largest_headline_width_share": 0.668,
+   "columns": 3.0,
+   "body_pt": 9.5,
+   "headline_max_pt": 63.0
+  },
+  "kinds": [
+   [
+    "daily_newspaper",
+    681
+   ],
+   [
+    "world_newspaper",
+    15
+   ],
+   [
+    "modern_daily_full",
+    6
+   ],
+   [
+    "free_commuter",
+    5
+   ],
+   [
+    "uk_tabloid",
+    2
+   ],
+   [
+    "us_local_newspaper",
+    2
+   ]
+  ],
+  "formats": [
+   [
+    "broadsheet",
+    532
+   ],
+   [
+    "tabloid",
+    108
+   ],
+   [
+    "magazine",
+    37
+   ],
+   [
+    "berliner",
+    25
+   ]
+  ],
+  "exemplars": [
+   "San Antonio Express-News (daily_newspaper)",
+   "Stars and Stripes (daily_newspaper)",
+   "Segre (daily_newspaper)",
+   "The News Journal (daily_newspaper)",
+   "The Providence Journal (daily_newspaper)",
+   "Milenio Jalisco (daily_newspaper)",
+   "Houston Chronicle (daily_newspaper)",
+   "Hanover Evening Sun (daily_newspaper)"
+  ]
+ },
+ {
+  "cluster": 0,
+  "pages": 369,
+  "median": {
+   "headline_ratio": 5.44,
+   "headline_blocks": 8.0,
+   "largest_graphic_share": 0.141,
+   "graphic_share": 0.29,
+   "text_area_share": 0.268,
+   "paper_share": 0.546,
+   "saturated_share": 0.115,
+   "largest_headline_width_share": 0.322,
+   "columns": 4.0,
+   "body_pt": 9.5,
+   "headline_max_pt": 51.0
+  },
+  "kinds": [
+   [
+    "daily_newspaper",
+    354
+   ],
+   [
+    "us_local_newspaper",
+    5
+   ],
+   [
+    "world_newspaper",
+    4
+   ],
+   [
+    "pl_newspaper",
+    2
+   ],
+   [
+    "free_commuter",
+    2
+   ],
+   [
+    "modern_daily_full",
+    2
+   ]
+  ],
+  "formats": [
+   [
+    "broadsheet",
+    324
+   ],
+   [
+    "tabloid",
+    23
+   ],
+   [
+    "berliner",
+    20
+   ],
+   [
+    "magazine",
+    2
+   ]
+  ],
+  "exemplars": [
+   "Courier-Post (daily_newspaper)",
+   "Times Herald-Record (daily_newspaper)",
+   "Daily Tribune (daily_newspaper)",
+   "Stevens Point Journal (daily_newspaper)",
+   "Marshfield News-Herald (daily_newspaper)",
+   "The Milford Daily News (daily_newspaper)",
+   "Mannheimer Morgen (daily_newspaper)",
+   "Metro West Daily News (daily_newspaper)"
+  ]
+ },
+ {
+  "cluster": 2,
+  "pages": 154,
+  "median": {
+   "headline_ratio": 5.24,
+   "headline_blocks": 3.0,
+   "largest_graphic_share": 0.528,
+   "graphic_share": 0.619,
+   "text_area_share": 0.162,
+   "paper_share": 0.257,
+   "saturated_share": 0.343,
+   "largest_headline_width_share": 0.444,
+   "columns": 0.0,
+   "body_pt": 10.0,
+   "headline_max_pt": 65.0
+  },
+  "kinds": [
+   [
+    "daily_newspaper",
+    85
+   ],
+   [
+    "world_newspaper",
+    14
+   ],
+   [
+    "news_magazine",
+    12
+   ],
+   [
+    "consumer_magazine",
+    10
+   ],
+   [
+    "pl_tv_guide",
+    8
+   ],
+   [
+    "tv_guide",
+    8
+   ]
+  ],
+  "formats": [
+   [
+    "broadsheet",
+    45
+   ],
+   [
+    "small",
+    39
+   ],
+   [
+    "magazine",
+    39
+   ],
+   [
+    "tabloid",
+    18
+   ]
+  ],
+  "exemplars": [
+   "The Laconia Daily Sun (daily_newspaper)",
+   "Time Magazine, 7 June - 14 June 2021 (news_magazine)",
+   "2024 Agosto 20 (world_newspaper)",
+   "The Courier-Journal (daily_newspaper)",
+   "CU Amiga Magazine Issue 068 (consumer_magazine)",
+   "Byte Magazine Volume 20 Number 09: 20 Years (consumer_magazine)",
+   "The Palm Beach Post (daily_newspaper)",
+   "Chicago Sun-Times (daily_newspaper)"
+  ]
+ },
+ {
+  "cluster": 5,
+  "pages": 90,
+  "median": {
+   "headline_ratio": 7.765,
+   "headline_blocks": 5.5,
+   "largest_graphic_share": 0.218,
+   "graphic_share": 0.344,
+   "text_area_share": 0.841,
+   "paper_share": 0.346,
+   "saturated_share": 0.259,
+   "largest_headline_width_share": 0.665,
+   "columns": 1.0,
+   "body_pt": 17.0,
+   "headline_max_pt": 124.0
+  },
+  "kinds": [
+   [
+    "daily_newspaper",
+    67
+   ],
+   [
+    "uk_tabloid",
+    7
+   ],
+   [
+    "free_commuter",
+    5
+   ],
+   [
+    "pl_free_tabloid",
+    3
+   ],
+   [
+    "pl_newspaper",
+    2
+   ],
+   [
+    "world_newspaper",
+    2
+   ]
+  ],
+  "formats": [
+   [
+    "tabloid",
+    33
+   ],
+   [
+    "magazine",
+    21
+   ],
+   [
+    "small",
+    18
+   ],
+   [
+    "broadsheet",
+    17
+   ]
+  ],
+  "exemplars": [
+   "Nea Kriti (daily_newspaper)",
+   "Diário de Taubaté (daily_newspaper)",
+   "MARCA 2008 (world_newspaper)",
+   "Edmonton Sun (daily_newspaper)",
+   "Edmonton Sun (daily_newspaper)",
+   "The Epoch Times: Chinese New York Edition (daily_newspaper)",
+   "Daily News (daily_newspaper)",
+   "The Ottawa Sun (daily_newspaper)"
+  ]
+ }
+]

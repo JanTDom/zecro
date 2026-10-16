@@ -52,6 +52,7 @@ def estimate_text_capacity(
     font_family: str | None = None,
     bold: bool = False,
     gutter_mm: float = 4.0,
+    face_args: dict | None = None,
 ) -> CopyfitReport:
     """Whether ``text`` fits a multi-column frame.
 
@@ -69,7 +70,8 @@ def estimate_text_capacity(
     leading_pt = float(leading_pt or font_size_pt * 1.2)
     tracking_em = float(tracking_em)
     if font_family:
-        measured = _measured_capacity(text, width_mm, height_mm, columns, font_size_pt, leading_pt, font_family, bold, gutter_mm)
+        measured = _measured_capacity(text, width_mm, height_mm, columns, font_size_pt, leading_pt, font_family, bold, gutter_mm,
+                                       face_args, tracking_em)
         if measured is not None:
             return measured
     measure_mm = max(1.0, (float(width_mm) - (columns - 1) * gutter_mm) / columns)
@@ -95,11 +97,13 @@ def estimate_text_capacity(
     # Keep the historical 5% reserve for paragraph endings, but never round a
     # non-empty paragraph down to zero lines.
     if estimated_lines:
-        # A single-line kicker/headline must remain a single line. The old
-        # blanket 5% ceil turned ``1`` into ``2`` and rejected otherwise
-        # valid pages (or forced the generator to grow every tiny frame).
-        # Reserve one line only once a paragraph already spans multiple lines.
-        estimated_lines = estimated_lines if estimated_lines <= 1 else math.ceil(estimated_lines * 1.05)
+        # Explicit display-title breaks are separate one-line paragraphs. They
+        # already contain the art director's complete line plan and need no
+        # paragraph-ending reserve. Add the reserve only when at least one
+        # paragraph actually wraps inside its own line box.
+        estimated_lines = (math.ceil(estimated_lines * 1.05)
+                           if any(lines > 1 for lines in paragraph_lines)
+                           else estimated_lines)
     capacity_characters = max(1, int(capacity_lines * chars_per_line * 0.94))
     overflow_ratio = characters / capacity_characters if capacity_characters else float("inf")
     free_lines = capacity_lines - estimated_lines
@@ -144,7 +148,8 @@ def estimate_text_capacity(
     )
 
 
-def _measured_capacity(text, width_mm, height_mm, columns, size, leading, family, bold, gutter_mm):
+def _measured_capacity(text, width_mm, height_mm, columns, size, leading, family, bold, gutter_mm, face_args=None,
+                       tracking_em=0.0):
     try:
         # Avoid entering the expensive measured path when the optional shaping
         # stack is not installed.  The caller then uses the deterministic
@@ -153,11 +158,12 @@ def _measured_capacity(text, width_mm, height_mm, columns, size, leading, family
         import uharfbuzz  # noqa: F401
         from .fonts import resolve_font
         from .shaper import fill_columns
-        path = resolve_font(family, bold=bold, text=text)
+        path = (resolve_font(family, text=text, weight=face_args["weight"], italic=face_args["italic"],
+                             width=face_args["width"]) if face_args else resolve_font(family, bold=bold, text=text))
         if not path:
             return None
         fit = fill_columns(text or "", width_mm=float(width_mm), height_mm=float(height_mm), columns=columns, gutter_mm=gutter_mm,
-                           font_size_pt=size, leading_pt=leading, font_path=path)
+                           font_size_pt=size, leading_pt=leading, font_path=path, tracking_em=tracking_em or 0.0)
     except Exception:
         return None
     shaped = fit["shaped"]

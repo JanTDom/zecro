@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { apiUrl } from '../../api/client';
 import { useProject } from '../../context/ProjectContext';
 import { Button } from '../common/Button';
-import { Check, ChevronDown, FileText, LayoutDashboard, Menu, Plus, Sparkles, X } from 'lucide-react';
+import { isTechnicalProject } from '../../projectVisibility';
+import { Check, ChevronDown, FileText, LayoutDashboard, LogOut, Menu, Plus, Sparkles, X } from 'lucide-react';
 
 interface NavbarProps {
   onOpenNewProject: () => void;
@@ -10,12 +11,17 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenNewProject }) => {
   const { projects, activeProject, selectProject, setActiveTab } = useProject();
+  const visibleProjects = projects.filter(project => !isTechnicalProject(project));
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [aiStatus, setAiStatus] = useState('Sprawdzanie AI…');
+  const logout = async () => {
+    await fetch(apiUrl('/auth/logout'), { method: 'POST', credentials: 'include' }).catch(() => null);
+    window.dispatchEvent(new CustomEvent('zecro-session-expired', { detail: 'logout' }));
+  };
   React.useEffect(() => {
     let active = true;
-    fetch(apiUrl('/health/ai')).then(async response => {
+    fetch(apiUrl('/health/ai'), { credentials: 'include' }).then(async response => {
       const body = await response.json().catch(() => ({}));
       if (active) setAiStatus(response.ok && body.status === 'ready' ? `Gemini: ${body.model}` : `AI niedostępne: ${body.detail?.reason || body.reason || response.status}`);
     }).catch(() => { if (active) setAiStatus('AI niedostępne: brak połączenia'); });
@@ -23,10 +29,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenNewProject }) => {
   }, []);
 
   const mobileNav = [
-    { id: 'dashboard' as const, label: 'Studio', icon: LayoutDashboard },
-    { id: 'generate' as const, label: 'Generator', icon: Sparkles },
-    { id: 'gallery' as const, label: 'Galeria', icon: FileText },
-    { id: 'projects' as const, label: 'Projekty', icon: Plus },
+    { id: 'dashboard' as const, label: 'Zacznij tutaj', icon: LayoutDashboard },
+    { id: 'generate' as const, label: 'Materiały i strona', icon: Sparkles },
+    { id: 'gallery' as const, label: 'Warianty', icon: FileText },
+    { id: 'projects' as const, label: 'Moje gazety', icon: Plus },
+    { id: 'settings' as const, label: 'AI i źródła', icon: Sparkles },
   ];
 
   return (
@@ -47,11 +54,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenNewProject }) => {
                   <Icon className="w-4 h-4 text-editorial-crimson" />{label}
                 </button>
               ))}
+              <button onClick={() => void logout()} className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-[12px] text-ink-200 hover:bg-ink-950"><LogOut className="w-4 h-4" />Wyloguj</button>
             </div>
           )}
         </div>
         <div className="hidden sm:flex items-center gap-2 text-[12px] text-ink-500">
-          <span>Studio</span><span className="text-ink-700">/</span><span className="font-semibold text-ink-200">Przestrzeń robocza</span>
+          <button onClick={() => setActiveTab('dashboard')} className="font-semibold text-ink-200">Zacznij tutaj</button>
         </div>
       </div>
 
@@ -59,25 +67,28 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenNewProject }) => {
         <div className="relative">
           <button onClick={() => setDropdownOpen((open) => !open)} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-ink-800 bg-white hover:bg-ink-950 transition-colors min-w-[188px] text-left">
             <span className="w-7 h-7 rounded-md bg-ink-950 flex items-center justify-center shrink-0"><FileText className="w-3.5 h-3.5 text-ink-300" /></span>
-            <span className="min-w-0 flex-1"><span className="block text-[12px] font-semibold text-ink-100 truncate">{activeProject?.name || 'Wybierz projekt'}</span><span className="block text-[10px] text-ink-500 font-mono uppercase tracking-wide">{activeProject?.format || 'custom'} · DNA v{activeProject?.dnaVersion || 1}</span></span>
+            <span className="min-w-0 flex-1"><span className="block text-[12px] font-semibold text-ink-100 truncate">{activeProject?.name || 'Wybierz gazetę'}</span><span className="block text-[10px] text-ink-500">{activeProject ? 'Otwarta gazeta' : 'Moje gazety'}</span></span>
             <ChevronDown className="w-3.5 h-3.5 text-ink-500" />
           </button>
           {dropdownOpen && (
             <div className="absolute right-0 top-[calc(100%+8px)] w-72 bg-white border border-ink-800 rounded-xl shadow-page-elevated py-2 animate-fade-in">
-              <div className="px-3 pb-2 mb-1 border-b border-ink-800 flex items-center justify-between"><span className="text-[10px] uppercase tracking-[0.16em] font-mono text-ink-500">Twoje tytuły</span><span className="text-[10px] text-ink-500">{projects.length}</span></div>
+              <div className="px-3 pb-2 mb-1 border-b border-ink-800 flex items-center justify-between"><span className="text-[10px] uppercase tracking-[0.16em] font-mono text-ink-500">Twoje gazety</span><span className="text-[10px] text-ink-500">{visibleProjects.length}</span></div>
               <div className="max-h-64 overflow-y-auto">
-                {projects.map((project) => (
+                {visibleProjects.length === 0 && <p className="px-3 py-3 text-xs text-ink-500">Nie masz jeszcze własnej gazety.</p>}
+                {visibleProjects.map((project) => (
                   <button key={project.id} onClick={() => { void selectProject(project.id); setDropdownOpen(false); }} className="w-full px-3 py-2.5 flex items-center gap-2.5 hover:bg-ink-950 text-left">
-                    <span className="w-2 h-2 rounded-full bg-editorial-crimson" /><span className="flex-1 min-w-0"><span className="block text-[12px] font-semibold text-ink-100 truncate">{project.name}</span><span className="block text-[10px] font-mono text-ink-500">{project.format} · v{project.dnaVersion}</span></span>{project.id === activeProject?.id && <Check className="w-4 h-4 text-editorial-crimson" />}
+                    <span className="w-2 h-2 rounded-full bg-editorial-crimson" /><span className="flex-1 min-w-0"><span className="block text-[12px] font-semibold text-ink-100 truncate">{project.name}</span><span className="block text-[10px] font-mono text-ink-500">Własna gazeta · wersja stylu {project.dnaVersion}</span></span>{project.id === activeProject?.id && <Check className="w-4 h-4 text-editorial-crimson" />}
                   </button>
                 ))}
               </div>
-              <div className="mt-1 pt-2 border-t border-ink-800 px-2"><Button variant="ghost" size="sm" className="w-full justify-start" leftIcon={<Plus className="w-3.5 h-3.5" />} onClick={() => { setDropdownOpen(false); onOpenNewProject(); }}>Nowy projekt</Button></div>
+              <button onClick={() => { setDropdownOpen(false); setActiveTab('projects'); }} className="w-full px-3 py-2 text-left text-xs font-semibold text-editorial-crimson">Zobacz wszystkie gazety</button>
+              <div className="mt-1 pt-2 border-t border-ink-800 px-2"><Button variant="ghost" size="sm" className="w-full justify-start" leftIcon={<Plus className="w-3.5 h-3.5" />} onClick={() => { setDropdownOpen(false); onOpenNewProject(); }}>Nowa gazeta</Button></div>
+              <button onClick={() => void logout()} className="w-full px-3 py-2 text-left text-xs text-ink-500 hover:text-ink-100">Wyloguj</button>
             </div>
           )}
         </div>
         <button onClick={() => setActiveTab('settings')} className="hidden lg:flex items-center gap-2 px-2.5 py-2 text-[10px] font-mono text-ink-500 border-l border-ink-800 pl-4"><span className={`w-1.5 h-1.5 rounded-full ${aiStatus.startsWith('Gemini:') ? 'bg-emerald-500' : 'bg-amber-500'}`} />{aiStatus}</button>
-        <Button variant="editorial" size="md" leftIcon={<Sparkles className="w-3.5 h-3.5" />} onClick={() => setActiveTab('generate')}>Generuj stronę</Button>
+        <Button variant="editorial" size="md" leftIcon={<Plus className="w-3.5 h-3.5" />} onClick={onOpenNewProject}>Nowa gazeta</Button>
       </div>
     </header>
   );

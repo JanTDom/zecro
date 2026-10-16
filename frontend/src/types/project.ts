@@ -1,4 +1,5 @@
 export type NewspaperFormat = 'broadsheet' | 'berliner' | 'tabloid' | 'compact' | 'custom';
+export type EditorialCharacter = 'analysis' | 'local' | 'everyday' | 'tabloid' | 'magazine' | 'guide' | 'business' | 'sports' | 'science' | 'culture' | 'serious' | 'popular';
 
 export interface PageDimensions {
   widthMm: number;
@@ -34,4 +35,5 @@ export interface Project {
   updatedAt: string;
   themeColor: string;
   accentFont: string;
+  editorialCharacter?: EditorialCharacter;
 }

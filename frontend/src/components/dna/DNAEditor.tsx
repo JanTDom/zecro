@@ -33,7 +33,7 @@ export const DNAEditor: React.FC = () => {
   }, [dna]);
 
   if (!activeProject || !localDna) {
-    return <div className="p-8 text-center text-ink-400">No TitleDNA loaded.</div>;
+    return <div className="p-8 text-center text-ink-400">Nie wczytano zasad stylu gazety.</div>;
   }
 
   const handleSave = async () => {
@@ -43,14 +43,14 @@ export const DNAEditor: React.FC = () => {
       await reloadDNA();
       addToast({
         type: 'success',
-        title: 'TitleDNA Saved & Versioned',
-        message: `Updated to DNA v${localDna.version + 1}. Generator and solver will now use these grammar rules.`,
+        title: 'Styl gazety zapisany',
+        message: `Zapisano wersję ${localDna.version + 1}. Nowe strony użyją tych ustawień.`,
       });
     } catch (e) {
       addToast({
         type: 'error',
-        title: 'Save Failed',
-        message: 'Could not update TitleDNA.',
+        title: 'Nie udało się zapisać',
+        message: 'Spróbuj ponownie zapisać ustawienia stylu.',
       });
     } finally {
       setIsSaving(false);
@@ -104,17 +104,17 @@ export const DNAEditor: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] uppercase font-mono tracking-widest text-editorial-crimson font-bold">
-              Machine-Readable Grammar as Data
+              Ustawienia wyglądu gazety
             </span>
             <Badge variant="accent" size="sm">
               DNA v{localDna.version}
             </Badge>
           </div>
           <h1 className="text-3xl font-headline font-black text-ink-100 tracking-tight">
-            TitleDNA & Transgression Editor
+            Styl i zasady gazety
           </h1>
           <p className="text-sm text-ink-400 mt-1 max-w-2xl">
-            Fine-tune the modular grid, typography scales, photo wrap margins, transgression catalog, and page energy budget for <strong className="text-ink-100">{activeProject.name}</strong>.
+            Ustaw podział strony, wielkość pisma, kolory i wygląd zdjęć dla gazety <strong className="text-ink-100">{activeProject.name}</strong>.
           </p>
         </div>
 
@@ -125,7 +125,7 @@ export const DNAEditor: React.FC = () => {
             leftIcon={<RotateCcw className="w-4 h-4" />}
             onClick={() => setLocalDna(dna ? JSON.parse(JSON.stringify(dna)) : null)}
           >
-            Reset
+            Przywróć
           </Button>
           <Button
             variant="editorial"
@@ -134,7 +134,7 @@ export const DNAEditor: React.FC = () => {
             leftIcon={<Save className="w-4 h-4" />}
             onClick={handleSave}
           >
-            Save DNA Changes
+            Zapisz styl gazety
           </Button>
         </div>
       </div>
@@ -150,7 +150,7 @@ export const DNAEditor: React.FC = () => {
           }`}
         >
           <Layers className="w-4 h-4 text-editorial-ochre" />
-          1. Modular Grid
+          1. Podział strony
         </button>
 
         <button
@@ -162,7 +162,7 @@ export const DNAEditor: React.FC = () => {
           }`}
         >
           <Type className="w-4 h-4 text-blue-400" />
-          2. Typography Scale
+          2. Wielkość pisma
         </button>
 
         <button
@@ -174,7 +174,7 @@ export const DNAEditor: React.FC = () => {
           }`}
         >
           <Palette className="w-4 h-4 text-emerald-400" />
-          3. Color Palette
+          3. Kolory
         </button>
 
         <button
@@ -186,7 +186,7 @@ export const DNAEditor: React.FC = () => {
           }`}
         >
           <Camera className="w-4 h-4 text-purple-400" />
-          4. Photo & Cutout Rules
+          4. Zdjęcia
         </button>
 
         <button
@@ -198,7 +198,7 @@ export const DNAEditor: React.FC = () => {
           }`}
         >
           <Flame className="w-4 h-4 text-editorial-crimson" />
-          5. Transgressions & Energy Budget
+          5. Efekty układu
         </button>
 
         <button
@@ -225,31 +225,31 @@ export const DNAEditor: React.FC = () => {
             <Card className="space-y-6">
               <div>
                 <h3 className="font-headline font-bold text-base text-ink-100 mb-1">
-                  Modular Grid Geometry & Margins
+                  Kolumny i marginesy
                 </h3>
                 <p className="text-xs text-ink-400">
-                  Defines the mathematical proportions for columns, gutters, and baseline rhythm.
+                  Ustaw liczbę kolumn, odstępy i marginesy strony.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <Slider
-                  label="Columns Count"
+                  label="Liczba kolumn"
                   value={localDna.grid.columns}
                   min={3}
                   max={8}
                   step={1}
-                  unit=" cols"
+                  unit=" kolumn"
                   onChange={(v) =>
                     setLocalDna((prev) =>
                       prev ? { ...prev, grid: { ...prev.grid, columns: v } } : prev
                     )
                   }
-                  description="Primary vertical subdivisions across the page spread."
+                  description="Na ile pionowych części podzielić stronę."
                 />
 
                 <Slider
-                  label="Gutter Width"
+                  label="Odstęp między kolumnami"
                   value={localDna.grid.gutterMm}
                   min={2}
                   max={10}
@@ -260,11 +260,11 @@ export const DNAEditor: React.FC = () => {
                       prev ? { ...prev, grid: { ...prev.grid, gutterMm: v } } : prev
                     )
                   }
-                  description="Inter-column spacing for editorial separation."
+                  description="Przerwa między sąsiednimi kolumnami tekstu."
                 />
 
                 <Slider
-                  label="Baseline Grid Rhythm"
+                  label="Rytm wierszy tekstu"
                   value={localDna.grid.baselineGridPt}
                   min={8}
                   max={16}
@@ -275,11 +275,11 @@ export const DNAEditor: React.FC = () => {
                       prev ? { ...prev, grid: { ...prev.grid, baselineGridPt: v } } : prev
                     )
                   }
-                  description="Vertical alignment increment for all body text leadings."
+                  description="Pomaga równo układać wiersze w kolumnach."
                 />
 
                 <Slider
-                  label="Top Margin"
+                  label="Górny margines"
                   value={localDna.grid.marginTopMm}
                   min={10}
                   max={35}
@@ -290,11 +290,11 @@ export const DNAEditor: React.FC = () => {
                       prev ? { ...prev, grid: { ...prev.grid, marginTopMm: v } } : prev
                     )
                   }
-                  description="Spacing between page trim and header/masthead rule."
+                  description="Odległość treści od górnej krawędzi strony."
                 />
 
                 <Slider
-                  label="Side Margin (Outer/Inner)"
+                  label="Boczne marginesy"
                   value={localDna.grid.marginLeftMm}
                   min={8}
                   max={30}
@@ -314,11 +314,11 @@ export const DNAEditor: React.FC = () => {
                         : prev
                     )
                   }
-                  description="Outer margins flanking the editorial grid."
+                  description="Odległość treści od bocznych krawędzi."
                 />
 
                 <Slider
-                  label="Bottom Margin"
+                  label="Dolny margines"
                   value={localDna.grid.marginBottomMm}
                   min={12}
                   max={35}
@@ -329,7 +329,7 @@ export const DNAEditor: React.FC = () => {
                       prev ? { ...prev, grid: { ...prev.grid, marginBottomMm: v } } : prev
                     )
                   }
-                  description="Foot margin anchoring page numbers and folios."
+                  description="Miejsce pod tekstem, także na numer strony."
                 />
               </div>
             </Card>
@@ -340,10 +340,10 @@ export const DNAEditor: React.FC = () => {
             <Card className="space-y-6">
               <div>
                 <h3 className="font-headline font-bold text-base text-ink-100 mb-1">
-                  Editorial Typography Hierarchy & Kegel Scales
+                  Wielkość nagłówków i tekstu
                 </h3>
                 <p className="text-xs text-ink-400">
-                  Strict ratio between headlines, decks, lead paragraph, and multi-column body text.
+                  Ustaw wielkość pisma i odstępy między wierszami dla różnych części artykułu.
                 </p>
               </div>
 
@@ -352,7 +352,7 @@ export const DNAEditor: React.FC = () => {
                 <div className="p-3.5 bg-ink-950/70 rounded-lg border border-ink-800 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono uppercase font-bold text-ink-200">
-                      Primary Headline
+                      Główny nagłówek
                     </span>
                     <span className="text-xs font-mono text-editorial-ochre font-bold">
                       {localDna.typography.headlinePrimary.sizePt}pt / {localDna.typography.headlinePrimary.lineHeightPt}pt
@@ -360,7 +360,7 @@ export const DNAEditor: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Slider
-                      label="Kegel Size"
+                      label="Wielkość pisma"
                       value={localDna.typography.headlinePrimary.sizePt}
                       min={24}
                       max={72}
@@ -371,7 +371,7 @@ export const DNAEditor: React.FC = () => {
                       }
                     />
                     <Slider
-                      label="Leading / Line Height"
+                      label="Odstęp między wierszami"
                       value={localDna.typography.headlinePrimary.lineHeightPt}
                       min={22}
                       max={70}
@@ -388,7 +388,7 @@ export const DNAEditor: React.FC = () => {
                 <div className="p-3.5 bg-ink-950/70 rounded-lg border border-ink-800 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono uppercase font-bold text-editorial-crimson">
-                      Kicker Overhang Tag
+                      Nadtytuł
                     </span>
                     <span className="text-xs font-mono text-ink-300">
                       {localDna.typography.kicker.sizePt}pt • {localDna.typography.kicker.fontFamily}
@@ -396,7 +396,7 @@ export const DNAEditor: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Slider
-                      label="Kicker Size"
+                      label="Wielkość nadtytułu"
                       value={localDna.typography.kicker.sizePt}
                       min={8}
                       max={18}
@@ -407,7 +407,7 @@ export const DNAEditor: React.FC = () => {
                       }
                     />
                     <Slider
-                      label="Letter Spacing"
+                      label="Odstęp między literami"
                       value={localDna.typography.kicker.letterSpacingPt || 1.5}
                       min={0}
                       max={4}
@@ -424,7 +424,7 @@ export const DNAEditor: React.FC = () => {
                 <div className="p-3.5 bg-ink-950/70 rounded-lg border border-ink-800 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono uppercase font-bold text-ink-200">
-                      Deck / Subhead Lead
+                      Podtytuł
                     </span>
                     <span className="text-xs font-mono text-ink-300">
                       {localDna.typography.deck.sizePt}pt / {localDna.typography.deck.lineHeightPt}pt
@@ -432,7 +432,7 @@ export const DNAEditor: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Slider
-                      label="Deck Kegel"
+                      label="Wielkość podtytułu"
                       value={localDna.typography.deck.sizePt}
                       min={10}
                       max={20}
@@ -443,7 +443,7 @@ export const DNAEditor: React.FC = () => {
                       }
                     />
                     <Slider
-                      label="Deck Leading"
+                      label="Odstęp między wierszami"
                       value={localDna.typography.deck.lineHeightPt}
                       min={12}
                       max={26}
@@ -460,7 +460,7 @@ export const DNAEditor: React.FC = () => {
                 <div className="p-3.5 bg-ink-950/70 rounded-lg border border-ink-800 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono uppercase font-bold text-ink-200">
-                      Body Columns Text
+                      Tekst artykułu
                     </span>
                     <span className="text-xs font-mono text-ink-300">
                       {localDna.typography.body.sizePt}pt / {localDna.typography.body.lineHeightPt}pt
@@ -468,7 +468,7 @@ export const DNAEditor: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Slider
-                      label="Body Font Size"
+                      label="Wielkość tekstu"
                       value={localDna.typography.body.sizePt}
                       min={7.5}
                       max={12}
@@ -479,7 +479,7 @@ export const DNAEditor: React.FC = () => {
                       }
                     />
                     <Slider
-                      label="Body Leading"
+                      label="Odstęp między wierszami"
                       value={localDna.typography.body.lineHeightPt}
                       min={9}
                       max={16}
@@ -500,10 +500,10 @@ export const DNAEditor: React.FC = () => {
             <Card className="space-y-6">
               <div>
                 <h3 className="font-headline font-bold text-base text-ink-100 mb-1">
-                  Color Rules & Ink Palette
+                  Kolory gazety
                 </h3>
                 <p className="text-xs text-ink-400">
-                  Editorial newsprint tones, spot colors, rule line shades, and tint boxes.
+                  Wybierz kolory nagłówków, linii i tła.
                 </p>
               </div>
 
@@ -521,7 +521,7 @@ export const DNAEditor: React.FC = () => {
                       <div>
                         <p className="text-xs font-bold text-ink-100">{c.name}</p>
                         <p className="text-[10px] font-mono text-ink-400">
-                          Role: {c.role.toUpperCase()} {c.cmyk ? `• CMYK (${c.cmyk})` : ''}
+                          Zastosowanie: {c.role.toUpperCase()} {c.cmyk ? `• CMYK (${c.cmyk})` : ''}
                         </p>
                       </div>
                     </div>
@@ -553,16 +553,16 @@ export const DNAEditor: React.FC = () => {
             <Card className="space-y-6">
               <div>
                 <h3 className="font-headline font-bold text-base text-ink-100 mb-1">
-                  Photo Treatment & Auto-Cutout Rules
+                  Wygląd zdjęć
                 </h3>
                 <p className="text-xs text-ink-400">
-                  Configure silhouette background removal, contour text wrap padding, and framing.
+                  Ustaw obrys zdjęcia i odstęp tekstu od wyciętej postaci.
                 </p>
               </div>
 
               <div className="space-y-5">
                 <Toggle
-                  label="Allow Silhouette Cutout Text Wrap"
+                  label="Pozwól na tekst wokół wyciętego zdjęcia"
                   checked={localDna.photos.allowedCutouts}
                   onChange={(v) =>
                     setLocalDna((prev) =>
@@ -574,11 +574,11 @@ export const DNAEditor: React.FC = () => {
                         : prev
                     )
                   }
-                  description="Enables automatic alpha mask tracing and dynamic contour text flow around subjects."
+                  description="Tekst może opływać postać, jeśli zdjęcie ma przezroczyste tło."
                 />
 
                 <Slider
-                  label="Text Wrap Clearance Padding"
+                  label="Odstęp tekstu od zdjęcia"
                   value={localDna.photos.wrapPaddingMm}
                   min={1}
                   max={10}
@@ -594,11 +594,11 @@ export const DNAEditor: React.FC = () => {
                         : prev
                     )
                   }
-                  description="Margin distance between photo silhouette contour and running text."
+                  description="Odległość tekstu od krawędzi wyciętego zdjęcia."
                 />
 
                 <Slider
-                  label="Photo Border Rule Width"
+                  label="Grubość ramki zdjęcia"
                   value={localDna.photos.borderRulePt}
                   min={0}
                   max={3}
@@ -614,7 +614,7 @@ export const DNAEditor: React.FC = () => {
                         : prev
                     )
                   }
-                  description="Hairline or medium stroke framing rectangular photographs."
+                  description="Grubość obramowania zwykłych zdjęć."
                 />
               </div>
             </Card>
@@ -625,10 +625,10 @@ export const DNAEditor: React.FC = () => {
             <Card className="space-y-6">
               <div>
                 <h3 className="font-headline font-bold text-base text-ink-100 mb-1">
-                  Transgression Catalog & Page Tension Budget
+                  Odważne efekty układu
                 </h3>
                 <p className="text-xs text-ink-400">
-                  Control expressive layout violations. The generator uses these costs to stay within the art director's target energy budget.
+                  Określ, jak mocno układ może odbiegać od zwykłej siatki. Program pilnuje ustalonego limitu.
                 </p>
               </div>
 
@@ -636,14 +636,14 @@ export const DNAEditor: React.FC = () => {
               <div className="p-4 bg-ink-950 rounded-lg border border-ink-800 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono uppercase font-bold text-editorial-crimson">
-                    Page Energy / Tension Score Limit
+                    Limit odważnych efektów na stronie
                   </span>
                   <span className="text-xs font-mono text-editorial-ochre font-bold">
-                    Target: {localDna.pageEnergyBudget.targetTensionScore} pts • Max: {localDna.pageEnergyBudget.maxTensionScore} pts
+                    Cel: {localDna.pageEnergyBudget.targetTensionScore} pkt · Maksimum: {localDna.pageEnergyBudget.maxTensionScore} pkt
                   </span>
                 </div>
                 <Slider
-                  label="Target Tension per Spread"
+                  label="Docelowa intensywność układu"
                   value={localDna.pageEnergyBudget.targetTensionScore}
                   min={2}
                   max={20}
@@ -687,11 +687,11 @@ export const DNAEditor: React.FC = () => {
                     {rule.allowed && (
                       <div className="pt-2 border-t border-ink-800 flex items-center justify-between gap-4">
                         <span className="text-[11px] font-mono text-ink-400">
-                          Trigger: {rule.triggerCondition}
+                          Warunek: {rule.triggerCondition}
                         </span>
                         <div className="w-48">
                           <Slider
-                            label="Cost Points"
+                            label="Intensywność efektu"
                             value={rule.cost}
                             min={0.5}
                             max={6.0}
@@ -715,7 +715,7 @@ export const DNAEditor: React.FC = () => {
         <div className="lg:col-span-5 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono uppercase text-ink-400 font-semibold">
-              Live DNA Render Preview
+              Podgląd stylu gazety
             </span>
             <Badge variant="outline" size="sm">
               Real-Time Grammar Engine

@@ -5,6 +5,25 @@ from backend.app.models.schemas import Project, PageInputMaterial, StoryInput, G
 
 client = TestClient(app)
 
+
+def test_settings_overview_is_read_only_and_never_exposes_secrets(monkeypatch):
+    from backend.app.models.database import db
+    from backend.app.config import settings
+    monkeypatch.setattr(settings, "gemini_api_key", "test-key")
+    monkeypatch.setattr(db, "list_integrations", lambda project_id=None: [{
+        "id": "gemini-test", "kind": "ai_provider", "provider": "gemini", "label": "Gemini",
+        "enabled": True, "secret_ref": "secret-ciphertext", "config_json": {"api_key_mask": "masked"},
+    }])
+    monkeypatch.setattr(db, "get_routing", lambda: {})
+    response = client.get("/settings/overview")
+    assert response.status_code == 200
+    assert response.json()["tasks"]["visual_critic"]["status"] == "ready"
+    assert response.json()["integrations"][0]["configured"] is True
+    assert "secret-ciphertext" not in response.text
+    assert "test-key" not in response.text
+    assert "api_key_mask" not in response.text
+    assert client.post("/settings/integrations", json={"provider": "gemini"}).status_code in {403, 503}
+
 def test_health_and_root():
     res = client.get("/")
     assert res.status_code == 200
@@ -75,6 +94,7 @@ def test_project_lifecycle_and_generation():
     assert res_gen.status_code == 201
     run_data = res_gen.json()
     assert len(run_data["candidates"]) >= 2
+    assert run_data["stats"]["visual_review"]["status"] == "skipped"
     cand_1 = run_data["candidates"][0]
     cand_2 = run_data["candidates"][1]
 

@@ -17,8 +17,10 @@ TASK_DEFAULTS = {
     "page_planning": "gemini_model_text_pro", "copy_fit": "gemini_model_text_pro", "headline_variants": "gemini_model_text_pro",
     "write_from_brief": "gemini_model_text_pro", "fact_guard": "gemini_model_text_fast", "translate": "gemini_model_text_pro",
     "teaser": "gemini_model_text_fast", "caption": "gemini_model_text_fast", "pullquote": "gemini_model_text_fast", "infobox": "gemini_model_text_fast",
-    "photo_brief": "gemini_model_text_fast", "photo_ranking": "gemini_model_text_pro", "image_generation": "gemini_model_image",
-    "mask_qa": "gemini_model_text_fast", "visual_critic": "gemini_model_text_pro", "corpus_audit": "gemini_model_text_fast",
+    "photo_brief": "gemini_model_text_fast", "photo_ranking": "gemini_model_text_pro", "photo_focal": "gemini_model_text_fast", "image_generation": "gemini_model_image",
+    "mask_qa": "gemini_model_text_fast", "subject_segmentation": "gemini_model_segmentation",
+    "visual_critic": "gemini_model_text_pro", "visual_pairwise": "gemini_model_text_pro", "corpus_audit": "gemini_model_text_fast",
+    "art_direction": "gemini_model_text_pro", "layout_review": "gemini_model_text_pro", "layout_pairwise": "gemini_model_text_pro",
     "embeddings": "gemini_model_embed", "logo_analysis": "gemini_model_text_pro", "font_pairing": "gemini_model_text_pro",
 }
 FALLBACK_FAST = {"gemini_model_text_pro": "gemini_model_text_fast"}

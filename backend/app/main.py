@@ -1,7 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from .config import settings
+from . import auth
 from .api import projects, corpus, dna, generate, preferences, export, assets, archetypes, editorial, editorial_model, production, ai, settings_integrations, logo, page_plan, studio
 from .models.database import db
 from .storage.asset_store import storage_configured
@@ -12,16 +14,32 @@ app = FastAPI(
     version=settings.app_version
 )
 
+@app.middleware("http")
+async def require_studio_session(request: Request, call_next):
+    if not auth.enabled() or request.method == "OPTIONS" or request.url.path in {
+        "/", "/health", "/auth/login", "/auth/session", "/auth/logout"
+    }:
+        return await call_next(request)
+    if not auth.valid_session(request.cookies.get(auth.COOKIE_NAME)):
+        return JSONResponse(status_code=401, content={"detail": "Zaloguj się, aby otworzyć studio."})
+    if request.method not in {"GET", "HEAD"}:
+        try:
+            auth._check_origin(request)
+        except Exception:
+            return JSONResponse(status_code=403, content={"detail": "Ta strona nie ma dostępu do studia."})
+    return await call_next(request)
+
 # Enable CORS for frontend integration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-Zecro-Admin-Token"],
 )
 
 # Register API routers
+app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(corpus.router)
 app.include_router(dna.router)
@@ -35,6 +53,7 @@ app.include_router(editorial_model.router)
 app.include_router(production.router)
 app.include_router(ai.router)
 app.include_router(settings_integrations.router)
+app.include_router(settings_integrations.public_router)
 app.include_router(logo.router)
 app.include_router(page_plan.router)
 app.include_router(studio.router)

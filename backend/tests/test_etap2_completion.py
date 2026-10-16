@@ -208,6 +208,10 @@ def test_no_provider_is_explicitly_unavailable(monkeypatch):
     from backend.app.ai.gemini_client import AIUnavailable
     from backend.app.config import settings
     monkeypatch.setattr(settings, "gemini_api_key", "")
+    # The developer database may legitimately contain the encrypted Gemini
+    # integration used by the running application.  This test exercises the
+    # no-provider branch, so isolate it from that persistent local state.
+    monkeypatch.setattr(runtime.db, "list_integrations", lambda project_id=None: [])
     with pytest.raises(AIUnavailable):
         runtime.run_task("teaser", "teaser", {"headline": "x"}, None)
 

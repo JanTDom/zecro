@@ -80,6 +80,12 @@ export interface Candidate {
   previewImageUrl?: string;
   criticScore: number; // 0.00 to 1.00 (e.g. 0.94)
   tasteScore: number; // 0.00 to 1.00 (predicted by TasteModel)
+  visualReview?: { status?: string; score?: number; style_fidelity?: number; photo_headline_match?: number; photo_use?: number;
+    dead_zones?: string[]; top_3_fixes?: string[]; category_mismatch?: string[];
+    category_review?: { status: 'candidate_for_editor' | 'needs_revision'; target: number; editorial_approval_required: boolean } };
+  styleReadiness?: { status: string; warnings: string[]; photo_story_count?: number; story_count?: number };
+  /** Plain-language explanation: page morphology and the photo editor's choice. */
+  layoutStory?: { morphology?: string; photoReason?: string; photoScore?: number; decisions: string[] };
   passHardGates: boolean;
   hardGatesReport: HardGatesReport;
   criticRationale: string;

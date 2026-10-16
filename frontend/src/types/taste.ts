@@ -9,6 +9,7 @@ export interface PreferenceSignal {
   winnerCandidateId: string;
   userDeltaEdits?: ElementDelta[];
   feedbackNotes?: string;
+  reviewDurationSec?: number;
   timestamp: string;
 }
 
@@ -18,6 +19,9 @@ export interface TasteModelMetrics {
   totalComparisons: number;
   preferenceWinRate: number; // e.g. 0.88 -> 88%
   avgTimeToApproveSec: number;
+  heldOutWinRate: number;
+  evaluatedSampleCount: number;
+  feedbackCount: number;
   featureWeights: {
     tensionTolerance: number;
     cutoutAffinity: number;

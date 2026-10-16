@@ -16,8 +16,8 @@ const PROVIDERS: Record<string, string[]> = {
 const TASK_LABEL: Record<string, string> = {
   page_planning: 'Plan strony', copy_fit: 'Dopasowanie tekstu', headline_variants: 'Warianty tytułów', write_from_brief: 'Pisanie z briefu',
   fact_guard: 'Strażnik faktów', translate: 'Tłumaczenie', teaser: 'Zapowiedź', caption: 'Podpis zdjęcia', pullquote: 'Cytat', infobox: 'Ramka faktów',
-  photo_brief: 'Brief zdjęciowy', photo_ranking: 'Ranking zdjęć', image_generation: 'Generowanie ilustracji', mask_qa: 'Kontrola maski',
-  visual_critic: 'Krytyk wizualny', corpus_audit: 'Audyt korpusu', embeddings: 'Embeddingi', logo_analysis: 'Analiza logo', font_pairing: 'Dobór fontów',
+  photo_brief: 'Brief zdjęciowy', photo_ranking: 'Ranking zdjęć', image_generation: 'Generowanie ilustracji', mask_qa: 'Kontrola maski', subject_segmentation: 'Wycinanie sylwetek ze zdjęć',
+  visual_critic: 'Krytyk wizualny', corpus_audit: 'Audyt korpusu', embeddings: 'Wyszukiwanie podobnych treści', logo_analysis: 'Analiza logo', font_pairing: 'Dobór krojów pisma',
 };
 const CUSTOM_TEMPLATE = JSON.stringify({
   type: 'rest', base_url: 'https://api.example.com',
@@ -26,11 +26,16 @@ const CUSTOM_TEMPLATE = JSON.stringify({
   mapping: { items: '$.results[*]', fields: { url: '$.image.full', thumb_url: '$.image.thumb', title: '$.title', credit_line: '$.author', license: '$.license', width_px: '$.image.w', height_px: '$.image.h' } },
 }, null, 2);
 
-const Status: React.FC<{ s?: string }> = ({ s }) => <span className={`px-1.5 py-0.5 rounded text-[11px] ${s === 'ready' ? 'bg-green-100 text-green-800' : s === 'error' ? 'bg-red-100 text-red-800' : s === 'warning' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'}`}>{s || '—'}</span>;
+const STATUS_LABEL: Record<string, string> = { ready: 'Gotowe', configured: 'Skonfigurowane', unavailable: 'Niedostępne', unconfigured: 'Nieustawione', warning: 'Wymaga uwagi', error: 'Błąd' };
+const Status: React.FC<{ s?: string }> = ({ s }) => <span className={`px-1.5 py-0.5 rounded text-[11px] ${s === 'ready' ? 'bg-green-100 text-green-800' : s === 'error' ? 'bg-red-100 text-red-800' : s === 'warning' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'}`}>{STATUS_LABEL[s || ''] || s || '—'}</span>;
 
 export const IntegrationsSettings: React.FC = () => {
   const [tab, setTab] = React.useState<Tab>('Modele AI');
   const [token, setToken] = React.useState('');
+  const [adminUnlocked, setAdminUnlocked] = React.useState(false);
+  const [adminOpen, setAdminOpen] = React.useState(false);
+  const [overview, setOverview] = React.useState<{ integrations: Data[]; tasks: Record<string, Data> } | null>(null);
+  const [overviewError, setOverviewError] = React.useState('');
   const [items, setItems] = React.useState<Data[]>([]);
   const [status, setStatus] = React.useState('');
   const [busy, setBusy] = React.useState(false);
@@ -42,6 +47,12 @@ export const IntegrationsSettings: React.FC = () => {
   const [audit, setAudit] = React.useState<Data[]>([]);
   const [photoSources, setPhotoSources] = React.useState<Data[] | null>(null);
   const [oa, setOa] = React.useState<{ url: string; result: Data | null }>({ url: '', result: null });
+
+  React.useEffect(() => {
+    let active = true;
+    studio.settingsOverview().then(data => { if (active) setOverview(data); }).catch(e => { if (active) setOverviewError(errText(e)); });
+    return () => { active = false; };
+  }, []);
 
   const guard = async (label: string, fn: () => Promise<unknown>) => {
     setBusy(true);
@@ -56,7 +67,14 @@ export const IntegrationsSettings: React.FC = () => {
     if (tab === 'Źródła zdjęć') setPhotoSources(await studio.photoSources() as unknown as Data[]);
     setStatus('');
   }), [token, tab]);
-  React.useEffect(() => { void reload(); }, [reload]);
+  React.useEffect(() => { if (adminUnlocked) void reload(); }, [adminUnlocked, reload]);
+
+  const unlock = () => guard('Nie można otworzyć edycji połączeń', async () => {
+    setAdminToken(token);
+    setItems(await studio.integrations());
+    setAdminUnlocked(true);
+    setStatus('');
+  });
 
   const kind = KIND_FOR[tab] || 'ai_provider';
   const isCustomTab = tab === 'Własne API';
@@ -98,11 +116,35 @@ export const IntegrationsSettings: React.FC = () => {
     setLimits(l); setStatus('Limity zapisane.');
   });
   const providerChoices = ['gemini', ...items.filter(i => i.kind === 'ai_provider' && i.enabled).map(i => i.id)];
-  const providerName = (v: string) => v === 'gemini' ? 'Gemini (.env.local)' : (items.find(i => i.id === v)?.label || v);
+  const providerName = (v: string) => v === 'gemini' ? 'Gemini' : (items.find(i => i.id === v)?.label || v);
+
+  const overviewPanel = <>
+    <header><h1 className="text-3xl font-semibold">AI i źródła</h1><p className="mt-2 text-sm text-ink-500">Tu sprawdzisz, co jest podłączone. Klucze są przechowywane na serwerze i nie są pokazywane w przeglądarce.</p></header>
+    {overviewError && <p role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm">Nie udało się odczytać stanu połączeń: {overviewError}</p>}
+    {!overview && !overviewError && <p className="text-sm text-ink-500">Sprawdzam połączenia…</p>}
+    {overview && <>
+      <section className="rounded-xl border bg-white p-5 space-y-3">
+        <h2 className="text-lg font-semibold">Podłączone modele i źródła</h2>
+        {overview.integrations.length ? <ul className="grid gap-3 md:grid-cols-2">{overview.integrations.map((item, index) => <li key={`${item.provider}-${index}`} className="rounded-lg border p-3 flex items-center justify-between gap-3"><span><strong className="block">{item.label}</strong><span className="text-xs text-ink-500">{item.kind === 'ai_provider' ? 'Model AI' : 'Źródło danych'}</span></span><Status s={item.enabled && item.configured ? 'ready' : 'unconfigured'} /></li>)}</ul> : <p className="text-sm text-ink-500">Nie dodano jeszcze żadnego modelu ani źródła.</p>}
+      </section>
+      <section className="rounded-xl border bg-white p-5 space-y-3">
+        <h2 className="text-lg font-semibold">Do czego służy AI</h2>
+        <p className="text-sm text-ink-500">Gemini może obsługiwać także ocenę wyglądu strony, jeśli zadanie „Krytyk wizualny” ma stan „Gotowe”. Stan oznacza dostępny klucz i przypisany model; wynik konkretnej oceny zobaczysz przy wygenerowanej stronie.</p>
+        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">{Object.entries(overview.tasks).map(([task, route]) => <div key={task} className="rounded-lg border p-3 flex justify-between gap-2 text-sm"><div><strong>{TASK_LABEL[task] || task}</strong><p className="text-xs text-ink-500">{route.provider || '—'} · {route.model || 'bez modelu'}</p></div><Status s={route.status} /></div>)}</div>
+      </section>
+    </>}
+  </>;
+
+  if (!adminUnlocked) return <div className="p-6 max-w-7xl mx-auto space-y-6">{overviewPanel}
+    <section className="rounded-xl border bg-white p-5">
+      <button type="button" className="text-sm font-semibold text-editorial-crimson" onClick={() => setAdminOpen(!adminOpen)} aria-expanded={adminOpen}>Zmień połączenia i klucze {adminOpen ? '−' : '+'}</button>
+      {adminOpen && <div className="mt-4 max-w-xl space-y-3"><p className="text-sm text-ink-500">Aby zmienić modele AI, klucze i źródła, wpisz hasło ustawień. Jest to osobne hasło do zmian na serwerze; nie wpisuj tu klucza Gemini. Do tworzenia gazety ten krok nie jest potrzebny.</p><label className="block text-sm">Hasło ustawień AI<input type="password" autoComplete="off" value={token} onChange={e => setToken(e.target.value)} className="block border rounded p-2 mt-1 w-full" /></label><button disabled={busy || !token} onClick={() => void unlock()} className="px-4 py-2 rounded bg-editorial-crimson text-white disabled:opacity-50">Otwórz edycję połączeń</button>{status && <p role="alert" className="text-sm text-red-700">{status}</p>}</div>}
+    </section>
+  </div>;
 
   return <div className="p-6 max-w-7xl mx-auto space-y-5">
-    <header><h1 className="text-2xl font-semibold">AI i źródła</h1><p className="text-sm text-ink-500">Dowolne modele i API źródeł, routing zadań z zapasowymi dostawcami, limity kosztów i dziennik. Klucze trafiają tylko na serwer (szyfrowane).</p></header>
-    <label className="block text-sm">Token administratora (tylko w pamięci tej karty)<input type="password" autoComplete="off" value={token} onChange={e => setToken(e.target.value)} onBlur={() => void reload()} className="block border rounded p-2 mt-1 w-full max-w-md" /></label>
+    {overviewPanel}
+    <div className="flex items-center justify-between"><h2 className="text-xl font-semibold">Połączenia i klucze</h2><button onClick={() => { setAdminUnlocked(false); setAdminToken(''); setToken(''); }} className="text-sm underline">Zamknij</button></div>
     {status && <p className="rounded-lg border p-3 text-sm bg-white" role="status">{status}</p>}
     <nav className="flex flex-wrap gap-2">{TABS.map(name => <button key={name} onClick={() => setTab(name)} className={`px-3 py-2 rounded-lg text-sm border ${tab === name ? 'bg-blue-50 text-editorial-crimson border-editorial-crimson' : 'border-ink-800'}`}>{name}</button>)}</nav>
 
@@ -119,7 +161,7 @@ export const IntegrationsSettings: React.FC = () => {
           {['photo_source', 'text_source', 'agency', 'fact_source', 'ai_provider', 'storage', 'export_target'].map(k => <option key={k}>{k}</option>)}</select></label>
           : <label>Dostawca<select className="block w-full border rounded p-2" value={form.provider} onChange={e => setForm({ ...form, provider: e.target.value })}>{(PROVIDERS[kind] || ['custom']).map(p => <option key={p}>{p}</option>)}</select></label>}
         <label>Nazwa<input className="block w-full border rounded p-2" value={form.label} onChange={e => setForm({ ...form, label: e.target.value })} /></label>
-        {kind === 'ai_provider' && !isCustomTab && <><label>Base URL (opcjonalnie)<input className="block w-full border rounded p-2" value={form.base_url} onChange={e => setForm({ ...form, base_url: e.target.value })} placeholder="https://…/v1" /></label>
+        {kind === 'ai_provider' && !isCustomTab && <><label>Adres usługi (opcjonalnie)<input className="block w-full border rounded p-2" value={form.base_url} onChange={e => setForm({ ...form, base_url: e.target.value })} placeholder="https://…/v1" /></label>
           <label>Model<input className="block w-full border rounded p-2" value={form.model} onChange={e => setForm({ ...form, model: e.target.value })} placeholder="po teście wybierzesz z listy" /></label></>}
         <label className="md:col-span-2">Klucz API / sekret<input className="block w-full border rounded p-2" type="password" value={form.api_key} onChange={e => setForm({ ...form, api_key: e.target.value })} autoComplete="off" /></label>
         {(isCustomTab || form.provider === 'custom') && <>
@@ -148,7 +190,7 @@ export const IntegrationsSettings: React.FC = () => {
         {t.mapping_errors?.length > 0 && <div className="text-amber-700">Błędy mapowania: {t.mapping_errors.map((m: Data) => `${m.field}: ${m.error}`).join('; ')}</div>}
         {t.raw_sample && <details><summary>Surowa odpowiedź</summary><pre className="whitespace-pre-wrap max-h-64 overflow-auto">{t.raw_sample}</pre></details>}
       </div>}
-    </article>; })}{visible.length === 0 && <p className="text-sm text-ink-500">Brak integracji w tej sekcji{tab === 'Modele AI' ? ' — Gemini działa z klucza w .env.local.' : '.'}</p>}</section>}
+    </article>; })}{visible.length === 0 && <p className="text-sm text-ink-500">Brak dodatkowych połączeń w tej sekcji. Stan modeli sprawdzisz u góry strony.</p>}</section>}
 
     {tab === 'Routing zadań' && <section className="rounded-xl border bg-white p-4 space-y-3 text-sm">
       <p className="text-xs text-ink-500">Każde zadanie ma dostawcę, model i łańcuch zapasowy (gdy pierwszy nie odpowie lub brak klucza). Puste pole = domyślny model Gemini.</p>

@@ -1,0 +1,203 @@
+{
+  "name": "Wukadka",
+  "description": "Gazeta Pasażerów WKD — bezpłatny dwutygodnik. Zestaw zmierzony z okładek NR20–NR22 (pliki produkcyjne w corpus/wukadka). Stałe elementy marki są tu danymi; zmienna część okładki jest generowana.",
+  "source_issues": [
+    "NR20",
+    "NR21",
+    "NR22"
+  ],
+  "format": {
+    "trim_mm": [
+      264.6,
+      390.0
+    ],
+    "bleed_mm": 3.0,
+    "live": {
+      "left": 10.0,
+      "right": 259.0,
+      "top": 14.8,
+      "bottom": 375.0
+    },
+    "_live_source": "Prawa krawędź bloków tekstu na okładkach NR21/NR22: 258,7 i 256,5 mm."
+  },
+  "palette": {
+    "red": "#e62e33",
+    "ink": "#231f20",
+    "panel": "#567199",
+    "yellow": "#fed304",
+    "teal": "#468da7",
+    "cyan": "#00aae5",
+    "dark": "#1f2126",
+    "white": "#ffffff",
+    "paper": "#ffffff"
+  },
+  "fonts": {
+    "_source": "Kroje i stopnie odczytane z PDF okładek NR20–NR22 (fonty osadzone), tracking z IDML NR22 4–5 (InDesign, 1/1000 em). Rodzina Upgrade nie ma jej w bibliotece kroju — do czasu wgrania używany jest zamiennik oznaczony 'substitute_for'.",
+    "display": {
+      "family": "Gotham XNarrow",
+      "weight": "900",
+      "tracking_em": -0.02,
+      "role": "stos tytułu głównego, belki nadtytułu, skybox (NR20–22: 38–218 pt)",
+      "fallbacks": [
+        "Nimbus Sans D"
+      ]
+    },
+    "teaser": {
+      "family": "Nimbus Sans D",
+      "weight": "900",
+      "tracking_em": -0.04,
+      "role": "dolne zapowiedzi, roundel krzyżówki (NR21–22: 26–51 pt, tracking -30..-50)"
+    },
+    "display_italic": {
+      "family": "Avenir Next",
+      "weight": "900",
+      "style": "italic",
+      "tracking_em": -0.05,
+      "substitute_for": "Upgrade Black Italic",
+      "role": "tytuł postaci (44–100 pt, tracking -50)",
+      "fallbacks": [
+        "Myriad Pro"
+      ]
+    },
+    "deck_italic": {
+      "family": "Myriad Pro",
+      "weight": "600",
+      "style": "italic",
+      "tracking_em": -0.02,
+      "substitute_for": "Upgrade Medium Italic",
+      "role": "tytuł „Rozmowy Wukadki” (47–63 pt)"
+    },
+    "label_italic": {
+      "family": "Myriad Pro",
+      "weight": "700",
+      "style": "italic",
+      "tracking_em": -0.02,
+      "substitute_for": "Upgrade Semibold Italic",
+      "role": "„Rozmowy” (31,6 pt)"
+    },
+    "info": {
+      "family": "Myriad Pro",
+      "weight": "600",
+      "tracking_em": 0.0,
+      "substitute_for": "Upgrade Semibold",
+      "role": "pasek z datą, imię postaci (12–17 pt)"
+    },
+    "pageref": {
+      "family": "AmsiProNarw-Black",
+      "weight": "400",
+      "role": "STR. (10 pt)"
+    },
+    "body": {
+      "family": "Utopia",
+      "weight": "700",
+      "tracking_em": 0.0,
+      "role": "lead/tekst (8,8–9,6 pt)"
+    },
+    "credit": {
+      "family": "Antenna",
+      "weight": "250",
+      "role": "nakład, podpisy fot. (8 pt)"
+    }
+  },
+  "brand_frame": {
+    "logo": {
+      "asset": "logo.png",
+      "x": 4.06,
+      "y": 83.8,
+      "w": 200.6,
+      "h": 43.7,
+      "max_covered_share": 0.12
+    },
+    "panel": {
+      "x": -3.0,
+      "y": 79.0,
+      "w": 215.0,
+      "bottom": 353.0,
+      "color": "panel"
+    },
+    "card": {
+      "inset_left": 7.0,
+      "top": 143.0,
+      "bottom": 349.0,
+      "slant_mm": 14.0,
+      "color": "paper"
+    },
+    "dateline": {
+      "x": 7.0,
+      "y": 134.0,
+      "w": 191.0,
+      "h": 6.6,
+      "size_pt": 8.2,
+      "left": "Nr {issue_number}  |  {issue_date}",
+      "center": "BEZPŁATNY DWUTYGODNIK",
+      "right": "www.wukadka.pl",
+      "sub": "Nakład: 30 000 egzemplarzy"
+    },
+    "skybox": {
+      "y": 14.8,
+      "h": 56.0,
+      "gap": 11.0,
+      "slots": 2
+    },
+    "bottom": {
+      "y": 356.0,
+      "h": 19.0
+    }
+  },
+  "grammar": {
+    "lead_rotation_deg": [
+      -9.0,
+      -8.5
+    ],
+    "lead_kicker": "red_slant_chips",
+    "stack_max_lines": 5,
+    "stack_line_gap_em": 0.07,
+    "emphasis_color": "red",
+    "base_color": "ink",
+    "hero_headline_colors": [
+      "teal",
+      "yellow"
+    ],
+    "hero_name_chip": {
+      "bg": "yellow",
+      "color": "teal"
+    },
+    "hero_body_box": {
+      "bg": "yellow",
+      "color": "ink",
+      "size_pt": 8.2
+    },
+    "interview_label": [
+      "Rozmowy",
+      "Wukadki"
+    ],
+    "promo_roundel": {
+      "bg": "cyan",
+      "color": "white",
+      "accent": "yellow",
+      "d_mm": 40.0,
+      "rotation_deg": -8.8
+    },
+    "body_size_pt": 9.5,
+    "page_ref_style": "bold",
+    "legible_alternatives": {
+      "teal": [
+        "panel",
+        "ink"
+      ],
+      "red": [
+        "ink"
+      ],
+      "yellow": [
+        "ink"
+      ],
+      "white": [
+        "ink"
+      ],
+      "panel": [
+        "ink"
+      ]
+    },
+    "lead_rotation_source": "NR20–NR22: stos i belki tytułu głównego obrócone o 8,8–9,0° w lewo; roundel 8,8°; reszta 0°."
+  }
+}

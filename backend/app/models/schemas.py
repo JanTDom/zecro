@@ -71,6 +71,10 @@ class PhotoRulesDNA(BaseModel):
     min_dpi: int = Field(default=200)
     max_photos_per_page: int = Field(default=3)
     text_wrap_offset_mm: float = Field(default=3.5)
+    # Below this photo-editor score the lead story stops before geometry
+    # with "potrzebne inne zdjęcie" instead of laying out a weak cover.
+    min_lead_photo_score: float = Field(default=0.52, ge=0, le=1)
+    min_lead_photo_match: float = Field(default=0.45, ge=0, le=1)
 
 
 class StyleBlend(BaseModel):
@@ -137,6 +141,9 @@ class TitleDNA(BaseModel):
     archetype: Optional[str] = Field(default=None, description="One of the five global style archetypes")
     style_blend: StyleBlend = Field(default_factory=StyleBlend)
     corpus_stats: Dict[str, Any] = Field(default_factory=dict)
+    # Cover composition is data in the title DNA.  The generator may vary the
+    # geometry within these ranges; no corpus page is used as a template.
+    cover_grammar: Dict[str, Any] = Field(default_factory=dict)
     logo_profile: Optional[LogoProfile] = None
     # Edition-level editorial grammar.  Kept as data so a title can change its
     # advertising catalogue and page energy without changing the generator.
@@ -161,6 +168,9 @@ class Frame(BaseModel):
     h: float = Field(..., description="Height in mm")
     unit: Literal["mm", "grid"] = "mm"
     rotation_deg: float = 0.0
+    # Vertical shear (tabloid "slanted" type): verticals stay vertical, the
+    # right end rises by width·tan(skew).  Pivot = the frame's left edge.
+    skew_y_deg: float = 0.0
 
 class ElementStyle(BaseModel):
     type_scale: Optional[str] = None
@@ -168,13 +178,29 @@ class ElementStyle(BaseModel):
     font_size_pt: Optional[float] = None
     line_height_pt: Optional[float] = None
     font_weight: Optional[str] = None
+    # Face selection inside a family: "italic" and a CSS-like stretch let a
+    # title kit name e.g. Myriad Pro Bold Condensed Italic exactly.
+    font_style: Optional[Literal["normal", "italic"]] = None
+    font_stretch: Optional[Literal["extra-condensed", "condensed", "semi-condensed", "normal"]] = None
+    # Tracking in em (InDesign "-30" = -0.030).  Applied by the shaper, the
+    # copyfit, every renderer and the critic alike.
+    tracking_em: Optional[float] = Field(default=None, ge=-0.15, le=0.3)
     case: Optional[Literal["normal", "upper", "lower", "title"]] = "normal"
     align: Optional[Literal["left", "center", "right", "justify"]] = "left"
     color: Optional[str] = None
     bg_color: Optional[str] = None
+    outline_color: Optional[str] = None
+    outline_width_pt: Optional[float] = Field(default=None, ge=0, le=3)
+    shadow_color: Optional[str] = None
+    shadow_offset_x_pt: Optional[float] = Field(default=None, ge=-5, le=5)
+    shadow_offset_y_pt: Optional[float] = Field(default=None, ge=-5, le=5)
     border_width_mm: Optional[float] = None
     border_color: Optional[str] = None
     padding_mm: Optional[float] = None
+    # Explicit text inset [top, right, bottom, left] in mm; overrides
+    # padding_mm.  Shaped frames use it to keep copy inside the shape.
+    inset_mm: Optional[List[float]] = None
+    valign: Optional[Literal["top", "center", "bottom"]] = "top"
     columns: Optional[int] = 1
 
 class TextWrap(BaseModel):
@@ -196,6 +222,11 @@ class Element(BaseModel):
     z: int = 1
     style: Optional[ElementStyle] = Field(default_factory=ElementStyle)
     treatment: Literal["crop", "cutout", "full-bleed", "framed", "tinted"] = "crop"
+    # Frame outline.  Popular titles use circles, starbursts, corner
+    # triangles and slanted bars; every renderer and the critic use the same
+    # geometry (engine/shapes.py).
+    shape: Literal["rect", "circle", "ellipse", "starburst", "triangle_tl", "triangle_tr",
+                   "triangle_bl", "triangle_br", "slant"] = "rect"
     mask_ref: Optional[str] = None
     image_url: Optional[str] = None
     contour_points: Optional[List[List[float]]] = None  # [[x,y], ...] relative to frame in mm
@@ -276,6 +307,10 @@ class StoryImageInput(BaseModel):
     width_px: Optional[int] = Field(default=None, gt=0)
     height_px: Optional[int] = Field(default=None, gt=0)
     dpi: Optional[float] = Field(default=None, gt=0)
+    # Structured photo-editor observations (emotion, motion, faces, gaze,
+    # headline-safe zone, cutout feasibility).  The generator reads them as
+    # data; they never set coordinates directly.
+    photo_analysis: Optional[Dict[str, Any]] = None
 
     @model_validator(mode="after")
     def normalise_legacy_image_fields(self):
@@ -300,6 +335,11 @@ class StoryInput(BaseModel):
     lead: Optional[str] = None
     body: str
     pullquote: Optional[str] = None
+    # Popular covers: the words the display headline stresses (scale/colour)
+    # and the printed page reference ("STR. 4–5").  Chosen by the editor or
+    # proposed by AI; the composer only reads them.
+    headline_emphasis: List[str] = Field(default_factory=list)
+    page_ref: Optional[str] = None
     importance: float = 0.9  # 1.0 = Lead story, 0.5 = secondary
     rank: Literal["lead", "second", "third", "short", "brief", "teaser", "box", "column"] = "second"
     span_cols: Optional[int] = Field(default=None, ge=1)
@@ -363,14 +403,40 @@ class PagePlan(BaseModel):
         return [slot.story_ref for slot in self.slots if not slot.teaser_only]
 
 
+class TVSlot(BaseModel):
+    """One programme in a TV schedule (TV guide pages)."""
+    station: str
+    time: str = Field(..., pattern=r"^\d{1,2}:\d{2}$")
+    title: str
+    genre: Optional[str] = None
+    description: Optional[str] = None
+    highlight: bool = False
+    image_url: Optional[str] = None
+    image_width_px: Optional[int] = Field(default=None, gt=0)
+    image_height_px: Optional[int] = Field(default=None, gt=0)
+
+    @property
+    def minutes(self) -> int:
+        hours, minutes = self.time.split(":")
+        return int(hours) * 60 + int(minutes)
+
+
 class PageInputMaterial(BaseModel):
     issue_date: Optional[str] = "September 1, 2026"
     issue_number: Optional[str] = "No. 14,892"
     section_name: Optional[str] = "FRONT PAGE"
     masthead_title: Optional[str] = "THE DAILY CHRONICLE"
     stories: List[StoryInput] = Field(default_factory=list)
+    # "source": copy is fitted from the supplied texts (AI expands when the
+    # source is too short); "placeholder": proofs fill frames with marked
+    # placeholder copy ("tekst markowany") that can never be published.
+    copy_mode: Literal["source", "placeholder"] = "source"
+    # TV guides: the schedule is data, laid out as a navigable listing.
+    tv_schedule: List[TVSlot] = Field(default_factory=list)
     page_plan: Optional[PagePlan] = None
     page_zone: Literal["front_page", "spread", "back_page"] = "front_page"
+    page_topic: Literal["general", "events", "politics", "science", "celebrities", "economy", "sports", "culture", "practical"] = "general"
+    editorial_mood: Literal["auto", "urgent", "human", "solemn", "celebratory", "analytical", "practical", "scandal", "entertainment"] = "auto"
     # Human-facing aliases accepted by the API and import manifests.
     page_type: Optional[Literal["front", "front_page", "spread", "back", "back_page"]] = None
     style_blend: StyleBlend = Field(default_factory=StyleBlend)
@@ -461,6 +527,9 @@ class CriticResult(BaseModel):
     vlm_score: Optional[float] = None
     vlm_reasoning: Optional[str] = None
     preference_score: Optional[float] = None
+    # Score from the archetype calibration fitted on A/B pairs (VLM and/or
+    # human), when a validated calibration exists for the title archetype.
+    calibrated_score: Optional[float] = None
     novelty_vs_corpus: float = 0.0
     diversity_in_run: float = 0.0
     total_fitness: float = 0.0
@@ -502,6 +571,9 @@ class GenerationRequest(BaseModel):
     # The deterministic critic is always part of generation. Visual VLM
     # review is opt-in because it is an external, potentially slow operation.
     visual_review: bool = False
+    # Explicit editor override after a "potrzebne inne zdjęcie" stop.
+    accept_weak_photos: bool = False
+    copy_review: bool = False
     prioritize_novelty: bool = True
     energy_budget_override: Optional[float] = None
     style_blend: Optional[StyleBlend] = None
@@ -568,6 +640,9 @@ class Project(BaseModel):
     status: Literal["draft", "ready", "learning", "active"] = "ready"
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    editorial_character: Optional[str] = None
+    format_name: Optional[str] = None
+    dimensions: Optional[Dict[str, Any]] = None
 
 class ExportArtifact(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -693,6 +768,7 @@ class Asset(RevisionedModel):
     prompt_provenance: Optional[str] = None
     alt_text: Optional[str] = None
     caption: Optional[str] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)
     focal_point: List[float] = Field(default_factory=lambda: [0.5, 0.5])
     width_px: Optional[int] = None
     height_px: Optional[int] = None

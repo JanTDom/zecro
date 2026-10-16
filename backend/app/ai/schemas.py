@@ -125,10 +125,41 @@ class PhotoScore(BaseModel):
     crop_suggestion: list[int] = Field(default_factory=list)
     risks: list[str] = Field(default_factory=list)
     reason: str = ""
+    # Photo-editing features consumed by the geometry generator.  They are
+    # observations about pixels and composition, never identity claims.
+    headline_match: float = Field(default=0.0, ge=0, le=1)
+    emotion: Literal["tension", "grief", "joy", "anger", "fear", "surprise", "calm", "neutral", "uncertain"] = "uncertain"
+    motion: float = Field(default=0.0, ge=0, le=1)
+    reportage: float = Field(default=0.0, ge=0, le=1)
+    posed: bool = False
+    face_count: int = Field(default=0, ge=0, le=50)
+    largest_face_share: float = Field(default=0.0, ge=0, le=1)
+    gaze_direction: Literal["left", "right", "camera", "up", "down", "none"] = "none"
+    motion_direction: Literal["left", "right", "toward_camera", "away", "none"] = "none"
+    subject_box: list[int] = Field(default_factory=list)
+    headline_safe_zone: Literal["top", "bottom", "left", "right", "none"] = "none"
+    cutout_feasible: bool = False
+    print_quality_at_crop: float = Field(default=0.0, ge=0, le=1)
 
 
 class PhotoRanking(BaseModel):
     scores: list[PhotoScore]
+
+
+class PhotoFocalAI(BaseModel):
+    subject_kind: Literal["person", "animal", "object", "scene", "uncertain"]
+    point_x: int = Field(ge=0, le=1000)
+    point_y: int = Field(ge=0, le=1000)
+    confidence: float = Field(ge=0, le=1)
+    reason: str = ""
+
+
+class PairwiseJudgement(BaseModel):
+    winner: Literal["A", "B", "tie"]
+    confidence: float = Field(default=0.5, ge=0, le=1)
+    reasons: list[str] = Field(default_factory=list)
+    a_issues: list[str] = Field(default_factory=list)
+    b_issues: list[str] = Field(default_factory=list)
 
 
 class PageCritique(BaseModel):
@@ -142,6 +173,9 @@ class PageCritique(BaseModel):
     typographic_issues: list[str] = Field(default_factory=list)
     score: float
     top_3_fixes: list[str] = Field(default_factory=list)
+    style_fidelity: float = 0.0
+    photo_use: float = 0.0
+    category_mismatch: list[str] = Field(default_factory=list)
 
 
 class MaskQA(BaseModel):
@@ -184,3 +218,39 @@ class LogoAI(BaseModel):
 class ImagePrompt(BaseModel):
     prompt: str
     negative: list[str] = Field(default_factory=list)
+
+
+
+class MoveValue(BaseModel):
+    nazwa: str
+    wartosc: str
+
+
+class ArtPlan(BaseModel):
+    gatunek: str
+    czytanie_tytulu: str = ""
+    dominanta: str = ""
+    uzasadnienie: str = ""
+    ruchy: list[MoveValue] = Field(default_factory=list)
+    ryzyka: list[str] = Field(default_factory=list)
+
+
+class ReviewDefect(BaseModel):
+    id: str
+    gdzie: str = ""
+    waga: Literal["blocker", "major", "minor"] = "major"
+    opis: str = ""
+
+
+class ReviewFix(BaseModel):
+    ruch: str
+    wartosc: str
+    naprawia: str = ""
+
+
+class LayoutReview(BaseModel):
+    do_druku: bool = False
+    ocena: float = Field(default=0, ge=0, le=10)
+    werdykt: str = ""
+    defekty: list[ReviewDefect] = Field(default_factory=list)
+    poprawki: list[ReviewFix] = Field(default_factory=list)

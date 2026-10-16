@@ -1,0 +1,115 @@
+{
+  "archetype": "tabloid",
+  "source": "vlm",
+  "pairs": 47,
+  "features": [
+    "balance",
+    "reading_gravity",
+    "scale_rhythm",
+    "breathing_space",
+    "tension",
+    "corpus_alignment",
+    "hero_photo_share",
+    "photo_count",
+    "module_uniformity",
+    "headline_dominance",
+    "diagonal_entry",
+    "intentional_overlap",
+    "largest_empty_region",
+    "colour_plane_share",
+    "text_share"
+  ],
+  "mean": {
+    "balance": 0.6818404255319145,
+    "reading_gravity": 0.9853936170212771,
+    "scale_rhythm": 0.28488297872340407,
+    "breathing_space": 0.5005957446808509,
+    "tension": 0.5241702127659575,
+    "corpus_alignment": 0.5579255319148934,
+    "hero_photo_share": 0.3465384878157787,
+    "photo_count": 0.7393617021276597,
+    "module_uniformity": 0.6949680851063834,
+    "headline_dominance": 0.45444255319148946,
+    "diagonal_entry": 0.09574468085106383,
+    "intentional_overlap": 0.34574468085106386,
+    "largest_empty_region": 0.020277659574468074,
+    "colour_plane_share": 0.11904371847341895,
+    "text_share": 0.37375465770860544
+  },
+  "std": {
+    "balance": 0.0607321120133835,
+    "reading_gravity": 0.01510686618945483,
+    "scale_rhythm": 0.09081426642808874,
+    "breathing_space": 0.42494408441053655,
+    "tension": 0.26798684622760616,
+    "corpus_alignment": 0.10044679330019217,
+    "hero_photo_share": 0.15020320802483833,
+    "photo_count": 0.1204760814138949,
+    "module_uniformity": 0.11673897343051197,
+    "headline_dominance": 0.09574941751876792,
+    "diagonal_entry": 0.29424078055190045,
+    "intentional_overlap": 0.33443025339613075,
+    "largest_empty_region": 0.0284594865246338,
+    "colour_plane_share": 0.11937765988354951,
+    "text_share": 0.0372321412626624
+  },
+  "weights": {
+    "balance": -0.69942,
+    "reading_gravity": 0.88399,
+    "scale_rhythm": -0.76565,
+    "breathing_space": -0.45484,
+    "tension": 1.22933,
+    "corpus_alignment": 0.30117,
+    "hero_photo_share": 0.80796,
+    "photo_count": 0.80552,
+    "module_uniformity": 0.41812,
+    "headline_dominance": -0.51902,
+    "diagonal_entry": 1.13615,
+    "intentional_overlap": 0.81874,
+    "largest_empty_region": -0.93506,
+    "colour_plane_share": 0.35832,
+    "text_share": -0.80538
+  },
+  "loo_accuracy": 0.9574,
+  "heuristic_pair_accuracy": 0.4043,
+  "valid": true,
+  "note": "Kalibracja z ocen parami. Źródło VLM nie zastępuje gustu redaktora; pary od redaktora (pętla gustu) mają pierwszeństwo w projekcie.",
+  "architecture_win_loss": {
+    "photo-top:diagonal_hero_entry": [
+      9,
+      0
+    ],
+    "photo-top:dual_scale_collage": [
+      11,
+      7
+    ],
+    "photo-top:photo_dominant_strip": [
+      9,
+      4
+    ],
+    "modular-grid": [
+      0,
+      11
+    ],
+    "photo-top:asymmetric_hero_rail": [
+      9,
+      1
+    ],
+    "dominant-right": [
+      6,
+      4
+    ],
+    "dominant-left": [
+      1,
+      5
+    ],
+    "stacked": [
+      1,
+      11
+    ],
+    "type-led:skyline_type_portrait": [
+      1,
+      4
+    ]
+  }
+}

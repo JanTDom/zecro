@@ -1,3 +1,4 @@
+import { safeStorage } from '../safeStorage';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Project } from '../types/project';
 import { TitleDNA } from '../types/dna';
@@ -79,9 +80,9 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const list = await api.getProjects();
       setProjects(list);
       if (!activeProject && list.length > 0) {
-        const savedId = localStorage.getItem('layout_studio_active_proj_id');
-        const match = list.find((p) => p.id === savedId) || list[0];
-        setActiveProject(match);
+        const savedId = safeStorage.get('layout_studio_active_proj_id');
+        const match = list.find((p) => p.id === savedId);
+        if (match) setActiveProject(match);
       }
     } catch (e) {
       console.error('Failed to load projects:', e);
@@ -95,7 +96,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const p = await api.getProject(id);
       if (p) {
         setActiveProject(p);
-        localStorage.setItem('layout_studio_active_proj_id', id);
+        safeStorage.set('layout_studio_active_proj_id', id);
         const [loadedDna, loadedMetrics, runs] = await Promise.all([
           api.getTitleDNA(p.id),
           api.getTasteMetrics(p.id),
@@ -146,8 +147,9 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const list = await api.getProjects();
         setProjects(list);
         if (list.length > 0) {
-          const savedId = localStorage.getItem('layout_studio_active_proj_id');
-          const current = list.find((p) => p.id === savedId) || list[0];
+          const savedId = safeStorage.get('layout_studio_active_proj_id');
+          const current = list.find((p) => p.id === savedId);
+          if (!current) return;
           setActiveProject(current);
           const [loadedDna, loadedMetrics, runs] = await Promise.all([
             api.getTitleDNA(current.id),
@@ -179,8 +181,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await selectProject(newProj.id);
     addToast({
       type: 'success',
-      title: 'Project Created',
-      message: `Project "${newProj.name}" has been created with isolated DNA.`,
+      title: 'Gazeta utworzona',
+      message: `Gazeta „${newProj.name}” jest gotowa. Dodaj pierwszy artykuł, aby przygotować stronę.`,
     });
     return newProj;
   }, [reloadProjects, selectProject, addToast]);
@@ -194,8 +196,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     addToast({
       type: 'info',
-      title: 'Project Deleted',
-      message: 'Project and its isolated models have been removed.',
+      title: 'Gazeta usunięta',
+      message: 'Gazeta i jej ustawienia zostały usunięte.',
     });
   }, [activeProject, selectProject, addToast]);
 

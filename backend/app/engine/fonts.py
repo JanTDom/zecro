@@ -9,7 +9,8 @@ Polish coverage is measured from the font's own cmap for every face
 separately: ``full`` / ``partial`` (missing list) / ``none``.
 """
 from __future__ import annotations
-import hashlib, io, json, re, shutil
+import hashlib, io, json, re, shutil, tempfile, time
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
@@ -133,6 +134,7 @@ def ingest_bytes(data: bytes, filename: str, *, source: str = "upload", license_
         rec = db.save_font({**info, "storage_ref": ref, "font_number": 0, "sha256": sha, "source": source,
                             "license_note": license_note, "project_id": project_id})
         saved.append({**rec, "status": "added"})
+    _cached_faces.cache_clear()
     return saved
 
 
@@ -143,8 +145,11 @@ def ingest_path(path: Path, **kw) -> list[dict[str, Any]]:
 def local_file(rec: dict[str, Any]) -> Optional[Path]:
     ref = rec.get("storage_ref") or ""
     p = Path(ref)
-    if p.is_file():
-        return p
+    try:
+        if p.is_file():
+            return p
+    except OSError:
+        pass  # a path from another machine/sandbox can be unreadable
     moved = FONT_DIR / p.name  # library copied between machines (absolute path differs)
     if p.name and moved.is_file():
         return moved
@@ -235,8 +240,11 @@ def families(require_polish: bool = False) -> list[dict[str, Any]]:
         g = groups.setdefault(rec["family"], {"family": rec["family"], "faces": [], "polish": "full", "sources": set()})
         g["faces"].append({k: rec[k] for k in ("id", "subfamily", "weight", "italic", "polish", "missing_chars", "embedding", "format", "has_kerning")})
         g["sources"].add(rec.get("source") or "")
-        if rec["polish"] != "full":
-            g["polish"] = "partial" if g["polish"] == "full" and rec["polish"] == "partial" else ("none" if rec["polish"] == "none" else "partial")
+        # A family is usable for Polish copy as soon as at least one face covers
+        # all required characters. Other faces keep their own coverage flag.
+        g["polish"] = ("full" if any(face["polish"] == "full" for face in g["faces"])
+                       else "partial" if any(face["polish"] == "partial" for face in g["faces"])
+                       else "none")
     out = [{**g, "sources": sorted(g["sources"])} for g in groups.values()]
     if require_polish:
         out = [g for g in out if any(f["polish"] == "full" for f in g["faces"])]
@@ -255,22 +263,37 @@ def _candidates(family: Optional[str]) -> list[str]:
     return list(dict.fromkeys(names))
 
 
-def resolve_face(family: Optional[str], *, weight: int = 400, italic: bool = False, text: Optional[str] = None) -> Optional[dict[str, Any]]:
+@lru_cache(maxsize=256)
+def _cached_faces(name: str, minute: int) -> tuple[dict[str, Any], ...]:
+    """Avoid a remote database round trip for every candidate's text frame."""
+    return tuple(db.list_fonts(name))
+
+
+STRETCH_CLASS = {"extra-condensed": 2, "condensed": 3, "semi-condensed": 4, "normal": 5}
+
+
+def resolve_face(family: Optional[str], *, weight: int = 400, italic: bool = False, text: Optional[str] = None,
+                 width: Optional[int] = None) -> Optional[dict[str, Any]]:
     """Closest library face for a CSS-like family stack that covers ``text``."""
     needed = set(text or "") & set(POLISH_LETTERS + POLISH_TYPO)
     for name in _candidates(family):
-        faces = db.list_fonts(name)
+        faces = _cached_faces(name, int(time.monotonic() // 60))
         usable = [f for f in faces if not (needed & set(f["missing_chars"]))]
         if not usable:
             continue
-        usable.sort(key=lambda f: (f["italic"] != italic, abs((f["weight"] or 400) - weight), f["width"] != 5))
+        if width is None:
+            usable.sort(key=lambda f: (f["italic"] != italic, abs((f["weight"] or 400) - weight), f["width"] != 5))
+        else:
+            usable.sort(key=lambda f: (f["italic"] != italic, abs((f["width"] or 5) - width),
+                                       abs((f["weight"] or 400) - weight)))
         if local_file(usable[0]):
             return usable[0]
     return None
 
 
-def resolve_font(family: Optional[str], *, bold: bool = False, italic: bool = False, text: Optional[str] = None) -> Optional[str]:
-    face = resolve_face(family, weight=700 if bold else 400, italic=italic, text=text)
+def resolve_font(family: Optional[str], *, bold: bool = False, italic: bool = False, text: Optional[str] = None,
+                 weight: Optional[int] = None, width: Optional[int] = None) -> Optional[str]:
+    face = resolve_face(family, weight=weight or (700 if bold else 400), italic=italic, text=text, width=width)
     path = local_file(face) if face else None
     return str(path) if path else None
 
@@ -282,14 +305,25 @@ def ttf_for_pdf(path: str) -> str:
     font = TTFont(str(src), lazy=True)
     if "glyf" in font:
         return str(src)
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    target = CACHE_DIR / (hashlib.sha256(src.read_bytes()).hexdigest()[:16] + ".ttf")
-    if target.exists():
-        return str(target)
-    font = TTFont(str(src))
-    _otf_to_ttf(font)
-    font.save(str(target))
-    return str(target)
+    filename = hashlib.sha256(src.read_bytes()).hexdigest()[:16] + ".ttf"
+    converted = None
+    for cache_dir in (CACHE_DIR, Path(tempfile.gettempdir()) / "zecro-font-cache"):
+        target = cache_dir / filename
+        if target.is_file():
+            return str(target)
+        try:
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            if converted is None:
+                converted = TTFont(str(src))
+                _otf_to_ttf(converted)
+            converted.save(str(target))
+            return str(target)
+        except OSError:
+            # A local read-only checkout can still export the user's approved
+            # font through the system temporary directory. On Vercel both
+            # paths are under /tmp; the same conversion is used in previews.
+            continue
+    raise OSError(f"Cannot cache a printable TrueType conversion of {src.name}")
 
 
 def _otf_to_ttf(font, max_err: float = 1.0, reverse_direction: bool = True) -> None:
@@ -332,3 +366,15 @@ def font_report(scene_fonts: Iterable[tuple[str, int, bool]]) -> list[dict[str, 
                     "packaged": bool(face and face["embedding"] in {"installable", "editable"}),
                     "note": None if face else "font nie jest w bibliotece — zainstaluj go na komputerze z InDesignem"})
     return out
+
+
+def style_face_args(style) -> dict[str, Any]:
+    """weight / italic / width for an ElementStyle (numeric weights kept)."""
+    raw = str(getattr(style, "font_weight", None) or "")
+    if raw.isdigit():
+        weight = int(raw)
+    else:
+        weight = 700 if raw in ("bold", "600", "700", "800", "900") else 400
+    stretch = getattr(style, "font_stretch", None)
+    return {"weight": weight, "italic": getattr(style, "font_style", None) == "italic",
+            "width": STRETCH_CLASS.get(stretch) if stretch else None}
