@@ -286,7 +286,10 @@ def fill_copy(element, source: str, extra_sources: list[str], *, mode: str, seed
         if fill >= FILL_MIN:
             return {"status": "shortened", "capacity_words": capacity, "fill": round(fill, 3)}
         # Sentence boundaries left a gap: the copy editor rewrites to length.
-        return {"status": "needs_expansion", "capacity_words": capacity, "target_words": int(capacity * .9),
+        target = int(capacity * .9)
+        while target > 1 and ratio(placeholder_text(target, 0)) > 1.0:
+            target -= 1
+        return {"status": "needs_expansion", "capacity_words": capacity, "target_words": target,
                 "fill": round(fill, 3)}
     # Too short: extend with further *source* sentences of the same story.
     used = set(_sentences(text))
@@ -305,6 +308,8 @@ def fill_copy(element, source: str, extra_sources: list[str], *, mode: str, seed
     if fill >= FILL_MIN:
         return {"status": "extended_from_source", "capacity_words": capacity, "fill": round(fill, 3)}
     target = int(capacity * .9)
+    while target > 1 and ratio(placeholder_text(target, 0)) > 1.0:
+        target -= 1
     return {"status": "needs_expansion", "capacity_words": capacity, "target_words": target,
             "fill": round(fill, 3)}
 

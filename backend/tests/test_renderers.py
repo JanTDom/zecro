@@ -122,3 +122,27 @@ def test_idml_renderer(sample_scene_graph):
     finally:
         if os.path.exists(idml_path):
             os.remove(idml_path)
+
+
+def test_pdf_trapping_bleed_on_shared_edge(tmp_path):
+    from backend.app.models.schemas import ElementStyle
+    # Case 1: Photo at z=0, plate at z=10 directly below it (shared horizontal edge at y=60)
+    photo = Element(id="ph1", role="photo", frame=Frame(x=10, y=10, w=50, h=50), z=0)
+    plate = Element(id="pl1", role="band", frame=Frame(x=10, y=60, w=50, h=40), z=10, style=ElementStyle(bg_color="#fed304"))
+    
+    bleeds1 = PDFRenderer._compute_trapping_bleeds([photo, plate], bleed_mm=0.25)
+    # ph1 is under pl1 (bottom touches top) -> dy1 = 0.25
+    assert "ph1" in bleeds1
+    assert bleeds1["ph1"] == (0.0, 0.0, 0.0, 0.25)
+    assert "pl1" not in bleeds1
+    
+    # Case 2: Plate at z=1, photo at z=5 directly to the right of it (shared vertical edge at x=100)
+    plate_left = Element(id="pl2", role="band", frame=Frame(x=60, y=10, w=40, h=50), z=1, style=ElementStyle(bg_color="#111111"))
+    photo_right = Element(id="ph2", role="photo", frame=Frame(x=100, y=10, w=40, h=50), z=5)
+    
+    bleeds2 = PDFRenderer._compute_trapping_bleeds([plate_left, photo_right], bleed_mm=0.25)
+    # pl2 is under ph2 (right touches left) -> dx1 = 0.25
+    assert "pl2" in bleeds2
+    assert bleeds2["pl2"] == (0.0, 0.0, 0.25, 0.0)
+    assert "ph2" not in bleeds2
+

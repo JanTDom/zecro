@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Literal, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel, Field
 
 from ..engine.content_engine import (
@@ -676,3 +676,198 @@ def editorial_history(object_type: str, object_id: str):
     if not db.get_editorial_object(object_type, object_id):
         _not_found(object_type, object_id)
     return {"object_id": object_id, "object_type": object_type, "revisions": db.list_editorial_revisions(object_id)}
+
+
+# -------------------------------------------------------------------------
+# Smart Content Ingest & AI Editorial Redaction Endpoints
+# -------------------------------------------------------------------------
+class IngestUrlRequest(BaseModel):
+    url: str
+    auto_cutout: bool = True
+    project_id: Optional[str] = None
+
+
+class RedactTextRequest(BaseModel):
+    text: str
+    title: Optional[str] = None
+    project_id: Optional[str] = None
+
+
+@router.post("/editorial/ingest-url")
+def ingest_url_endpoint(request: IngestUrlRequest):
+    """Fetch article content from an internet link, extract its photo, process AI cutout and redact copy."""
+    from ..engine.content_ingest import download_and_extract_url, process_editorial_photo, redact_editorial_article
+
+    if not request.url or not request.url.strip():
+        raise HTTPException(status_code=400, detail="Adres URL jest wymagany.")
+
+    try:
+        extracted = download_and_extract_url(request.url)
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=f"Nie udało się pobrać strony: {str(exc)}")
+
+    raw_title = extracted.get("raw_title") or "AKTUALNOŚCI"
+    raw_body = extracted.get("raw_body") or extracted.get("raw_description") or ""
+    if not raw_body:
+        raise HTTPException(status_code=422, detail="Na podanej stronie nie znaleziono treści artykułu.")
+
+    # 1. Redact article copy with AI
+    redacted = redact_editorial_article(
+        raw_title=raw_title,
+        raw_text=raw_body,
+        domain=extracted.get("domain", ""),
+        project_id=request.project_id,
+    )
+
+    # 2. Process photo if found
+    photos = []
+    image_url = extracted.get("image_url")
+    if image_url:
+        photo_meta = process_editorial_photo(
+            image_source=image_url,
+            auto_cutout=request.auto_cutout,
+            caption=redacted.get("headline", ""),
+            credit=f"Foto: {extracted.get('domain', 'Internet')}",
+        )
+        if photo_meta:
+            photos.append(photo_meta)
+
+    lead_story = {
+        "id": "story-lead-01",
+        "role": "lead-story",
+        "importance": 5,
+        "kicker": redacted.get("kicker", "RAPORT"),
+        "headline": redacted.get("headline", raw_title.upper()),
+        "deck": redacted.get("deck", ""),
+        "lead": redacted.get("lead", ""),
+        "body": redacted.get("body", raw_body[:800]),
+        "byline": redacted.get("byline", f"opr. / {extracted.get('domain', '')}"),
+        "pullQuote": redacted.get("pull_quote", ""),
+        "wordCount": len((redacted.get("body") or "").split()),
+    }
+
+    return {
+        "status": "ok",
+        "leadStory": lead_story,
+        "photos": photos,
+        "source": {
+            "url": extracted.get("source_url"),
+            "domain": extracted.get("domain"),
+            "raw_title": raw_title,
+        },
+        "provenance": redacted.get("provenance", {}),
+    }
+
+
+@router.post("/editorial/ingest-file")
+async def ingest_file_endpoint(
+    file: UploadFile = File(...),
+    auto_cutout: bool = Form(True),
+    project_id: Optional[str] = Form(None),
+):
+    """Extract content from an uploaded document (DOCX, PDF, TXT), process embedded photos and redact."""
+    from ..engine.content_ingest import extract_document_file, process_editorial_photo, redact_editorial_article
+
+    ext = Path(file.filename or "doc.txt").suffix.lower()
+    if ext not in {".docx", ".doc", ".pdf", ".txt", ".rtf", ".md", ".odt"}:
+        raise HTTPException(status_code=415, detail="Obsługiwane formaty dokumentów: DOCX, PDF, TXT, RTF, MD.")
+
+    settings.UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+    temp_path = settings.UPLOADS_DIR / f"temp_doc_{uuid4()}{ext}"
+    try:
+        content = await file.read()
+        temp_path.write_bytes(content)
+
+        extracted = extract_document_file(temp_path, file.filename or "dokument")
+    finally:
+        if temp_path.exists():
+            try:
+                temp_path.unlink()
+            except Exception:
+                pass
+
+    raw_title = extracted.get("raw_title") or Path(file.filename or "Dokument").stem
+    raw_body = extracted.get("raw_body") or ""
+    if not raw_body.strip():
+        raise HTTPException(status_code=422, detail="Plik nie zawiera tekstu lub nie udało się go odczytać.")
+
+    # 1. Redact article copy
+    redacted = redact_editorial_article(
+        raw_title=raw_title,
+        raw_text=raw_body,
+        domain="",
+        project_id=project_id,
+    )
+
+    # 2. Process embedded image if found in docx/pdf
+    photos = []
+    if extracted.get("extracted_image_bytes"):
+        photo_meta = process_editorial_photo(
+            image_source=extracted["extracted_image_bytes"],
+            auto_cutout=auto_cutout,
+            caption=redacted.get("headline", ""),
+            credit=f"Dokument: {file.filename}",
+        )
+        if photo_meta:
+            photos.append(photo_meta)
+
+    lead_story = {
+        "id": "story-lead-01",
+        "role": "lead-story",
+        "importance": 5,
+        "kicker": redacted.get("kicker", "DOKUMENT"),
+        "headline": redacted.get("headline", raw_title.upper()),
+        "deck": redacted.get("deck", ""),
+        "lead": redacted.get("lead", ""),
+        "body": redacted.get("body", raw_body[:800]),
+        "byline": redacted.get("byline", "Opracowanie redakcyjne"),
+        "pullQuote": redacted.get("pull_quote", ""),
+        "wordCount": len((redacted.get("body") or "").split()),
+    }
+
+    return {
+        "status": "ok",
+        "leadStory": lead_story,
+        "photos": photos,
+        "source": {
+            "filename": file.filename,
+        },
+        "provenance": redacted.get("provenance", {}),
+    }
+
+
+@router.post("/editorial/redact-text")
+def redact_text_endpoint(request: RedactTextRequest):
+    """Redact raw draft/notes into formatted Polish editorial newspaper copy."""
+    from ..engine.content_ingest import redact_editorial_article
+
+    if not request.text or not request.text.strip():
+        raise HTTPException(status_code=400, detail="Tekst do zredagowania jest wymagany.")
+
+    redacted = redact_editorial_article(
+        raw_title=request.title or "AKTUALNOŚCI",
+        raw_text=request.text,
+        domain="",
+        project_id=request.project_id,
+    )
+
+    lead_story = {
+        "id": "story-lead-01",
+        "role": "lead-story",
+        "importance": 5,
+        "kicker": redacted.get("kicker", "WYDANIE GŁÓWNE"),
+        "headline": redacted.get("headline", (request.title or "TYTUŁ").upper()),
+        "deck": redacted.get("deck", ""),
+        "lead": redacted.get("lead", ""),
+        "body": redacted.get("body", request.text[:800]),
+        "byline": redacted.get("byline", "Redakcja"),
+        "pullQuote": redacted.get("pull_quote", ""),
+        "wordCount": len((redacted.get("body") or "").split()),
+    }
+
+    return {
+        "status": "ok",
+        "leadStory": lead_story,
+        "provenance": redacted.get("provenance", {}),
+    }
+

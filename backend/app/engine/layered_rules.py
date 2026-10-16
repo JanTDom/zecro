@@ -889,6 +889,48 @@ def near_miss_edges(els: list[Element], trim: list, lo: float = .3, hi: float = 
     return out
 
 
+def snap_near_edges(els: list[Element], lo: float = .3, hi: float = 2.5) -> None:
+    """Rulebook U9/D29: plates whose parallel edges almost meet are snapped
+    onto the larger plate's edge — no paper sliver, no step."""
+    plates = [e for e in els if (e.role in ("band", "plate") or (getattr(e, "style", None) and e.style.bg_color))
+              and getattr(e.frame, "w", 0) >= 3.0 and getattr(e.frame, "h", 0) >= 2.0
+              and not getattr(e.frame, "rotation_deg", 0)
+              and not getattr(e.frame, "skew_y_deg", 0) and getattr(e, "shape", None) in (None, "rect")]
+    for a in plates:
+        for b in plates:
+            if a is b or a.frame.w * a.frame.h > b.frame.w * b.frame.h:
+                continue                          # move the smaller plate (a)
+            fa, fb = a.frame, b.frame
+            if min(fa.y + fa.h, fb.y + fb.h) - max(fa.y, fb.y) >= 3:
+                for ea in ("l", "r"):
+                    xa = fa.x if ea == "l" else fa.x + fa.w
+                    for xb in (fb.x, fb.x + fb.w):
+                        if lo < abs(xa - xb) < hi:
+                            if ea == "l":
+                                new_w = fa.w + fa.x - xb
+                                if new_w >= 1.0:
+                                    fa.w = new_w; fa.x = xb
+                            else:
+                                new_w = xb - fa.x
+                                if new_w >= 1.0:
+                                    fa.w = new_w
+                            break
+            if min(fa.x + fa.w, fb.x + fb.w) - max(fa.x, fb.x) >= 3:
+                for ea in ("t", "b"):
+                    ya = fa.y if ea == "t" else fa.y + fa.h
+                    for yb in (fb.y, fb.y + fb.h):
+                        if lo < abs(ya - yb) < hi:
+                            if ea == "t":
+                                new_h = fa.h + fa.y - yb
+                                if new_h >= 1.0:
+                                    fa.h = new_h; fa.y = yb
+                            else:
+                                new_h = yb - fa.y
+                                if new_h >= 1.0:
+                                    fa.h = new_h
+                            break
+
+
 def _owned_raster(els, meta, W, H, sc, white_is_paper: bool = False):
     import numpy as np
     from PIL import Image, ImageDraw

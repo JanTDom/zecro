@@ -24,10 +24,24 @@ import {
   Eye,
   Sliders,
   Flame,
+  Bot,
+  Wand2,
+  AlertCircle,
+  Wrench,
+  History,
 } from 'lucide-react';
 
 export const SceneGraphCanvas: React.FC = () => {
-  const { selectedCandidate, activeProject, dna, addToast, reloadTasteMetrics } = useProject();
+  const {
+    selectedCandidate,
+    setSelectedCandidate,
+    currentRun,
+    setCurrentRun,
+    activeProject,
+    dna,
+    addToast,
+    reloadTasteMetrics,
+  } = useProject();
 
   const [elements, setElements] = useState<SceneGraphElement[]>(
     selectedCandidate ? JSON.parse(JSON.stringify(selectedCandidate.sceneGraph.elements)) : []
@@ -40,6 +54,7 @@ export const SceneGraphCanvas: React.FC = () => {
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [deltas, setDeltas] = useState<ElementDelta[]>([]);
   const [isLoggingDelta, setIsLoggingDelta] = useState<boolean>(false);
+  const [isApplyingAiFixes, setIsApplyingAiFixes] = useState<boolean>(false);
   const dragRef = useRef<{ id: string; startX: number; startY: number; frame: RectFrame } | null>(null);
 
   // Sync if candidate changes
@@ -135,6 +150,56 @@ export const SceneGraphCanvas: React.FC = () => {
       });
     } finally {
       setIsLoggingDelta(false);
+    }
+  };
+
+  const critique = selectedCandidate.metadata?.visual_critique || selectedCandidate.visualReview;
+  const trace = selectedCandidate.metadata?.art_director_trace;
+  const topFixes: string[] = critique?.top_3_fixes || [];
+  const defects: string[] = (critique as any)?.defects || (selectedCandidate.visualReview?.dead_zones ? selectedCandidate.visualReview.dead_zones.map((z: string) => `D28: martwa strefa ${z}`) : []);
+
+  const handleApplyAiFixes = async (fixesToApply?: string[]) => {
+    if (!activeProject || !selectedCandidate) return;
+    const fixes = fixesToApply && fixesToApply.length > 0 ? fixesToApply : topFixes;
+    if (fixes.length === 0) {
+      addToast({
+        type: 'warning',
+        title: 'Brak poprawek do zastosowania',
+        message: 'Krytyk nie zaproponował żadnych poprawek dla tego wariantu.',
+      });
+      return;
+    }
+    setIsApplyingAiFixes(true);
+    try {
+      const composer = selectedCandidate.metadata?.composer_name || 'framed_cover:wukadka';
+      const genes = selectedCandidate.metadata?.composer_genes || {};
+      const updatedCandidate = await api.applyArtDirectFixes(
+        activeProject.id,
+        fixes,
+        genes,
+        composer
+      );
+      setSelectedCandidate(updatedCandidate);
+      setElements(JSON.parse(JSON.stringify(updatedCandidate.sceneGraph.elements)));
+      if (currentRun) {
+        const updatedCandidates = currentRun.candidates.map((c) =>
+          c.id === updatedCandidate.id ? updatedCandidate : c
+        );
+        setCurrentRun({ ...currentRun, candidates: updatedCandidates });
+      }
+      addToast({
+        type: 'success',
+        title: 'Zastosowano poprawki AI',
+        message: `Zaktualizowano układ (${fixes.length} poprawek).`,
+      });
+    } catch (e) {
+      addToast({
+        type: 'error',
+        title: 'Nie udało się zastosować poprawek',
+        message: e instanceof Error ? e.message : 'Błąd silnika.',
+      });
+    } finally {
+      setIsApplyingAiFixes(false);
     }
   };
 
@@ -501,6 +566,144 @@ export const SceneGraphCanvas: React.FC = () => {
                 Click any element on the canvas to inspect its geometry, styling, and transgression score.
               </div>
             )}
+          </Card>
+
+          {/* AI Art Director & Review Panel */}
+          <Card className="space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-ink-800">
+              <div className="flex items-center gap-2">
+                <Bot className="w-4 h-4 text-emerald-400" />
+                <h3 className="font-headline font-bold text-sm text-white">
+                  AI Redaktor Techniczny & Pętla
+                </h3>
+              </div>
+              {critique?.status && (
+                <Badge
+                  variant={
+                    critique.status === 'candidate_for_editor' || critique.status === 'PASS'
+                      ? 'success'
+                      : 'warning'
+                  }
+                  size="sm"
+                >
+                  {critique.status === 'candidate_for_editor'
+                    ? 'DO OCENY'
+                    : critique.status === 'PASS'
+                    ? 'ZAAKCEPTOWANE'
+                    : 'DO POPRAWY'}
+                </Badge>
+              )}
+            </div>
+
+            {/* Critique Score & Defect summary */}
+            <div className="space-y-3">
+              {typeof critique?.score === 'number' && (
+                <div className="flex items-center justify-between text-xs font-mono bg-ink-950 p-2 rounded border border-ink-800">
+                  <span className="text-ink-400">Ocena krytyka wizualnego</span>
+                  <span className="font-bold text-emerald-400">
+                    {(critique.score <= 1 ? critique.score * 100 : critique.score).toFixed(0)} / 100
+                  </span>
+                </div>
+              )}
+
+              {/* Defekty D01-D30 */}
+              <div>
+                <span className="text-[10px] font-mono uppercase font-bold text-ink-400 block mb-1.5">
+                  Wykryte defekty (katalog D01–D30)
+                </span>
+                {defects.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {defects.map((defect, i) => (
+                      <div
+                        key={i}
+                        className="px-2 py-1 bg-rose-950/40 border border-rose-800/60 rounded text-[11px] font-mono text-rose-300 flex items-start gap-1.5"
+                      >
+                        <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />
+                        <span>{defect}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-ink-500 font-mono flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    Brak krytycznych defektów geometrii
+                  </p>
+                )}
+              </div>
+
+              {/* Proponowane poprawki */}
+              <div>
+                <span className="text-[10px] font-mono uppercase font-bold text-ink-400 block mb-1.5">
+                  Proponowane poprawki układu
+                </span>
+                {topFixes.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {topFixes.map((fix, i) => (
+                      <div
+                        key={i}
+                        className="px-2 py-1 bg-ink-950 border border-ink-800 rounded text-[11px] font-mono text-amber-300 flex items-center justify-between gap-1.5"
+                      >
+                        <div className="flex items-center gap-1.5 truncate">
+                          <Wrench className="w-3 h-3 text-amber-400 shrink-0" />
+                          <span className="truncate">{fix}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleApplyAiFixes([fix])}
+                          disabled={isApplyingAiFixes}
+                          className="text-[10px] underline text-ink-400 hover:text-white shrink-0 cursor-pointer"
+                        >
+                          Zastosuj
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-ink-500 font-mono">Brak oczekujących poprawek</p>
+                )}
+              </div>
+
+              {/* Action Button: Apply all fixes */}
+              {topFixes.length > 0 && (
+                <Button
+                  variant="editorial"
+                  size="sm"
+                  className="w-full mt-2"
+                  disabled={isApplyingAiFixes}
+                  isLoading={isApplyingAiFixes}
+                  leftIcon={<Wand2 className="w-3.5 h-3.5" />}
+                  onClick={() => handleApplyAiFixes()}
+                >
+                  Zastosuj poprawki AI ({topFixes.length})
+                </Button>
+              )}
+
+              {/* Loop trace summary if present */}
+              {trace && trace.length > 0 && (
+                <div className="pt-3 border-t border-ink-800 space-y-2">
+                  <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase font-bold text-ink-400">
+                    <History className="w-3 h-3 text-editorial-crimson" />
+                    <span>Ślad rund pętli AI ({trace.length})</span>
+                  </div>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {trace.map((step, idx) => (
+                      <div
+                        key={idx}
+                        className="p-1.5 bg-ink-950 rounded border border-ink-800/80 text-[10px] font-mono flex items-center justify-between text-ink-400"
+                      >
+                        <span>Runda {step.round}</span>
+                        <Badge
+                          variant={step.gate_passed ? 'success' : 'danger'}
+                          size="sm"
+                        >
+                          {step.gate_passed ? 'GATE PASS' : 'GATE FAIL'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </Card>
         </div>
       </div>

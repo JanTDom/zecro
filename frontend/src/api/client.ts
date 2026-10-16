@@ -3,7 +3,7 @@ import { TitleDNA, TypographyStyle } from '../types/dna';
 import { CorpusPage } from '../types/corpus';
 import { GenerationRun, Candidate, FrameCopyFit } from '../types/generation';
 import { TasteModelMetrics, PreferenceSignal } from '../types/taste';
-import { IntakeData, PhotoMaterial } from '../types/material';
+import { IntakeData, PhotoMaterial, StoryMaterial } from '../types/material';
 import { ExportArtifact, ExportOptions } from '../types/export';
 import { ElementDelta, SceneGraph, SceneGraphElement } from '../types/sceneGraph';
 import { editorialStyle } from '../editorialStyles';
@@ -99,6 +99,8 @@ function dnaFromApi(raw: Data, projectId: string): TitleDNA {
   return {
     id: raw.id, projectId, version: raw.version, updatedAt: raw.updated_at || '', canonical: raw,
     archetype: raw.archetype, styleBlend: raw.style_blend,
+    logo_profile: raw.logo_profile || raw.canonical?.logo_profile,
+    masthead: raw.masthead || raw.canonical?.masthead,
     grid: { columns: grid.columns, columnWidthMm: ((format.trim_w_mm - format.margin_left_mm - format.margin_right_mm) - (grid.columns - 1) * grid.gutter_mm) / grid.columns,
       gutterMm: grid.gutter_mm, baselineGridPt: grid.baseline_grid_pt, marginTopMm: format.margin_top_mm,
       marginBottomMm: format.margin_bottom_mm, marginLeftMm: format.margin_left_mm, marginRightMm: format.margin_right_mm,
@@ -403,6 +405,42 @@ export const api = {
       heightPx: raw.height_px ?? undefined, dpi: raw.dpi ?? undefined, focalPoint: raw.focal_point || [0.5, 0.5],
       focalStatus: raw.focal_status || 'unavailable', focalSubjectKind: raw.subject_kind || 'uncertain' };
   },
+  async ingestUrl(url: string, autoCutout = true, projectId?: string): Promise<{ leadStory: StoryMaterial; photos: PhotoMaterial[]; source: any }> {
+    const raw = await request('/editorial/ingest-url', json('POST', { url, auto_cutout: autoCutout, project_id: projectId }));
+    return {
+      leadStory: raw.leadStory,
+      photos: (raw.photos || []).map((p: any) => ({
+        ...p,
+        url: apiUrl(p.url),
+        previewUrl: apiUrl(p.previewUrl || p.url),
+        alphaMaskUrl: p.alphaMaskUrl ? apiUrl(p.alphaMaskUrl) : undefined,
+      })),
+      source: raw.source,
+    };
+  },
+  async ingestFile(file: File, autoCutout = true, projectId?: string): Promise<{ leadStory: StoryMaterial; photos: PhotoMaterial[]; source: any }> {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('auto_cutout', String(autoCutout));
+    if (projectId) form.append('project_id', projectId);
+    const raw = await request('/editorial/ingest-file', { method: 'POST', body: form });
+    return {
+      leadStory: raw.leadStory,
+      photos: (raw.photos || []).map((p: any) => ({
+        ...p,
+        url: apiUrl(p.url),
+        previewUrl: apiUrl(p.previewUrl || p.url),
+        alphaMaskUrl: p.alphaMaskUrl ? apiUrl(p.alphaMaskUrl) : undefined,
+      })),
+      source: raw.source,
+    };
+  },
+  async redactText(text: string, title?: string, projectId?: string): Promise<{ leadStory: StoryMaterial }> {
+    const raw = await request('/editorial/redact-text', json('POST', { text, title, project_id: projectId }));
+    return {
+      leadStory: raw.leadStory,
+    };
+  },
   async checkPhotos(projectId: string, intake: IntakeData): Promise<PhotoCheckResult> {
     const project = await this.getProject(projectId);
     return request(`/projects/${projectId}/photo-check`, json('POST', { material: buildMaterial(intake, project.newspaperTitle) }));
@@ -447,6 +485,20 @@ export const api = {
       page_zone: payload.pageZone || 'front_page', visual_review: false,
     })));
   },
+  async generateFramedCover(projectId: string, options: { kitName?: string; genes?: Data; material?: Data } = {}): Promise<Candidate> {
+    const raw = await request(`/projects/${projectId}/framed-cover`, json('POST', {
+      kit_name: options.kitName || 'wukadka', genes: options.genes, material: options.material,
+    }));
+    return candidateFromApi(raw);
+  },
+  async executeArtDirect(projectId: string, options: { composer?: string; rounds?: number; resume?: boolean; step?: number; genes?: Data; material?: Data } = {}): Promise<GenerationRun> {
+    const raw = await request(`/projects/${projectId}/art-direct`, json('POST', options));
+    return runFromApi(raw);
+  },
+  async applyArtDirectFixes(projectId: string, fixes: string[], genes: Data, composer = 'framed_cover:wukadka'): Promise<Candidate> {
+    const raw = await request(`/projects/${projectId}/art-direct/apply-fixes`, json('POST', { fixes, genes, composer }));
+    return candidateFromApi(raw);
+  },
   async getGenerationRuns(projectId: string): Promise<GenerationRun[]> { return (await request<Data[]>(`/projects/${projectId}/runs`)).map(runFromApi); },
   async getCandidate(id: string): Promise<Candidate> { return candidateFromApi(await request(`/candidates/${id}`)); },
   async saveCandidate(id: string, scene: SceneGraph): Promise<Candidate> { return candidateFromApi(await request(`/candidates/${id}`, json('PUT', sceneToApi(scene)))); },
@@ -476,6 +528,55 @@ export const api = {
   async logEditDelta(projectId: string, candidateId: string, deltas: ElementDelta[]): Promise<boolean> {
     await this.submitPreference({ id: '', projectId, type: 'manual_delta', candidateAId: candidateId, winnerCandidateId: candidateId,
       userDeltaEdits: deltas, timestamp: new Date().toISOString() }); return true;
+  },
+  async getPairwiseCandidates(projectId: string, composer = 'framed_cover:wukadka'): Promise<{
+    pair_id: string;
+    composer: string;
+    archetype: string;
+    candidate_a: Candidate;
+    candidate_b: Candidate;
+    features_a: Record<string, number>;
+    features_b: Record<string, number>;
+  }> {
+    const raw = await request<Data>(`/projects/${projectId}/pairs?composer=${encodeURIComponent(composer)}`);
+    return {
+      pair_id: raw.pair_id,
+      composer: raw.composer,
+      archetype: raw.archetype,
+      candidate_a: candidateFromApi(raw.candidate_a),
+      candidate_b: candidateFromApi(raw.candidate_b),
+      features_a: raw.features_a || {},
+      features_b: raw.features_b || {},
+    };
+  },
+  async submitPairwiseVote(projectId: string, payload: {
+    pair_id: string;
+    candidate_a_id: string;
+    candidate_b_id: string;
+    winner: 'A' | 'B' | 'tie';
+    notes?: string;
+    features_a?: Record<string, number>;
+    features_b?: Record<string, number>;
+    archetype?: string;
+  }): Promise<Data> {
+    return request(`/projects/${projectId}/pairs/vote`, json('POST', payload));
+  },
+  async getPairwiseCalibrationStatus(projectId: string): Promise<Data> {
+    return request(`/projects/${projectId}/pairs/status`);
+  },
+  async forceRecalibrateTaste(projectId: string): Promise<Data> {
+    return request(`/projects/${projectId}/pairs/calibrate`, { method: 'POST' });
+  },
+  async cutoutPhoto(projectId: string, fileOrUrl: { file?: File; imageUrl?: string; assetId?: string }): Promise<Data> {
+    if (fileOrUrl.file) {
+      const form = new FormData();
+      form.append('file', fileOrUrl.file);
+      return request(`/projects/${projectId}/cutout`, { method: 'POST', body: form });
+    }
+    return request(`/projects/${projectId}/cutout`, json('POST', {
+      image_url: fileOrUrl.imageUrl,
+      asset_id: fileOrUrl.assetId,
+    }));
   },
   async getTasteMetrics(projectId: string): Promise<TasteModelMetrics> { return tasteFromApi(await request(`/projects/${projectId}/taste-model`)); },
   async exportCandidate(id: string, options: ExportOptions): Promise<ExportArtifact> {

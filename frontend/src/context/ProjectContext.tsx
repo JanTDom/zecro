@@ -37,6 +37,8 @@ interface ProjectContextType {
   tasteMetrics: TasteModelMetrics | null;
   isLoading: boolean;
   toasts: ToastMessage[];
+  dnaSubTab: 'grid' | 'typography' | 'palette' | 'photos' | 'transgressions' | 'masthead';
+  setDnaSubTab: (subTab: 'grid' | 'typography' | 'palette' | 'photos' | 'transgressions' | 'masthead') => void;
   setActiveTab: (tab: NavigationTab) => void;
   selectProject: (id: string) => Promise<void>;
   reloadProjects: () => Promise<void>;
@@ -56,6 +58,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
+  const [dnaSubTab, setDnaSubTab] = useState<'grid' | 'typography' | 'palette' | 'photos' | 'transgressions' | 'masthead'>('grid');
   const [dna, setDna] = useState<TitleDNA | null>(null);
   const [currentRun, setCurrentRun] = useState<GenerationRun | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
@@ -207,6 +210,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         projects,
         activeProject,
         activeTab,
+        dnaSubTab,
+        setDnaSubTab,
         dna,
         currentRun,
         selectedCandidate,

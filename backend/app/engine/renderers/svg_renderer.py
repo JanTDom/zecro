@@ -1,7 +1,45 @@
 import html
 from typing import Optional
+from pathlib import Path
+import base64
 from ...models.schemas import SceneGraph, TitleDNA
 from ..image_ops import contour_to_svg_path
+from ...config import settings
+
+
+def _resolve_svg_image_href(ref: Optional[str]) -> Optional[str]:
+    if not ref:
+        return None
+    ref_str = str(ref).strip()
+    if ref_str.startswith("data:"):
+        return ref_str
+    if ref_str.startswith(("http://", "https://")):
+        return ref_str
+    # Sprawdzamy czy to ścieżka pliku
+    p = Path(ref_str)
+    if not p.is_absolute():
+        p = Path.cwd() / ref_str
+    if p.exists() and p.is_file():
+        try:
+            ext = p.suffix.lower()
+            mime = "image/svg+xml" if ext == ".svg" else "image/png" if ext == ".png" else "image/jpeg" if ext in (".jpg", ".jpeg") else "application/octet-stream"
+            b64 = base64.b64encode(p.read_bytes()).decode("ascii")
+            return f"data:{mime};base64,{b64}"
+        except Exception:
+            pass
+    # Jeśli to nazwa w uploads_dir
+    up_path = settings.UPLOADS_DIR / ref_str
+    if up_path.exists() and up_path.is_file():
+        try:
+            ext = up_path.suffix.lower()
+            mime = "image/svg+xml" if ext == ".svg" else "image/png" if ext == ".png" else "image/jpeg" if ext in (".jpg", ".jpeg") else "application/octet-stream"
+            b64 = base64.b64encode(up_path.read_bytes()).decode("ascii")
+            return f"data:{mime};base64,{b64}"
+        except Exception:
+            pass
+    if not ref_str.startswith("/"):
+        return f"/static/uploads/{ref_str}"
+    return ref_str
 
 class SVGRenderer:
     def __init__(self, dna: Optional[TitleDNA] = None):
@@ -80,9 +118,10 @@ class SVGRenderer:
                     f'fill="#dcd8cd" rx="1.0"{clip_attr}/>'
                 )
 
-                image_ref = elem.mask_ref if elem.treatment == "cutout" and elem.mask_ref else elem.image_url
-                if image_ref and (image_ref.startswith(("http", "/static/", "data:"))):
-                    href = html.escape(image_ref)
+                raw_ref = elem.mask_ref if elem.treatment == "cutout" and elem.mask_ref else elem.image_url
+                resolved_ref = _resolve_svg_image_href(raw_ref)
+                if resolved_ref:
+                    href = html.escape(resolved_ref)
                     if elem.crop_box and elem.source_width_px and elem.source_height_px:
                         l, t, r, b = elem.crop_box
                         sw, sh = elem.source_width_px, elem.source_height_px
@@ -116,24 +155,28 @@ class SVGRenderer:
 
             # Render Logo / Masthead
             elif elem.role == "logo":
-                if elem.image_url:
-                    svg_lines.append(f'<image xlink:href="{html.escape(elem.image_url)}" x="{fr.x:.1f}" y="{fr.y:.1f}" width="{fr.w:.1f}" height="{fr.h:.1f}" preserveAspectRatio="xMidYMid meet"/>')
+                href = _resolve_svg_image_href(elem.image_url)
+                if href:
+                    svg_lines.append(f'<image xlink:href="{html.escape(href)}" x="{fr.x:.1f}" y="{fr.y:.1f}" width="{fr.w:.1f}" height="{fr.h:.1f}" preserveAspectRatio="xMidYMid meet"/>')
                 else:
                     st = elem.style
-                    size_mm = ((st.font_size_pt if st else None) or 24.0) * 0.3528
-                    family = html.escape((st.font_family if st else None) or "sans-serif", quote=True)
-                    align = (st.align if st else None) or "left"
-                    anchor = {"left": "start", "center": "middle", "right": "end"}.get(align, "start")
+                    size_mm = ((st.font_size_pt if st else None) or 32.0) * 0.3528
+                    family = html.escape((st.font_family if st else None) or (self.dna.typography.fonts.get("headline", "Playfair Display") if self.dna else "Playfair Display"), quote=True)
+                    align = (st.align if st else None) or "center"
+                    anchor = {"left": "start", "center": "middle", "right": "end"}.get(align, "middle")
                     xx = fr.x + (0 if align == "left" else fr.w / 2 if align == "center" else fr.w)
-                    rows = (elem.text_content or "").split("\n")
-                    lead_mm = ((st.line_height_pt if st else None) or (st.font_size_pt if st else 24.0) * 1.06) * 0.3528
+                    text = elem.text_content or (self.dna.name if self.dna else "GAZETA")
+                    rows = text.split("\n")
+                    lead_mm = ((st.line_height_pt if st else None) or 36.0) * 0.3528
                     first = fr.y + fr.h / 2 + size_mm * .36 - lead_mm * (len(rows) - 1) / 2
+                    color = (st.color if st else None) or (self.dna.palette.primary if self.dna else "#111")
                     for row_index, row_text in enumerate(rows):
                         svg_lines.append(
                             f'<text x="{xx:.1f}" y="{first + row_index * lead_mm:.1f}" font-size="{size_mm:.1f}" '
-                            f'font-weight="{html.escape((st.font_weight if st else None) or "normal", quote=True)}" '
-                            f'font-family="{family}, sans-serif" text-anchor="{anchor}" '
-                            f'fill="{html.escape((st.color if st else None) or "#111", quote=True)}">{html.escape(row_text)}</text>'
+                            f'font-weight="900" '
+                            f'font-family="{family}, Georgia, serif" text-anchor="{anchor}" '
+                            f'letter-spacing="0.5" '
+                            f'fill="{html.escape(color, quote=True)}">{html.escape(row_text)}</text>'
                         )
 
             # Render Folio Bar & Rules

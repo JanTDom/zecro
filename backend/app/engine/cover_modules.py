@@ -178,9 +178,8 @@ def lead_slots(kit, skel: dict[str, Module], story, gap_right: float = 5.0, marg
         for ax0, ax1, _, adown in a:
             for bx0, bx1, bup, _ in b_:
                 if ax1 > bx0 and bx1 > ax0:
-                    need = max(need, adown + bup)
-                else:
-                    need = max(need, max(adown, bup) * 0.0)
+                    if adown > 0 or bup > 0:
+                        need = max(need, adown + bup + 1.2)
         return need
 
     norm = lambda w: re.sub(r"[^\wąćęłńóśźż]", "", w.lower())

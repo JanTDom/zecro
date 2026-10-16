@@ -22,7 +22,7 @@ def _tag(els: list[Element], module: str, *extra: str):
         e.constraints = [*(e.constraints or []), f"module:{module}", *extra]
 
 
-def compose_framed_cover(material, *, kit_name: str = "wukadka", genes: Optional[dict[str, Any]] = None) -> SceneGraph:
+def compose_framed_cover(material, *, kit_name: str = "wukadka", genes: Optional[dict[str, Any]] = None, dna: Optional[Any] = None) -> SceneGraph:
     kit = Kit(kit_name)
     genes = {"bottom": "corner", "skybox_order": "interview_first", **(genes or {})}
     material = _apply_text_moves(material, genes)
@@ -72,8 +72,16 @@ def compose_framed_cover(material, *, kit_name: str = "wukadka", genes: Optional
     c.plate(-c.bleed, fb[0][1], fb[1][0] + c.bleed, fb[2][1] - fb[0][1], "panel", z=1)
     lg = kit.frame["logo"]
     from pathlib import Path
+    logo_url = None
+    if dna and getattr(dna, "logo_profile", None) and getattr(dna.logo_profile, "asset_ref", None):
+        logo_url = dna.logo_profile.asset_ref
+    elif dna and getattr(dna, "masthead", None) and getattr(dna.masthead, "logo_url", None):
+        logo_url = dna.masthead.logo_url
+    if not logo_url:
+        logo_url = str(Path(kit.data["_root"]) / lg["asset"])
+
     c.add(Element(id="logo", role="logo", frame=Frame(x=lg["x"], y=lg["y"], w=lg["w"], h=lg["h"]), z=4,
-                  image_url=str(Path(kit.data["_root"]) / lg["asset"]), importance=.9, constraints=["brand"]))
+                  image_url=logo_url, importance=.9, constraints=["brand"]))
     d = kit.frame["dateline"]
     c.plate(d["x"], d["y"], d["w"], d["h"], "white", z=14)  # brand line stays above the hero
     values = {"issue_number": material.issue_number or "", "issue_date": material.issue_date or ""}

@@ -1,6 +1,8 @@
 import uuid
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, File, UploadFile
 from pydantic import BaseModel
 from ..models.schemas import ArtDirectionPlan, GenerationRequest, GenerationRun, Candidate, PageInputMaterial, SceneGraph, Story
 from ..models.database import db
@@ -19,6 +21,8 @@ from ..engine.editorial_style import editorial_style_label
 from ..engine.page_topic import apply_page_topic, PAGE_TOPIC_LABELS
 from ..engine.page_mood import apply_page_mood, resolve_page_mood
 from ..integrations.yourquantum import select_transgressions
+from ..engine.art_director import art_direct, kit_dna, COMPOSERS, _apply
+from ..engine.framed_cover import compose_framed_cover
 
 router = APIRouter(tags=["generate"])
 
@@ -553,3 +557,651 @@ def update_candidate_scene(candidate_id: str, scene_graph: SceneGraph):
     if not updated:
         raise HTTPException(status_code=404, detail="Candidate not found")
     return updated
+
+
+class FramedCoverRequest(BaseModel):
+    material: Optional[PageInputMaterial] = None
+    kit_name: str = "wukadka"
+    genes: Optional[Dict[str, Any]] = None
+
+
+class ArtDirectRequest(BaseModel):
+    material: Optional[PageInputMaterial] = None
+    composer: str = "framed_cover:wukadka"
+    rounds: int = 3
+    tag: Optional[str] = None
+    resume: bool = False
+    step: Optional[int] = None
+    genes: Optional[Dict[str, Any]] = None
+
+
+class ApplyFixesRequest(BaseModel):
+    genes: Dict[str, Any]
+    fixes: List[str]
+    composer: str = "framed_cover:wukadka"
+    material: Optional[PageInputMaterial] = None
+    kit_name: str = "wukadka"
+
+
+@router.post("/projects/{project_id}/framed-cover", response_model=Candidate)
+def generate_framed_cover(project_id: str, request: FramedCoverRequest):
+    proj = db.get_project(project_id)
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    dna = db.get_title_dna(project_id)
+    if not dna:
+        raise HTTPException(status_code=404, detail="Title DNA not found")
+
+    mat = request.material
+    if not mat or not any(s.images for s in mat.stories):
+        try:
+            from backend.scripts.wukadka_demo import material as demo_mat
+            mat = demo_mat()
+        except Exception:
+            try:
+                from scripts.wukadka_demo import material as demo_mat
+                mat = demo_mat()
+            except Exception:
+                pass
+    if mat:
+        mat = PageInputMaterial.model_validate(mat.model_dump())
+
+    effective_dna = kit_dna(request.kit_name) if request.kit_name else dna
+    if getattr(dna, "logo_profile", None) and getattr(dna.logo_profile, "asset_ref", None):
+        effective_dna.logo_profile = dna.logo_profile
+
+    scene = compose_framed_cover(mat, kit_name=request.kit_name, genes=request.genes, dna=effective_dna)
+    critic = LayoutCritic(effective_dna)
+    critic_res = critic.evaluate(scene)
+    svg_thumb = SVGRenderer(effective_dna).render(scene)
+
+    run_id = str(uuid.uuid4())
+    cand_id = str(uuid.uuid4())
+    cand = Candidate(
+        id=cand_id,
+        run_id=run_id,
+        scene_graph=scene,
+        critic=critic_res,
+        svg_thumbnail=svg_thumb,
+        html_preview_url=f"/candidates/{cand_id}/preview",
+        rank=1,
+        selected=False,
+        created_at=datetime.now(timezone.utc).isoformat()
+    )
+    run = GenerationRun(
+        id=run_id,
+        project_id=project_id,
+        material=mat,
+        candidates=[cand],
+        status="completed",
+        stats={"composer": f"framed_cover:{request.kit_name}", "genes": request.genes or {}},
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
+    db.save_generation_run(run)
+    return cand
+
+
+@router.post("/projects/{project_id}/art-direct", response_model=GenerationRun)
+def execute_art_direct_loop(project_id: str, request: ArtDirectRequest):
+    proj = db.get_project(project_id)
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    dna = db.get_title_dna(project_id)
+    if not dna:
+        raise HTTPException(status_code=404, detail="Title DNA not found")
+
+    from pathlib import Path
+    mat = request.material
+    if not mat or not any(s.images for s in mat.stories):
+        try:
+            from backend.scripts.wukadka_demo import material as demo_mat
+            mat = demo_mat()
+        except Exception:
+            try:
+                from scripts.wukadka_demo import material as demo_mat
+                mat = demo_mat()
+            except Exception:
+                pass
+    if mat:
+        mat = PageInputMaterial.model_validate(mat.model_dump())
+
+    out_dir = Path("output") / "art-direct" / project_id
+    out_dir.mkdir(parents=True, exist_ok=True)
+    tag = request.tag or f"ad_{uuid.uuid4().hex[:6]}"
+
+    comp_fn = COMPOSERS.get(request.composer)
+    if not comp_fn:
+        raise HTTPException(status_code=400, detail=f"Nieznany kompozytor: {request.composer}")
+    comp = comp_fn()
+    effective_dna = comp.dna()
+
+    res = art_direct(mat, composer_key=request.composer, dna=effective_dna, rounds=request.rounds,
+                     out_dir=out_dir, tag=tag, start_genes=request.genes, resume=request.resume,
+                     max_new_rounds=request.step)
+
+    trace = res["trace"]
+    run_id = str(uuid.uuid4())
+    candidates = []
+    critic = LayoutCritic(effective_dna)
+    svg_renderer = SVGRenderer(effective_dna)
+
+    for idx, r in enumerate(trace.get("rounds") or []):
+        scene_path = Path(r["scene"])
+        if scene_path.exists():
+            sg = SceneGraph.model_validate_json(scene_path.read_text(encoding="utf-8"))
+            crit_res = critic.evaluate(sg)
+            svg_thumb = svg_renderer.render(sg)
+            cand_id = str(uuid.uuid4())
+            rv = r.get("review") or {}
+            sg.metadata["visual_critique"] = {
+                "status": "candidate_for_editor" if rv.get("do_druku") else "needs_revision",
+                "score": rv.get("ocena"),
+                "top_3_fixes": rv.get("poprawki") or [],
+                "defekty": rv.get("defekty") or [],
+                "werdykt": rv.get("werdykt"),
+            }
+            sg.metadata["art_director_trace"] = trace
+            sg.metadata["round_number"] = r.get("round")
+            sg.metadata["genes"] = r.get("genes")
+
+            cand = Candidate(
+                id=cand_id,
+                run_id=run_id,
+                scene_graph=sg,
+                critic=crit_res,
+                svg_thumbnail=svg_thumb,
+                html_preview_url=f"/candidates/{cand_id}/preview",
+                rank=idx + 1,
+                selected=(r.get("round") == trace.get("best_round")),
+                created_at=datetime.now(timezone.utc).isoformat()
+            )
+            candidates.append(cand)
+
+    run = GenerationRun(
+        id=run_id,
+        project_id=project_id,
+        material=mat,
+        candidates=candidates,
+        status="completed",
+        stats={"composer": request.composer, "trace": trace, "best_round": trace.get("best_round")},
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
+    return db.save_generation_run(run)
+
+
+@router.post("/projects/{project_id}/art-direct/apply-fixes", response_model=Candidate)
+def apply_art_direct_fixes(project_id: str, request: ApplyFixesRequest):
+    proj = db.get_project(project_id)
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    dna = db.get_title_dna(project_id)
+    if not dna:
+        raise HTTPException(status_code=404, detail="Title DNA not found")
+
+    comp_fn = COMPOSERS.get(request.composer)
+    if not comp_fn:
+        raise HTTPException(status_code=400, detail=f"Nieznany kompozytor: {request.composer}")
+    comp = comp_fn()
+    mat = request.material
+    if not mat or not any(s.images for s in mat.stories):
+        try:
+            from backend.scripts.wukadka_demo import material as demo_mat
+            mat = demo_mat()
+        except Exception:
+            try:
+                from scripts.wukadka_demo import material as demo_mat
+                mat = demo_mat()
+            except Exception:
+                pass
+    if mat:
+        mat = PageInputMaterial.model_validate(mat.model_dump())
+
+    parsed_fixes: list[dict[str, Any]] = []
+    for f in request.fixes:
+        if isinstance(f, dict):
+            parsed_fixes.append(f)
+        elif isinstance(f, str) and ":" in f:
+            k, v = f.split(":", 1)
+            k, v = k.strip(), v.strip()
+            try:
+                if "." in v:
+                    val = float(v)
+                elif v.lstrip("-").isdigit():
+                    val = int(v) if not v.startswith("-") else -int(v[1:])
+                else:
+                    val = v
+            except Exception:
+                val = v
+            parsed_fixes.append({"nazwa": k, "wartosc": val})
+        elif isinstance(f, str):
+            parsed_fixes.append({"nazwa": f, "wartosc": True})
+
+    log: list = []
+    new_genes = _apply(comp, dict(request.genes), parsed_fixes, mat, log)
+
+    scene = comp.compose(mat, new_genes)
+    effective_dna = comp.dna()
+    critic = LayoutCritic(effective_dna)
+    critic_res = critic.evaluate(scene)
+    svg_thumb = SVGRenderer(effective_dna).render(scene)
+
+    scene.metadata["applied_fixes"] = request.fixes
+    scene.metadata["rejected_fixes"] = log
+    scene.metadata["genes"] = new_genes
+
+    run_id = str(uuid.uuid4())
+    cand_id = str(uuid.uuid4())
+    cand = Candidate(
+        id=cand_id,
+        run_id=run_id,
+        scene_graph=scene,
+        critic=critic_res,
+        svg_thumbnail=svg_thumb,
+        html_preview_url=f"/candidates/{cand_id}/preview",
+        rank=1,
+        selected=True,
+        created_at=datetime.now(timezone.utc).isoformat()
+    )
+    run = GenerationRun(
+        id=run_id,
+        project_id=project_id,
+        material=mat,
+        candidates=[cand],
+        status="completed",
+        stats={"composer": request.composer, "genes": new_genes, "fixes": request.fixes, "rejected": log},
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
+    db.save_generation_run(run)
+    return cand
+
+
+# ---------------------------------------------------------------------------
+# Punkt 2: Pętla gustu z człowiekiem w studiu (pojedynki A/B + kalibracja)
+# ---------------------------------------------------------------------------
+
+class PairVoteRequest(BaseModel):
+    pair_id: str
+    candidate_a_id: str
+    candidate_b_id: str
+    winner: str  # "A" | "B" | "tie"
+    notes: Optional[str] = None
+    features_a: Optional[dict[str, float]] = None
+    features_b: Optional[dict[str, float]] = None
+    archetype: Optional[str] = None
+
+
+@router.get("/projects/{project_id}/pairs")
+def get_pairwise_candidates(project_id: str, composer: Optional[str] = "framed_cover:wukadka"):
+    """Zwraca dwa warianty kandydujące (A i B) do pojedynku gustu dla człowieka."""
+    proj = db.get_project(project_id)
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    dna = db.get_title_dna(project_id)
+    if not dna:
+        raise HTTPException(status_code=404, detail="Title DNA not found")
+
+    composer_key = composer or "framed_cover:wukadka"
+    comp_fn = COMPOSERS.get(composer_key)
+    if not comp_fn:
+        raise HTTPException(status_code=400, detail=f"Nieznany kompozytor: {composer_key}")
+    comp = comp_fn()
+    effective_dna = comp.dna()
+
+    try:
+        from backend.scripts.wukadka_demo import material as demo_mat
+        mat = demo_mat()
+    except Exception:
+        try:
+            from scripts.wukadka_demo import material as demo_mat
+            mat = demo_mat()
+        except Exception:
+            mat = None
+
+    if mat:
+        mat = PageInputMaterial.model_validate(mat.model_dump())
+
+    # Generujemy dwa odmienne warianty genetyczne dla pojedynku
+    if "wukadka" in composer_key:
+        genes_a = {"bottom": "corner", "skybox_order": "interview_first", "corner_photos": "framed", "hero_dy": 0.0}
+        genes_b = {"bottom": "strip", "skybox_order": "other_first", "corner_photos": "cutout", "hero_dy": 14.0, "hero_shift": 8.0}
+    else:
+        genes_a = {"layout_mode": "dominant-left", "photo_treatment": "crop", "variation": 0.25}
+        genes_b = {"layout_mode": "modular-grid", "photo_treatment": "cutout", "variation": 0.75}
+
+    scene_a = comp.compose(mat, genes_a)
+    scene_b = comp.compose(mat, genes_b)
+
+    critic = LayoutCritic(effective_dna)
+    crit_a = critic.evaluate(scene_a)
+    crit_b = critic.evaluate(scene_b)
+
+    svg_renderer = SVGRenderer(effective_dna)
+    svg_a = svg_renderer.render(scene_a)
+    svg_b = svg_renderer.render(scene_b)
+
+    from ..engine.critic_calibration import calibration_features
+    features_a = calibration_features(scene_a, critic)
+    features_b = calibration_features(scene_b, critic)
+
+    cand_a_id = str(uuid.uuid4())
+    cand_b_id = str(uuid.uuid4())
+    pair_id = str(uuid.uuid4())
+
+    cand_a = Candidate(
+        id=cand_a_id,
+        run_id=pair_id,
+        scene_graph=scene_a,
+        critic=crit_a,
+        svg_thumbnail=svg_a,
+        html_preview_url=f"/candidates/{cand_a_id}/preview",
+        rank=1,
+        selected=False,
+        created_at=datetime.now(timezone.utc).isoformat()
+    )
+    cand_b = Candidate(
+        id=cand_b_id,
+        run_id=pair_id,
+        scene_graph=scene_b,
+        critic=crit_b,
+        svg_thumbnail=svg_b,
+        html_preview_url=f"/candidates/{cand_b_id}/preview",
+        rank=2,
+        selected=False,
+        created_at=datetime.now(timezone.utc).isoformat()
+    )
+
+    run = GenerationRun(
+        id=pair_id,
+        project_id=project_id,
+        material=mat,
+        candidates=[cand_a, cand_b],
+        status="completed",
+        stats={"composer": composer_key, "pairwise": True},
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
+    db.save_generation_run(run)
+
+    archetype = getattr(effective_dna, "archetype", "tabloid") or "tabloid"
+
+    return {
+        "pair_id": pair_id,
+        "composer": composer_key,
+        "archetype": archetype,
+        "candidate_a": cand_a,
+        "candidate_b": cand_b,
+        "features_a": features_a,
+        "features_b": features_b,
+    }
+
+
+@router.post("/projects/{project_id}/pairs/vote")
+def record_pairwise_vote(project_id: str, vote: PairVoteRequest):
+    """Zapisuje wybór człowieka w pojedynku A/B i uczy model Bradleya-Terry'ego."""
+    import json
+    from pathlib import Path
+    from ..models.schemas import PreferenceSignal
+    from ..engine.critic_calibration import (
+        CALIBRATION_DIR,
+        calibration_features,
+        fit_calibration,
+        save_calibration,
+        load_calibration,
+        MIN_PAIRS
+    )
+
+    proj = db.get_project(project_id)
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    dna = db.get_title_dna(project_id)
+    archetype = vote.archetype or getattr(dna, "archetype", "tabloid") or "tabloid"
+
+    cand_a = db.get_candidate(vote.candidate_a_id)
+    cand_b = db.get_candidate(vote.candidate_b_id)
+
+    feat_a = vote.features_a
+    feat_b = vote.features_b
+
+    critic = LayoutCritic(dna) if dna else None
+    if not feat_a and cand_a and critic:
+        feat_a = calibration_features(cand_a.scene_graph, critic)
+    if not feat_b and cand_b and critic:
+        feat_b = calibration_features(cand_b.scene_graph, critic)
+
+    # Zapis sygnału preferencji do bazy projektu
+    winner_cid = vote.candidate_a_id if vote.winner == "A" else (vote.candidate_b_id if vote.winner == "B" else None)
+    loser_cid = vote.candidate_b_id if vote.winner == "A" else (vote.candidate_a_id if vote.winner == "B" else None)
+
+    signal = PreferenceSignal(
+        id=str(uuid.uuid4()),
+        project_id=project_id,
+        signal_type="pairwise_comparison",
+        candidate_a_id=vote.candidate_a_id,
+        candidate_b_id=vote.candidate_b_id,
+        winner_candidate_id=winner_cid,
+        loser_candidate_id=loser_cid,
+        feedback_notes=vote.notes,
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
+    db.record_preference_signal(signal)
+
+    # Zapis pary dla Bradleya-Terry'ego
+    calib_out_dir = Path("output") / "calibration"
+    calib_out_dir.mkdir(parents=True, exist_ok=True)
+    pairs_file = calib_out_dir / f"human_pairs_{archetype}.jsonl"
+
+    if feat_a and feat_b and vote.winner in ("A", "B"):
+        winner_f = feat_a if vote.winner == "A" else feat_b
+        loser_f = feat_b if vote.winner == "A" else feat_a
+        record = {
+            "pair_id": vote.pair_id,
+            "project_id": project_id,
+            "winner": winner_f,
+            "loser": loser_f,
+            "source": "human",
+            "winner_candidate_id": winner_cid,
+            "loser_candidate_id": loser_cid,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        with pairs_file.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    # Wczytujemy wszystkie pary dla danego archetypu
+    pairs_list = []
+    if pairs_file.exists():
+        for line in pairs_file.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line:
+                try:
+                    pairs_list.append(json.loads(line))
+                except Exception:
+                    pass
+
+    total_pairs = len(pairs_list)
+    calibration_result = None
+
+    # Jeśli zebrano minimum par, trenujemy model Bradleya-Terry'ego z wagą człowieka
+    if total_pairs >= 6:
+        try:
+            calib_fit = fit_calibration(pairs_list, archetype=archetype, source="human")
+            if calib_fit.get("valid") or total_pairs >= 10:
+                save_calibration(calib_fit)
+                calibration_result = calib_fit
+        except Exception:
+            pass
+
+    current_calib = calibration_result or load_calibration(archetype) or {}
+
+    return {
+        "status": "recorded",
+        "pair_id": vote.pair_id,
+        "winner": vote.winner,
+        "total_human_pairs": total_pairs,
+        "calibration_active": bool(current_calib.get("valid")),
+        "loo_accuracy": current_calib.get("loo_accuracy"),
+        "weights": current_calib.get("weights"),
+    }
+
+
+@router.get("/projects/{project_id}/pairs/status")
+def get_pairwise_calibration_status(project_id: str):
+    """Zwraca stan kalibracji gustu człowieka dla archetypu projektu."""
+    import json
+    from pathlib import Path
+    from ..engine.critic_calibration import load_calibration
+
+    proj = db.get_project(project_id)
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    dna = db.get_title_dna(project_id)
+    archetype = getattr(dna, "archetype", "tabloid") or "tabloid"
+
+    pairs_file = Path("output") / "calibration" / f"human_pairs_{archetype}.jsonl"
+    count = 0
+    if pairs_file.exists():
+        count = sum(1 for line in pairs_file.read_text(encoding="utf-8").splitlines() if line.strip())
+
+    calib = load_calibration(archetype) or {}
+
+    return {
+        "archetype": archetype,
+        "human_pairs_count": count,
+        "valid": bool(calib.get("valid")),
+        "source": calib.get("source", "none"),
+        "loo_accuracy": calib.get("loo_accuracy"),
+        "heuristic_pair_accuracy": calib.get("heuristic_pair_accuracy"),
+        "weights": calib.get("weights", {}),
+        "note": calib.get("note"),
+    }
+
+
+@router.post("/projects/{project_id}/pairs/calibrate")
+def force_recalibrate_taste(project_id: str):
+    """Wymusza przeliczenie modelu preferencji Bradleya-Terry'ego z zebranych par ludzkich."""
+    import json
+    from pathlib import Path
+    from ..engine.critic_calibration import fit_calibration, save_calibration
+
+    proj = db.get_project(project_id)
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    dna = db.get_title_dna(project_id)
+    archetype = getattr(dna, "archetype", "tabloid") or "tabloid"
+
+    pairs_file = Path("output") / "calibration" / f"human_pairs_{archetype}.jsonl"
+    if not pairs_file.exists():
+        raise HTTPException(status_code=400, detail="Brak zebranych par do kalibracji")
+
+    pairs = [json.loads(line) for line in pairs_file.read_text(encoding="utf-8").splitlines() if line.strip()]
+    if not pairs:
+        raise HTTPException(status_code=400, detail="Plik z parami jest pusty")
+
+    calib_fit = fit_calibration(pairs, archetype=archetype, source="human")
+    save_calibration(calib_fit)
+
+    return {
+        "status": "calibrated",
+        "archetype": archetype,
+        "pairs_used": len(pairs),
+        "valid": calib_fit.get("valid"),
+        "loo_accuracy": calib_fit.get("loo_accuracy"),
+        "weights": calib_fit.get("weights"),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Punkt 4: Szparowanie (auto-cutout) w chmurze/API
+# ---------------------------------------------------------------------------
+
+class CutoutUrlRequest(BaseModel):
+    image_url: Optional[str] = None
+    asset_id: Optional[str] = None
+
+
+@router.post("/projects/{project_id}/cutout")
+@router.post("/api/cutout")
+async def execute_photo_cutout(
+    project_id: Optional[str] = None,
+    file: Optional[UploadFile] = File(None),
+    request_data: Optional[CutoutUrlRequest] = None
+):
+    """Automatyczne szparowanie zdjęcia (auto-cutout) z ekstrakcją konturu alfa, punktu ogniskowego i jakości krawędzi."""
+    import shutil
+    from ..config import settings
+    from ..engine.segmentation import segment_image
+    from ..engine.image_ops import extract_alpha_contour
+    from ..ai.photo_focal import analyse_photo_focal
+    from ..engine.cutout_quality import spikiness, cut_sides, refine_cutout
+    from ..storage.asset_store import persist_asset, materialize_asset
+    from ..storage.supabase_storage import get_storage_public_url, parse_storage_reference
+
+    settings.UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+    asset_id = (request_data and request_data.asset_id) or str(uuid.uuid4())
+    img_path = None
+
+    if file:
+        ext = Path(file.filename or "image.jpg").suffix.lower() or ".jpg"
+        img_path = settings.UPLOADS_DIR / f"cutout_src_{asset_id}{ext}"
+        with img_path.open("wb") as out:
+            shutil.copyfileobj(file.file, out)
+    elif request_data and request_data.asset_id:
+        rec = db.get_editorial_object("asset", request_data.asset_id)
+        if rec and rec.get("uri"):
+            img_path = materialize_asset(rec["uri"], prefix="uploads", cache_dir=settings.UPLOADS_DIR / ".cache")
+    elif request_data and request_data.image_url:
+        import urllib.request
+        ext = ".jpg"
+        img_path = settings.UPLOADS_DIR / f"cutout_src_{asset_id}{ext}"
+        urllib.request.urlretrieve(request_data.image_url, str(img_path))
+
+    if not img_path or not img_path.exists():
+        raise HTTPException(status_code=400, detail="Brak poprawnego pliku graficznego lub adresu URL do szparowania")
+
+    mask_target = settings.UPLOADS_DIR / f"mask_{asset_id}.png"
+    seg_res = segment_image(img_path, mask_target, target_w_mm=120.0, target_h_mm=160.0)
+
+    contour = seg_res.contour
+    mask_ref = None
+    mask_url = None
+
+    if seg_res.mask_path and Path(seg_res.mask_path).exists():
+        # Docięcie i uszlachetnienie krawędzi (refine_cutout)
+        try:
+            refined_path = refine_cutout(seg_res.mask_path, source_path=str(img_path))
+            final_mask = Path(refined_path)
+        except Exception:
+            final_mask = Path(seg_res.mask_path)
+
+        mask_ref = persist_asset(final_mask, prefix="uploads", key=final_mask.name)
+        mask_url = (get_storage_public_url(mask_ref) if parse_storage_reference(mask_ref)
+                    else f"/static/uploads/{final_mask.name}")
+
+    focal_info = analyse_photo_focal(img_path)
+    focal_point = focal_info.get("focal_point") or [0.5, 0.4]
+
+    # Jakość szparowania
+    spiky_score = 0.0
+    sides = {}
+    if seg_res.mask_path and Path(seg_res.mask_path).exists():
+        try:
+            spiky_score = spikiness(seg_res.mask_path)
+            sides = cut_sides(seg_res.mask_path)
+        except Exception:
+            pass
+
+    return {
+        "status": "ready" if contour else "partial",
+        "asset_id": asset_id,
+        "alpha_mask_url": mask_url,
+        "contour_polygon": contour,
+        "focal_point": focal_point,
+        "subject_kind": focal_info.get("subject_kind", "person"),
+        "quality": {
+            "status": seg_res.quality.get("status") if seg_res.quality else "ready",
+            "spikiness": spiky_score,
+            "cut_sides": sides,
+            "provider": seg_res.provider,
+        }
+    }
+
+
+

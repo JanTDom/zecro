@@ -1,0 +1,68 @@
+{
+  "name": "Magazyn Opinii i Reportażu",
+  "description": "Format magazynowy A4 z portretem na pełny spad, wyszukaną przestrzenią negatywną i typografią autorską.",
+  "genre": "G-MAGAZINE",
+  "format": {
+    "trim_mm": [210.0, 297.0],
+    "bleed_mm": 3.0,
+    "live": {
+      "left": 12.0,
+      "right": 198.0,
+      "top": 12.0,
+      "bottom": 285.0
+    }
+  },
+  "grid": {
+    "columns": 3,
+    "gutter_mm": 5.0,
+    "baseline_grid_pt": 12.0
+  },
+  "palette": {
+    "ink": "#1a1a1a",
+    "paper": "#ffffff",
+    "accent": "#d4af37",
+    "dark_tint": "#0f172a",
+    "cream": "#f8f7f4"
+  },
+  "fonts": {
+    "display": {
+      "family": "Upgrade",
+      "weight": "900",
+      "style": "italic",
+      "role": "tytuł okładkowy i otwierający (64–110 pt)",
+      "fallbacks": ["Playfair Display", "Avenir Next", "Gotham XNarrow"]
+    },
+    "subhead": {
+      "family": "Source Serif 4",
+      "weight": "400",
+      "style": "italic",
+      "role": "podtytuł i linie okładkowe (18–28 pt)",
+      "fallbacks": ["Utopia", "Times New Roman"]
+    },
+    "lead": {
+      "family": "Upgrade",
+      "weight": "500",
+      "role": "lead wprowadzający (12–15 pt)",
+      "fallbacks": ["Source Sans 3", "Myriad Pro"]
+    },
+    "body": {
+      "family": "Source Serif 4",
+      "weight": "400",
+      "role": "tekst rozkładówki (9.5–10.2 pt)",
+      "fallbacks": ["Utopia", "Times New Roman"]
+    },
+    "meta": {
+      "family": "Source Sans 3",
+      "weight": "600",
+      "role": "winieta, data, autor (8–10 pt)",
+      "fallbacks": ["Inter", "Arial"]
+    }
+  },
+  "grammar": {
+    "body_size_pt": 10.0,
+    "lead_size_pt": 14.0,
+    "columns": 3,
+    "energy_budget": 0.50,
+    "max_transgressions": 2
+  }
+}

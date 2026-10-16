@@ -28,7 +28,15 @@ import {
   CheckCircle2,
   Layers,
   ArrowRight,
+  Scale,
+  Globe,
+  FileUp,
+  Wand2,
+  Link as LinkIcon,
+  RefreshCw,
 } from 'lucide-react';
+import { PairwiseTasteModal } from './PairwiseTasteModal';
+import { CreationStepper } from '../common/CreationStepper';
 
 const emptyLeadStory: StoryMaterial = {
   id: 'story-lead-01', role: 'lead-story', importance: 5,
@@ -74,12 +82,127 @@ export const GeneratePage: React.FC = () => {
   const [tvScheduleText, setTvScheduleText] = useState('');
   const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
   const [draftSaved, setDraftSaved] = useState<boolean>(false);
+  const [isPairwiseOpen, setIsPairwiseOpen] = useState<boolean>(false);
   const draftHydrated = React.useRef(false);
   const [loadedDraftKey, setLoadedDraftKey] = useState('');
   const hasRequiredMaterial = Boolean(leadStory.headline.trim() && leadStory.body.trim());
 
+  const [ingestMode, setIngestMode] = useState<'url' | 'file' | 'manual'>('url');
+  const [inputUrl, setInputUrl] = useState('');
+  const [autoCutoutOnIngest, setAutoCutoutOnIngest] = useState(true);
+  const [isIngesting, setIsIngesting] = useState(false);
+  const [ingestStatus, setIngestStatus] = useState('');
+  const docFileInputRef = React.useRef<HTMLInputElement>(null);
+
   const goToMainMaterial = () => {
     document.getElementById('lead-story-fields')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleIngestUrl = async () => {
+    if (!inputUrl.trim() || !activeProject) return;
+    setIsIngesting(true);
+    setIngestStatus('Pobieram treść ze strony, wycinam tło ze zdjęcia i redaguję artykuł przez AI…');
+    try {
+      const res = await api.ingestUrl(inputUrl.trim(), autoCutoutOnIngest, activeProject.id);
+      setLeadStory(res.leadStory);
+      if (res.photos && res.photos.length > 0) {
+        setPhotos(prev => [...res.photos, ...prev]);
+      }
+      addToast({
+        type: 'success',
+        title: 'Materiał pobrany i zredagowany',
+        message: `Artykuł zredagowany z ${res.source?.domain || 'linku'}${res.photos?.length ? ' wraz ze zdjęciem AI' : ''}.`,
+      });
+      setIngestStatus('');
+    } catch (e) {
+      addToast({
+        type: 'error',
+        title: 'Błąd pobierania linku',
+        message: e instanceof Error ? e.message : 'Nie udało się pobrać lub zredagować strony.',
+      });
+      setIngestStatus('');
+    } finally {
+      setIsIngesting(false);
+    }
+  };
+
+  const handleIngestFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeProject) return;
+    setIsIngesting(true);
+    setIngestStatus('Odczytuję dokument, wyodrębniam zdjęcia i redaguję artykuł przez AI…');
+    try {
+      const res = await api.ingestFile(file, autoCutoutOnIngest, activeProject.id);
+      setLeadStory(res.leadStory);
+      if (res.photos && res.photos.length > 0) {
+        setPhotos(prev => [...res.photos, ...prev]);
+      }
+      addToast({
+        type: 'success',
+        title: 'Dokument odczytany i zredagowany',
+        message: `Artykuł zredagowany z pliku ${file.name}${res.photos?.length ? ' wraz z osadzonym zdjęciem' : ''}.`,
+      });
+      setIngestStatus('');
+    } catch (e) {
+      addToast({
+        type: 'error',
+        title: 'Błąd odczytu pliku',
+        message: e instanceof Error ? e.message : 'Nie udało się odczytać dokumentu.',
+      });
+      setIngestStatus('');
+    } finally {
+      setIsIngesting(false);
+      if (docFileInputRef.current) docFileInputRef.current.value = '';
+    }
+  };
+
+  const handleRedactDraft = async () => {
+    if (!leadStory.body.trim() || !activeProject) return;
+    setIsIngesting(true);
+    setIngestStatus('Redaguję wpisany brudnopis według profesjonalnych zasad prasy…');
+    try {
+      const res = await api.redactText(leadStory.body, leadStory.headline, activeProject.id);
+      setLeadStory(prev => ({
+        ...prev,
+        ...res.leadStory,
+      }));
+      addToast({
+        type: 'success',
+        title: 'Tekst zredagowany przez AI',
+        message: 'Artykuł sformatowano w profesjonalny styl prasowy z polską mikrotypografią.',
+      });
+    } catch (e) {
+      addToast({
+        type: 'error',
+        title: 'Błąd redagowania',
+        message: e instanceof Error ? e.message : 'Nie udało się zredagować tekstu.',
+      });
+    } finally {
+      setIsIngesting(false);
+      setIngestStatus('');
+    }
+  };
+
+  const handleFillSampleEditorial = () => {
+    setLeadStory({
+      id: 'story-lead-01',
+      role: 'lead-story',
+      importance: 5,
+      kicker: 'WYDANIE GŁÓWNE',
+      headline: 'WIELKA REWOLUCJA NA RYNKU: POLSKIE FIRMY PODBIJAJĄ EUROPEJSKĄ BRANŻĘ',
+      deck: 'Kluczowe inwestycje, rekordowe wyniki i nowe fabryki otwierają drogę do pozycji regionalnego lidera.',
+      lead: 'W ciągu ostatnich dwunastu miesięcy rodzime przedsiębiorstwa zanotowały niespotykany dotąd wzrost obrotów zagranicznych.',
+      body: 'Decydujący wpływ na sytuację miały inwestycje w nowoczesne technologie oraz odważna ekspansja na rynki zachodnioeuropejskie. Eksperci podkreślają, że skala projektów realizowanych w tym kwartale nie ma precedensu w najnowszej historii gospodarczej. Przemysł wytwórczy, sektor usług cyfrowych oraz inżynieria precyzyjna wyznaczają dziś standardy, które przyciągają inwestorów z całego globu. Wszystkie wskaźniki makroekonomiczne potwierdzają trwałość tego trendu na kolejne lata.',
+      byline: 'Michał Kowalczyk',
+      dateline: 'WARSZAWA',
+      pullQuote: 'To historyczny moment dla naszej gospodarki',
+      wordCount: 110,
+    });
+    addToast({
+      type: 'info',
+      title: 'Wstawiono przykładowy artykuł',
+      message: 'Możesz od razu kliknąć „Generuj warianty”, aby zobaczyć stronę z Twoim logo i stylem.',
+    });
   };
 
   const draftKey = activeProject ? `zecro:generator-draft:${activeProject.id}` : '';
@@ -258,10 +381,44 @@ export const GeneratePage: React.FC = () => {
     }
   };
 
+  const handleRunArtDirect = async () => {
+    if (!activeProject) return;
+    setIsGenerating(true);
+    setGenerationError('');
+    setGenerationProgress('Uruchamianie pętli AI (Dyrektor → Silnik → Redaktor → Sędzia)…');
+    try {
+      const intake = buildIntake(true);
+      const run = await api.executeArtDirect(activeProject.id, {
+        composer: 'framed_cover:wukadka',
+        rounds: 3,
+        material: intake.leadStory?.headline ? (intake as any) : undefined,
+      });
+      setCurrentRun(run);
+      if (run.candidates.length > 0) {
+        setSelectedCandidate(run.candidates.find(c => c.passHardGates) || run.candidates[0]);
+      }
+      addToast({
+        type: 'success',
+        title: 'Pętla AI Art Directora zakończona',
+        message: `Przeprowadzono ${run.candidates.length} rund. Wygenerowano warianty do oceny.`,
+      });
+      setActiveTab('gallery');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Błąd pętli AI Art Director.';
+      setGenerationError(message);
+      addToast({ type: 'error', title: 'Pętla AI nieudana', message });
+    } finally {
+      setIsGenerating(false);
+      setGenerationProgress('');
+    }
+  };
+
   if (!activeProject) return null;
 
   return (
     <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-8 animate-fade-in">
+      <CreationStepper currentStep={3} />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-ink-800 pb-6">
         <div>
@@ -285,6 +442,25 @@ export const GeneratePage: React.FC = () => {
         <div className="flex flex-wrap gap-2 justify-end">
           <Button variant="secondary" size="md" onClick={() => setShowAdvanced((value) => !value)}>
             {showAdvanced ? 'Ukryj ustawienia zaawansowane' : 'Ustawienia zaawansowane'}
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            leftIcon={<Scale className="w-5 h-5 text-editorial-ochre" />}
+            onClick={() => setIsPairwiseOpen(true)}
+            className="border-editorial-ochre/40 hover:bg-editorial-ochre/10 text-editorial-ochre font-bold shadow-md"
+          >
+            Pojedynek A/B (Nauka gustu AI)
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            isLoading={isGenerating}
+            leftIcon={<Layers className="w-5 h-5 text-editorial-crimson" />}
+            onClick={handleRunArtDirect}
+            className="border-editorial-crimson/50 hover:bg-editorial-crimson/10 text-editorial-crimson font-bold shadow-md"
+          >
+            Pętla AI (okładka ramowa)
           </Button>
           <Button
             variant="editorial"
@@ -363,16 +539,169 @@ export const GeneratePage: React.FC = () => {
         <div className="lg:col-span-7 space-y-6">
           {/* LEAD STORY CARD */}
           <Card className="space-y-5 border-l-4 border-editorial-crimson" id="lead-story-fields">
-            <div className="flex items-center justify-between pb-3 border-b border-ink-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-ink-800 gap-2">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-editorial-crimson" />
                 <h3 className="font-headline font-bold text-base text-ink-100">
                   Główny materiał (czołówka)
                 </h3>
               </div>
-              <Badge variant="accent" size="sm">
-                Priorytet: 5 / 5 ★
-              </Badge>
+              <div className="flex items-center gap-2">
+                {!hasRequiredMaterial && (
+                  <button
+                    type="button"
+                    onClick={handleFillSampleEditorial}
+                    className="text-xs font-mono text-editorial-ochre hover:text-white bg-editorial-ochre/10 hover:bg-editorial-ochre/25 border border-editorial-ochre/30 rounded px-2.5 py-1 transition-colors"
+                  >
+                    Wstaw przykładowy artykuł
+                  </button>
+                )}
+                <Badge variant="accent" size="sm">
+                  Priorytet: 5 / 5
+                </Badge>
+              </div>
+            </div>
+
+            {/* Smart Ingest Mode Selector */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-1.5 p-1 bg-ink-950 rounded-lg border border-ink-800 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setIngestMode('url')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
+                    ingestMode === 'url'
+                      ? 'bg-editorial-crimson text-white shadow-xs'
+                      : 'text-ink-400 hover:text-ink-200'
+                  }`}
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  Link z Internetu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIngestMode('file')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
+                    ingestMode === 'file'
+                      ? 'bg-editorial-crimson text-white shadow-xs'
+                      : 'text-ink-400 hover:text-ink-200'
+                  }`}
+                >
+                  <FileUp className="w-3.5 h-3.5" />
+                  Plik dokumentu (DOCX, PDF, TXT)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIngestMode('manual')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
+                    ingestMode === 'manual'
+                      ? 'bg-editorial-crimson text-white shadow-xs'
+                      : 'text-ink-400 hover:text-ink-200'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  Wpisz ręcznie
+                </button>
+              </div>
+
+              {/* Mode 1: URL */}
+              {ingestMode === 'url' && (
+                <div className="p-4 bg-ink-950/70 border border-ink-800 rounded-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-ink-200 flex items-center gap-1.5">
+                      <Globe className="w-4 h-4 text-editorial-crimson" />
+                      Wklej link do artykułu w Internecie
+                    </label>
+                    <span className="text-[10px] font-mono text-ink-500">AI pobierze treść, zdjęcie i zredaguje tekst</span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="relative flex-1">
+                      <LinkIcon className="w-4 h-4 absolute left-3 top-3 text-ink-500" />
+                      <input
+                        type="url"
+                        value={inputUrl}
+                        onChange={(e) => setInputUrl(e.target.value)}
+                        placeholder="https://wyborcza.pl/... lub onet.pl / bbc.com / gov.pl"
+                        className="w-full pl-9 pr-3 py-2 bg-ink-900 border border-ink-700 rounded-lg text-xs text-ink-100 placeholder:text-ink-600 focus:outline-hidden focus:border-editorial-crimson"
+                      />
+                    </div>
+                    <Button
+                      variant="editorial"
+                      isLoading={isIngesting}
+                      leftIcon={<Wand2 className="w-4 h-4" />}
+                      onClick={handleIngestUrl}
+                      disabled={!inputUrl.trim()}
+                    >
+                      Pobierz i zredaguj
+                    </Button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                    <label className="flex items-center gap-2 text-[11px] text-ink-400 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={autoCutoutOnIngest}
+                        onChange={(e) => setAutoCutoutOnIngest(e.target.checked)}
+                        className="rounded border-ink-700"
+                      />
+                      Wytnij tło ze zdjęcia przez AI (szparowanie do oblania tekstem)
+                    </label>
+                    {ingestStatus && (
+                      <span className="text-[10px] font-mono text-editorial-ochre animate-pulse">{ingestStatus}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Mode 2: FILE */}
+              {ingestMode === 'file' && (
+                <div className="p-4 bg-ink-950/70 border border-ink-800 rounded-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-ink-200 flex items-center gap-1.5">
+                      <FileUp className="w-4 h-4 text-editorial-crimson" />
+                      Wgraj plik z dokumentem
+                    </label>
+                    <span className="text-[10px] font-mono text-ink-500">DOCX, DOC, PDF, TXT, RTF, MD</span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 items-center">
+                    <input
+                      ref={docFileInputRef}
+                      type="file"
+                      accept=".docx,.doc,.pdf,.txt,.rtf,.md,.odt"
+                      onChange={handleIngestFile}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="secondary"
+                      isLoading={isIngesting}
+                      leftIcon={<FileUp className="w-4 h-4" />}
+                      onClick={() => docFileInputRef.current?.click()}
+                      className="w-full sm:w-auto"
+                    >
+                      Wybierz dokument z dysku
+                    </Button>
+                    <span className="text-xs text-ink-400">
+                      Program wyciągnie tekst, osadzone zdjęcia i zredaguje materiał prasowy.
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                    <label className="flex items-center gap-2 text-[11px] text-ink-400 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={autoCutoutOnIngest}
+                        onChange={(e) => setAutoCutoutOnIngest(e.target.checked)}
+                        className="rounded border-ink-700"
+                      />
+                      Wytnij tło ze zdjęć w dokumencie przez AI
+                    </label>
+                    {ingestStatus && (
+                      <span className="text-[10px] font-mono text-editorial-ochre animate-pulse">{ingestStatus}</span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Nadtytuł */}
@@ -433,9 +762,22 @@ export const GeneratePage: React.FC = () => {
                 <label className="block text-xs font-mono uppercase font-bold text-ink-300">
                   Tekst główny (wielokolumnowy)
                 </label>
-                <span className="text-[11px] font-mono text-ink-400">
-                  {leadStory.body.trim() ? leadStory.body.trim().split(/\s+/).length : 0} słów
-                </span>
+                <div className="flex items-center gap-3">
+                  {leadStory.body.trim().length > 30 && (
+                    <button
+                      type="button"
+                      onClick={handleRedactDraft}
+                      disabled={isIngesting}
+                      className="text-[11px] font-mono text-editorial-ochre hover:text-white bg-editorial-ochre/10 hover:bg-editorial-ochre/25 border border-editorial-ochre/30 rounded px-2 py-0.5 transition-colors flex items-center gap-1"
+                    >
+                      <Wand2 className="w-3 h-3" />
+                      Zredaguj ten tekst przez AI
+                    </button>
+                  )}
+                  <span className="text-[11px] font-mono text-ink-400">
+                    {leadStory.body.trim() ? leadStory.body.trim().split(/\s+/).length : 0} słów
+                  </span>
+                </div>
               </div>
               <textarea
                 rows={6}
@@ -699,6 +1041,39 @@ export const GeneratePage: React.FC = () => {
                       description={photo.hasCutoutMask ? "Tekst może otaczać wyciętą postać." : "Dla tego zdjęcia nie ma jeszcze poprawnego obrysu."}
                     />
 
+                    {!photo.hasCutoutMask && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="w-full text-xs font-mono border border-editorial-crimson/30 hover:border-editorial-crimson text-editorial-crimson mt-2"
+                        leftIcon={<Scissors className="w-3.5 h-3.5" />}
+                        onClick={async () => {
+                          try {
+                            addToast({ type: 'info', title: 'Szparowanie w toku…', message: 'Wycieranie tła i generowanie obrysu.' });
+                            const res = await api.cutoutPhoto(activeProject.id, { imageUrl: photo.url, file: photo.sourceFile });
+                            if (res.alpha_mask_url || res.contour_polygon) {
+                              const updated = [...photos];
+                              updated[pIdx] = {
+                                ...updated[pIdx],
+                                hasCutoutMask: true,
+                                autoCutout: true,
+                                alphaMaskUrl: res.alpha_mask_url,
+                                previewUrl: res.alpha_mask_url || updated[pIdx].previewUrl,
+                                cutoutContourPoints: res.contour_polygon,
+                                focalPoint: res.focal_point || updated[pIdx].focalPoint,
+                              };
+                              setPhotos(updated);
+                              addToast({ type: 'success', title: 'Tło wycięte!', message: 'Maska alfa i wektorowy kontur gotowe do składu.' });
+                            }
+                          } catch (err) {
+                            addToast({ type: 'error', title: 'Błąd wycinania', message: err instanceof Error ? err.message : 'Nie udało się wyciąć tła.' });
+                          }
+                        }}
+                      >
+                        Wytnij tło zdjęcia (AI Auto-Cutout)
+                      </Button>
+                    )}
+
                     {photo.hasCutoutMask && (
                       <div className="p-2 bg-purple-950/40 rounded border border-purple-800/50 text-[10px] font-mono text-purple-300 flex items-center gap-2">
                         <Scissors className="w-3.5 h-3.5 shrink-0" />
@@ -828,6 +1203,13 @@ export const GeneratePage: React.FC = () => {
           {isGenerating ? generationProgress || 'Generowanie wariantów…' : hasRequiredMaterial ? `Generuj ${warianty(candidateCount)}` : 'Przejdź do głównego materiału'}
         </Button>
       </section>
+
+      <PairwiseTasteModal
+        projectId={activeProject.id}
+        isOpen={isPairwiseOpen}
+        onClose={() => setIsPairwiseOpen(false)}
+        onToast={addToast}
+      />
     </div>
   );
 };

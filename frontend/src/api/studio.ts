@@ -58,9 +58,14 @@ export const studio = {
   uploadFonts: (files: File[]) => { const f = new FormData(); files.forEach(x => f.append('files', x)); return call<Data[]>('/fonts/upload', { method: 'POST', body: f }); },
   deleteFont: (id: string) => call(`/fonts/${id}`, { method: 'DELETE' }),
   // logo
+  dna: (projectId: string) => call<Data>(`/projects/${projectId}/dna`),
   uploadLogo: (projectId: string, file: File) => { const f = new FormData(); f.append('file', file); return call(`/projects/${projectId}/dna/logo`, { method: 'POST', body: f }); },
   approveLogo: (projectId: string, body: Data) => post(`/projects/${projectId}/dna/logo/approve`, body),
-  dna: (projectId: string) => call(`/projects/${projectId}/dna`),
+  // framed cover & AI art director
+  framedCover: (projectId: string, kit_name = 'wukadka', genes?: Data, material?: Data) => post(`/projects/${projectId}/framed-cover`, { kit_name, genes, material }),
+  artDirect: (projectId: string, options: Data = {}) => post(`/projects/${projectId}/art-direct`, options),
+  applyFixes: (projectId: string, fixes: string[], genes: Data, composer = 'framed_cover:wukadka', material?: Data) =>
+    post(`/projects/${projectId}/art-direct/apply-fixes`, { fixes, genes, composer, material }),
   // settings
   settingsOverview: () => call<{ integrations: Data[]; tasks: Record<string, Data> }>('/settings/overview'),
   integrations: () => call<Data[]>('/settings/integrations'),

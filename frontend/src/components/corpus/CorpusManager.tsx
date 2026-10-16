@@ -16,10 +16,12 @@ import {
   Eye,
   BarChart3,
   RefreshCw,
+  ArrowRight,
 } from 'lucide-react';
+import { CreationStepper } from '../common/CreationStepper';
 
 export const CorpusManager: React.FC = () => {
-  const { activeProject, reloadDNA, addToast, setActiveTab } = useProject();
+  const { activeProject, reloadDNA, addToast, setActiveTab, setDnaSubTab } = useProject();
   const [corpusPages, setCorpusPages] = useState<CorpusPage[]>([]);
   const [selectedPage, setSelectedPage] = useState<CorpusPage | null>(null);
   const [previewUnavailable, setPreviewUnavailable] = useState(false);
@@ -75,8 +77,9 @@ export const CorpusManager: React.FC = () => {
       addToast({
         type: 'success',
         title: 'Styl gazety zaktualizowany',
-        message: 'Program uwzględni teraz dodane przykłady.',
+        message: 'Program rozpoznał styl. Przejdź do wgrania logo gazety.',
       });
+      setDnaSubTab('masthead');
       setActiveTab('dna');
     } catch (error) {
       addToast({ type: 'error', title: 'Nie udało się zastosować przykładów', message: error instanceof Error ? error.message : 'Spróbuj ponownie.' });
@@ -103,6 +106,8 @@ export const CorpusManager: React.FC = () => {
 
   return (
     <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-8 animate-fade-in">
+      <CreationStepper currentStep={1} />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-ink-800 pb-6">
         <div>
@@ -119,7 +124,7 @@ export const CorpusManager: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <>
             <input
               ref={uploadInput}
@@ -146,6 +151,17 @@ export const CorpusManager: React.FC = () => {
             onClick={handleLearnDNA}
           >
             Zastosuj styl z przykładów
+          </Button>
+
+          <Button
+            variant="primary"
+            rightIcon={<ArrowRight className="w-4 h-4" />}
+            onClick={() => {
+              setDnaSubTab('masthead');
+              setActiveTab('dna');
+            }}
+          >
+            Krok 2: Winieta i logo →
           </Button>
         </div>
       </div>
@@ -215,6 +231,26 @@ export const CorpusManager: React.FC = () => {
                 <p className="text-[10px] text-ink-500 mt-1">Dodaj 2–10 stron, aby pokazać programowi ulubiony styl.</p>
               </div>
             )}
+          </div>
+
+          <div className="p-4 bg-ink-900/90 border border-ink-800 rounded-xl space-y-2">
+            <p className="text-xs text-ink-300 font-medium">
+              Chcesz przejść do logo i winiety?
+            </p>
+            <p className="text-[11px] text-ink-500">
+              Styl z przykładów jest opcjonalny. W kolejnym kroku wgrasz znak swojej gazety.
+            </p>
+            <Button
+              variant="editorial"
+              className="w-full justify-center mt-2"
+              rightIcon={<ArrowRight className="w-4 h-4" />}
+              onClick={() => {
+                setDnaSubTab('masthead');
+                setActiveTab('dna');
+              }}
+            >
+              Przejdź dalej: Wgraj logo (Krok 2) →
+            </Button>
           </div>
         </div>
 

@@ -255,3 +255,53 @@ Zasady działają ogólnie, w silniku i w bramce, a nie tylko dla jednej okładk
 Testy: 186 przechodzi, a 2 testy wolnego kolażu są oznaczone jako znane błędy (xfail). Poza tym nie przechodzi `test_short_source_becomes_an_expansion_request_not_a_hole` (kompozytor kafelkowy, copyfit 1,25×). Ten błąd nie wynika z tych zmian: występuje także po wyłączeniu nowych reguł dzielenia wyrazów. Test `test_contract_title_dna_schema_validation` wymaga uruchomienia z katalogu głównego repozytorium.
 
 Znane luki: na podglądzie PNG widać włoskowatą linię na wspólnej krawędzi zdjęcia i plamy (antyaliasing podglądu; na naświetlarce jej nie ma). Pętla AI potrafi oscylować między wariantem narożnika a paskiem. Wariant narożnika z wycięciami zostawia lukę nad głową (bramka to łapie).
+
+## VII. Ustabilizowanie pętli AI, eliminacja defektów i integracja ze studiem (16.10.2026)
+
+Wszystkie zaplanowane zadania kontynuacji zostały zrealizowane jako reguły ogólne w silniku, bramce, API i interfejsie użytkownika.
+
+1. **Pętla AI bez oscylacji (`backend/app/engine/art_director.py`, `backend/app/ai/prompts/layout_review.md`):**
+   - Do promptu Redaktora Technicznego przekazywana jest pełna historia dotychczasowych prób: zestaw genów, werdykt bramki (PASS/FAIL) oraz zgłoszone defekty.
+   - Wprowadzono twardą blokadę `forbidden_genes`: konfiguracja genów, która w poprzednich rundach przegrała pojedynek u sędziego lub została odrzucona przez bramkę, nie może być ponownie wybrana.
+   - W trybie `breakout` (domyślnym dla okładki ramowej z wyjściem postaci) ukryto nieaktywne ruchy (`hero_shift`, `hero_dy`), które wprowadzały szum decyzyjny. Aktywne ruchy to m.in. `bottom: strip/corner`, `headline_case: upper/title`, `head_scale`, `corner_photos`.
+   - Rezultat: 4 rundy pętli AI kończą się stabilnym kandydatem z wynikiem bramki PASS, bez cyklicznych nawrotów do gorszego układu.
+
+2. **Narożnik z wycięciami (`corner_photos: cutout`) bez dziury nad głową (`backend/app/engine/framed_cover.py`):**
+   - Usunięto defekt D28 (luka 24 cm² nad głową w żółtym pudełku zapowiedzi dolnej).
+   - Skalowanie i pozycjonowanie wycięć w narożniku (`cutout`) zostało powiązane bezpośrednio z faktyczną wysokością modułu dolnego (`b_h`) zamiast stałej wartości.
+   - Wariant z wycięciami w narożniku przechodzi bramkę jakości (GATE PASS).
+
+3. **Likwidacja włoskowatej linii na wspólnej krawędzi (`backend/app/renderers/pdf_renderer.py`):**
+   - Zaimplementowano regułę trappingu (nadlewu krawędzi) dla antyaliasingu rasteryzatora PNG: elementy spodnie leżące pod wyższymi elementami o wspólnej krawędzi otrzymują nadlew 0,25 mm pod element przykrywający.
+   - Włoskowata linia tła na styku zdjęcia i belki zniknęła na podglądach renderera.
+
+4. **Przeniesienie prymitywów U15–U19 do pozostałych kompozytorów (`backend/app/engine/plan_composer.py`):**
+   - Rozszerzono kontekst `_Ctx` w kompozytorze planowanym o:
+     - `photo_fill`: kadr typu cover wypełniający moduł (U16) ze skalowaniem do minimalnej wysokości twarzy (`min_face_mm=14.0`) i flagą `fills_module`.
+     - `fill_block`: formatowanie tytułu z wypełnieniem modułu bez wiszących spójników i sierotek (U5/U16).
+     - `snap_near_edges`: eliminacja mikroszczelin 0,3–2,5 mm (U18/D29) z ochroną przed ujemnymi wymiarami ramek i ignorowaniem linii dekoracyjnych (< 2 mm).
+   - Wpięto automatyczne wywołanie `ctx.snap_near_edges()` do układów dzienników (`compose_planned_page`), magazynów i okładek popularnych (`_compose_popular_cover`, `_compose_popular_poster_cover`, `_compose_popular_type_cover`, `_compose_editorial_or_service_cover`).
+   - Zabezpieczono nowym zestawem testów w `backend/tests/test_plan_composer_primitives.py` (3/3 przeszły).
+
+5. **Naprawa kompozytora kafelkowego (`backend/app/engine/frame_fill.py`):**
+   - Poprawiono obsługę copyfit 1,25× w teście `test_short_source_becomes_an_expansion_request_not_a_hole`. Zamiast błędnego oznaczania za krótkiego tekstu źródłowego jako dziury w makiecie, silnik prawidłowo generuje żądanie rozbudowy tekstu (`needs_more_source = True`, `expansion_request`).
+
+6. **Wystawienie okładki ramowej i pętli AI w API oraz studiu zecro.pl:**
+   - **Backend API (`backend/app/api/generate.py`):**
+     - `POST /projects/{project_id}/framed-cover`: generowanie wariantu okładki ramowej z wyliczeniem metryk i miniaturą SVG.
+     - `POST /projects/{project_id}/art-direct`: uruchomienie pełnej pętli AI (Dyrektor → Silnik → Redaktor → Sędzia) z zapisem rund i śladu decyzyjnego w metadanych kandydata.
+     - `POST /projects/{project_id}/art-direct/apply-fixes`: aplikacja poprawek redaktora do genów kompozytora i wygenerowanie poprawionego kandydata.
+     - Testy API w `backend/tests/test_api_framed_and_art_direct.py` (3/3 przeszły).
+   - **Frontend Studio (`frontend/src/`):**
+     - W `GeneratePage.tsx`: przycisk „Pętla AI (okładka ramowa)” uruchamiający pętlę na materiałach projektu.
+     - W `SceneGraphCanvas.tsx`: dedykowana karta boczna „AI Redaktor Techniczny & Pętla” prezentująca status werdyktu, ocenę wizualną, listę defektów D01–D30, proponowane poprawki, historię rund pętli oraz interaktywny przycisk **„Zastosuj poprawki AI”**, który natychmiast aktualizuje stronę w studiu.
+     - Weryfikacja buildu: `npm run build` w `frontend/` kompiluje się czysto (TypeScript 0 błędów, Vite production bundle wygenerowany w 2,95 s).
+
+7. **Silnik estetyki matematycznej i percepcji wizualnej (`backend/app/engine/aesthetics.py`):**
+   - **Xerox PARC (Stephen Harrington et al.):** Optyczna masa elementów (`element_optical_weight`), równowaga pozioma (`calculate_visual_balance`), równomierność pionowa względem złotego środka optycznego 45% wysokości (`calculate_visual_equilibrium`) oraz miara regularności osi Gestalt (`calculate_alignment_rhythm`).
+   - **Sophi.io (The Globe and Mail):** Zaawansowany detektor uwięzionej bieli (`detect_trapped_whitespace`), odróżniający naturalny oddech na marginesach zewnętrznych od przypadkowych pustych kieszeni uwięzionych między blokami redakcyjnymi.
+   - **Poynter Eyetrack (Mario Garcia):** Weryfikacja jednoznaczności punktu startowego (`evaluate_entry_point`), analiza wektora spojrzenia postaci (`evaluate_gaze_direction` — eliminacja ucieczki wzroku poza krawędź) oraz stabilności kotwicy dolnej (`evaluate_bottom_anchor`).
+   - Integracja z krytykiem (`critic.py` -> `aesthetic_index` w heurystykach i bramka na uwięzioną biel) oraz pomiarami pętli AI (`measurements` w `art_director.py`).
+   - Zabezpieczono 9 testami w `backend/tests/test_aesthetics.py` (9/9 passed). Cały zestaw: 212 passed, 2 xfailed.
+
+

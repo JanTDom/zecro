@@ -95,6 +95,30 @@ export interface Candidate {
   tags: string[];
   artDirection?: ArtDirectionPlan;
   isBookmarked?: boolean;
+  metadata?: {
+    visual_critique?: {
+      status?: string;
+      score?: number;
+      defects?: string[];
+      top_3_fixes?: string[];
+      raw_response?: string;
+      [key: string]: any;
+    };
+    art_director_trace?: Array<{
+      round: number;
+      candidate_id?: string;
+      genes?: Record<string, any>;
+      gate_passed?: boolean;
+      gate_details?: string[];
+      visual_critique?: any;
+      pairwise_winner?: any;
+      fixes_applied?: any;
+      [key: string]: any;
+    }>;
+    composer_name?: string;
+    composer_genes?: Record<string, any>;
+    [key: string]: any;
+  };
   createdAt: string;
 }
 

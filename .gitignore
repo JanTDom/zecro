@@ -37,5 +37,5 @@ Fonts/
 .playwright-cli/
 
 # Local QA renders
-output/_qa/
+output/
 corpus/.audit_cache.jsonl

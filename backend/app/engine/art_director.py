@@ -99,9 +99,15 @@ class Composer:
     describe_title: Callable[[Any], dict]
     references: list[Path] = field(default_factory=list)
     measure_moves: Optional[Callable[[Any, Any], None]] = None
+    filter_moves: Optional[Callable[[list[Move], dict], list[Move]]] = None
 
     def move(self, name: str) -> Optional[Move]:
         return next((m for m in self.moves if m.name == name), None)
+
+    def active_moves(self, genes: Optional[dict] = None) -> list[Move]:
+        if self.filter_moves and genes is not None:
+            return self.filter_moves(self.moves, genes)
+        return self.moves
 
 
 def _framed_wukadka() -> Composer:
@@ -174,8 +180,14 @@ def _framed_wukadka() -> Composer:
         rows.sort(key=lambda d: ((d.get("dziura_okna_cm2", 0) > 30), -d["wypelnienie_powierzchni"] + (.5 if d["uwagi"] else 0)))
         comp.move("lead_lines").measured = rows[:12]
 
+    def filter_moves(moves_list: list[Move], current_genes: dict) -> list[Move]:
+        hero_mode = (current_genes or {}).get("hero_mode", "breakout")
+        if hero_mode == "breakout":
+            return [m for m in moves_list if m.name not in ("hero_dy", "hero_shift")]
+        return moves_list
+
     return Composer("framed_cover:wukadka", "G-TABLOID-FRAME", "wukadka", compose, moves, dna, describe,
-                    sorted(root.glob("*.jpg")), measure)
+                    sorted(root.glob("*.jpg")), measure, filter_moves=filter_moves)
 
 
 # the engine's five base archetypes (corpus_indexer.create_archetype_dnas)
@@ -234,7 +246,60 @@ def _planned_page(archetype: str, zone: str = "front_page") -> Composer:
     return comp
 
 
-COMPOSERS: dict[str, Callable[[], Composer]] = {"framed_cover:wukadka": _framed_wukadka}
+def _kit_composer(kit_name: str, zone: str = "front_page") -> Composer:
+    from .corpus_indexer import create_archetype_dnas
+    from .zone_solver import compose_page
+    from .layered_cover import load_kit
+
+    kit_data = load_kit(kit_name)
+    genre = kit_data.get("genre", "G-COMPACT")
+
+    def dna():
+        return kit_dna(kit_name)
+
+    def compose(material, genes):
+        genes = dict(genes)
+        lead_id = genes.pop("dominant_story", None)
+        if lead_id and any(st.id == lead_id for st in material.stories):
+            stories = []
+            for st in material.stories:
+                if st.id == lead_id:
+                    st = st.model_copy(update={"rank": "lead", "importance": 1.0})
+                elif st.rank == "lead":
+                    st = st.model_copy(update={"rank": "second", "importance": min(st.importance, .8)})
+                stories.append(st)
+            material = material.model_copy(update={"stories": stories})
+        return compose_page(dna(), material.model_copy(update={"page_zone": zone}), genes)
+
+    def describe(material):
+        d = dna()
+        return {"nazwa": d.name, "gatunek": genre, "kit": kit_name, "strefa": zone,
+                "format_mm": [d.format.trim_w_mm, d.format.trim_h_mm], "lamy": d.grid.columns,
+                "rowek_mm": d.grid.gutter_mm,
+                "zasady_tytulu": ["rygorystyczna siatka tytułu; proporcje i skala z zestawu marki",
+                                  "jedna dominanta, zrównoważone kolumny, brak uwięzionej bieli"]}
+
+    moves = [
+        Move("layout_mode", "enum", "architektura strony: dominanta z lewej, z prawej, siatka modułowa, zdjęcie u góry, układ warstwowy",
+             ["dominant-left", "dominant-right", "modular-grid", "photo-top", "stacked"], "dominant-left"),
+        Move("photo_treatment", "enum", "traktowanie zdjęć: kadr prostokątny albo wycięcie",
+             ["crop", "cutout"], "crop"),
+        Move("variation", "number", "wariant architektury (0 = zachowawczy, 1 = dynamiczny)", (0, 1), .5),
+        Move("dominant_story", "enum", "który tekst jest dominantą strony (id)", [], None),
+    ]
+    comp = Composer(f"title_kit:{kit_name}", genre, kit_name, compose, moves, dna, describe, [])
+
+    def measure(c, material):
+        c.move("dominant_story").options = [st.id for st in material.stories]
+    comp.measure_moves = measure
+    return comp
+
+
+COMPOSERS: dict[str, Callable[[], Composer]] = {
+    "framed_cover:wukadka": _framed_wukadka,
+    "title_kit:daily_broadsheet": lambda: _kit_composer("daily_broadsheet"),
+    "title_kit:opinion_magazine": lambda: _kit_composer("opinion_magazine"),
+}
 for _arch in ARCHETYPE_GENRE:
     for _zone in ("front_page", "spread"):          # "spread" = inside page in the engine's schema
         COMPOSERS[f"planned_page:{_arch}:{_zone}"] = (lambda a=_arch, z=_zone: _planned_page(a, z))
@@ -246,7 +311,8 @@ def kit_dna(kit_name: str):
     from .corpus_indexer import create_archetype_dnas
     from .layered_cover import load_kit
     kit = load_kit(kit_name)
-    dna = create_archetype_dnas()[kit.get("archetype", "tabloid")]
+    arch = kit.get("archetype") or ("quality_press" if kit.get("genre") == "G-BROADSHEET" else ("editorial_magazine" if kit.get("genre") == "G-MAGAZINE" else "tabloid"))
+    dna = create_archetype_dnas()[arch]
     fmt = kit["format"]
     dna.name = kit["name"]
     dna.format.trim_w_mm, dna.format.trim_h_mm = fmt["trim_mm"]
@@ -348,8 +414,16 @@ def measurements(scene) -> dict:
                              "obrot_deg": sorted({round(e.frame.rotation_deg or 0, 1) for e in sheared}),
                              "fakt": "pionowe kreski liter są pionowe (obrót 0°), linia pisma wznosi się — to ścięcie, "
                                      "zgodne z tradycją tytułu; nie jest to obrót"}
-    from .layered_rules import cut_edge_report
+    from .layered_rules import cut_edge_report, empty_in_boxes, window_holes
     cuts = cut_edge_report(scene.elements, meta, list(scene.page.trim or []))
+    wh = window_holes(scene.elements, meta)
+    if wh:
+        out["dziury_w_oknach_cm2"] = {name: round(a, 1) for name, a in wh}
+    else:
+        out["dziury_w_oknach"] = "brak dziur w oknach powyżej dopuszczalnego limitu"
+    eb = empty_in_boxes(scene.elements, meta)
+    if eb:
+        out["puste_pola_w_pudelkach"] = {pid: {"cm2": round(a, 1), "proc": round(s, 1)} for pid, a, s in eb}
     for e in scene.elements:
         if e.role != "photo":
             continue
@@ -376,6 +450,22 @@ def measurements(scene) -> dict:
                     worst = max(worst, (min(lx1, ext[1]) - max(logo.frame.x, ext[0])) / logo.frame.w)
         out["winieta"] = {"zaslonieta_szerokosc": round(worst, 3), "limit_tytulu": rule.get("max_covered_share"),
                           "zmierzone_na_oryginale_NR21": 0.09}
+    try:
+        from .aesthetics import evaluate_page_aesthetics
+        aes = evaluate_page_aesthetics(scene)
+        out["estetyka_kompozycyjna"] = {
+            "indeks_estetyki": aes.total_aesthetic_index,
+            "rownowaga_optyczna": aes.balance_score,
+            "rownomiernosc_pionowa": aes.equilibrium_score,
+            "czystosc_osi_rytm": aes.rhythm_score,
+            "uwieziona_biel_cm2": aes.trapped_whitespace_cm2,
+            "jasnosc_punktu_wejscia": aes.entry_point_score,
+            "spojrzenie_postaci_do_wewnatrz": aes.gaze_alignment_score,
+            "kotwica_dolna": aes.bottom_anchor_score,
+            "rekomendacje": aes.recommendations[:4],
+        }
+    except Exception as exc:
+        out["estetyka_kompozycyjna"] = {"error": str(exc)[:160]}
     return out
 
 
@@ -407,18 +497,30 @@ def _against_measurements(review: dict, violations: list[str]) -> dict:
             "odrzucone_przez_pomiar": [{**d, "powod": "pomiar silnika nie potwierdza"} for d in gone]}
 
 
-def _vet(comp, material, critic, genes: dict, fixes: list[dict], log: list, max_tries: int = 3) -> dict:
+def _clean_genes(g: dict) -> dict:
+    return {k: v for k, v in (g or {}).items() if k != "hero_place"}
+
+
+def _vet(comp: Composer, material, critic, genes: dict, fixes: list[dict], log: list, max_tries: int = 3,
+         forbidden_genes: Optional[list[dict]] = None) -> dict:
     """The technical editor tries the proposed moves on the engine before a
-    round is spent on them: when the set breaks the gate, the move whose
-    removal clears most violations is dropped (logged with the reason)."""
+    round is spent on them: when the set breaks the gate or returns to a
+    forbidden/lost configuration, the move whose removal clears the problem
+    is dropped (logged with the reason)."""
+    clean_forbidden = [_clean_genes(fg) for fg in (forbidden_genes or [])]
+
     def run(fx):
         g = _apply(comp, genes, fx, material, [])
         g.pop("hero_place", None)
+        cg = _clean_genes(g)
+        if any(cg == fg for fg in clean_forbidden):
+            return g, ["konfiguracja już sprawdzona lub przegrana we wcześniejszej rundzie"]
         try:
             v = list(critic.evaluate_hard_gate(comp.compose(material, dict(g))).violations)
         except Exception as exc:          # a move the composer cannot build
             v = [f"kompozytor: {exc}"]
         return g, v
+
     new, viol = run(fixes)
     tries = 1
     while viol and len(fixes) > 1 and tries < max_tries:
@@ -432,11 +534,29 @@ def _vet(comp, material, critic, genes: dict, fixes: list[dict], log: list, max_
                 best = (i, g, v)
         if best is None or len(best[2]) >= len(viol):
             break
-        log.append({"ruch": fixes[best[0]], "powod": "po próbie na silniku łamie bramkę: " + "; ".join(viol[:2])})
+        log.append({"ruch": fixes[best[0]], "powod": "po próbie na silniku odrzucony: " + "; ".join(viol[:2])})
         fixes = fixes[:best[0]] + fixes[best[0] + 1:]
         new, viol = best[1], best[2]
-    _apply(comp, genes, fixes, material, log)          # the usual rejections (unknown moves, values)
-    return new
+
+    # Re-apply final remaining fixes and verify
+    applied = _apply(comp, genes, fixes, material, log)
+    applied.pop("hero_place", None)
+    clean_applied = _clean_genes(applied)
+
+    if any(clean_applied == fg for fg in clean_forbidden):
+        log.append({"ruch": "wszystkie_poprawki", "powod": "prowadzi do konfiguracji z listy zakazanych/przetestowanych"})
+        return dict(genes)
+
+    try:
+        final_viol = list(critic.evaluate_hard_gate(comp.compose(material, dict(applied))).violations)
+        if final_viol:
+            log.append({"ruch": "poprawki", "powod": "po próbie na silniku łamie bramkę: " + "; ".join(final_viol[:2])})
+            return dict(genes)
+    except Exception as exc:
+        log.append({"ruch": "poprawki", "powod": f"kompozytor: {exc}"})
+        return dict(genes)
+
+    return applied
 
 
 def _blocker_weight(rec: dict) -> float:
@@ -492,13 +612,18 @@ def compare(comp, title, know, refs, new_img, best_img, new_rec, best_rec) -> st
 # --------------------------------------------------------------- the loop
 def _apply(composer: Composer, genes: dict, raw_moves: list[dict], material, log: list) -> dict:
     out = dict(genes)
+    active_names = {m.name for m in composer.active_moves(genes)}
     for mv in raw_moves:
         name = mv.get("nazwa") or mv.get("ruch")
         value = mv.get("wartosc")
-        m = composer.move(name or "")
-        if m is None:
-            log.append({"odrzucony_ruch": name, "powod": "spoza listy ruchów"})
+        if name not in active_names:
+            m = composer.move(name or "")
+            if m is not None:
+                log.append({"odrzucony_ruch": name, "powod": f"ruch nieaktywny w trybie {genes.get('hero_mode', 'breakout')}"})
+            else:
+                log.append({"odrzucony_ruch": name, "powod": "spoza listy ruchów"})
             continue
+        m = composer.move(name or "")
         try:
             out[m.name] = m.parse(str(value), material)
         except Exception as exc:
@@ -553,7 +678,7 @@ def art_direct(material, composer_key: str = "framed_cover:wukadka", *, dna=None
         r = run_task("art_direction", "art_director",
                      {"podrecznik": know, "tytul": title, "material": mat,
                       "normy_z_korpusu": _norms(comp.genre),
-                      "ruchy": [m.brief() for m in comp.moves]},
+                      "ruchy": [m.brief() for m in comp.active_moves(genes)]},
                      ArtPlan, images=refs + [_jpeg(p["path"], 900) for p in photos], timeout_s=180, max_retries=1)
         plan = r.data
         trace["plan"] = plan
@@ -586,7 +711,7 @@ def art_direct(material, composer_key: str = "framed_cover:wukadka", *, dna=None
             rec_norms = [{"error": str(exc)[:160]}]
         scene_path = pdf.with_suffix(".scene.json")
         scene_path.write_text(scene.model_dump_json())
-        rec: dict[str, Any] = {"round": k + 1, "genes": {g: v for g, v in genes.items() if g != "hero_place"},
+        rec: dict[str, Any] = {"round": k + 1, "genes": _clean_genes(genes),
                                "gate": "PASS" if gate.passed else "FAIL", "violations": list(gate.violations), "pdf": str(pdf),
                                "scene": str(scene_path), "normy": rec_norms,
                                "pomiary_typografia": measurements(scene).get("typografia")}
@@ -594,13 +719,26 @@ def art_direct(material, composer_key: str = "framed_cover:wukadka", *, dna=None
             trace["rounds"].append(rec)
             best = best or (scene, rec, full)
             break
+
+        failed_rounds = [r for r in trace["rounds"] if r.get("gate") == "FAIL" or r.get("accepted") is False]
+        forbidden_genes = [_clean_genes(r["genes"]) for r in failed_rounds]
+        all_tried = [_clean_genes(r["genes"]) for r in trace["rounds"]]
+
+        trial_history = [
+            {"runda": r["round"], "geny": _clean_genes(r["genes"]), "bramka": r["gate"],
+             "naruszenia": r.get("violations", [])[:5],
+             "odrzucone_poprawki": r.get("rejected_fixes", [])}
+            for r in trace["rounds"]
+        ]
+
         try:
             rv = run_task("layout_review", "layout_review",
                           {"podrecznik": know, "tytul": title, "plan": plan,
-                           "ruchy": [m.brief(genes.get(m.name)) for m in comp.moves],
+                           "ruchy": [m.brief(genes.get(m.name)) for m in comp.active_moves(genes)],
                            "bramka": {"wynik": rec["gate"], "naruszenia": rec["violations"][:20]},
                            "pomiary": measurements(scene),
-                           "polozenie_w_normach_gatunku": rec.get("normy")},
+                           "polozenie_w_normach_gatunku": rec.get("normy"),
+                           "historia_prob": trial_history},
                           LayoutReview, images=[_jpeg(full, 1600)] + [_jpeg(c, 1400) for c in crops] + refs,
                           timeout_s=180, max_retries=1, use_cache=False)
             review = rv.data
@@ -628,11 +766,12 @@ def art_direct(material, composer_key: str = "framed_cover:wukadka", *, dna=None
         else:
             fixes = [{"nazwa": f.get("ruch"), "wartosc": f.get("wartosc")} for f in (review.get("poprawki") or [])]
             log = []
-            new_genes = _vet(comp, material, critic, genes, fixes, log)
+            new_genes = _vet(comp, material, critic, genes, fixes, log,
+                             forbidden_genes=forbidden_genes + all_tried)
             rec["rejected_fixes"] = log
             new_genes.pop("hero_place", None)  # re-solve the hero for the new moves
-            tried = [{g: v for g, v in r["genes"].items()} for r in trace["rounds"]]
-            if new_genes in tried:
+            clean_new = _clean_genes(new_genes)
+            if clean_new in all_tried or clean_new in forbidden_genes:
                 trace["done"] = "no new applicable fix"
             trace["next_genes"] = new_genes
             genes = dict(new_genes)

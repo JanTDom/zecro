@@ -1,0 +1,67 @@
+{
+  "name": "Dziennik Opinii",
+  "description": "Klasyczny ogólnokrajowy dziennik broadsheet w siatce 6-łamowej z dominującą winietą i hierarchią informacyjną.",
+  "genre": "G-BROADSHEET",
+  "format": {
+    "trim_mm": [350.0, 500.0],
+    "bleed_mm": 3.0,
+    "live": {
+      "left": 15.0,
+      "right": 335.0,
+      "top": 18.0,
+      "bottom": 482.0
+    }
+  },
+  "grid": {
+    "columns": 6,
+    "gutter_mm": 4.5,
+    "baseline_grid_pt": 11.5
+  },
+  "palette": {
+    "ink": "#111111",
+    "paper": "#fbfbf8",
+    "accent": "#990000",
+    "subtle": "#e8e6e1",
+    "lead_bg": "#ffffff"
+  },
+  "fonts": {
+    "display": {
+      "family": "Utopia",
+      "weight": "700",
+      "role": "nagłówek otwierający jedynki (54–96 pt)",
+      "fallbacks": ["Source Serif 4", "Playfair Display", "Times New Roman"]
+    },
+    "subhead": {
+      "family": "Utopia",
+      "weight": "400",
+      "style": "italic",
+      "role": "podtytuł i podwieszenie (20–32 pt)",
+      "fallbacks": ["Source Serif 4", "Times New Roman"]
+    },
+    "lead": {
+      "family": "Source Sans 3",
+      "weight": "600",
+      "role": "lead otwierający (12–14 pt)",
+      "fallbacks": ["Inter", "Arial"]
+    },
+    "body": {
+      "family": "Utopia",
+      "weight": "400",
+      "role": "tekst szpaltowy 6-łamowy (8.8–9.4 pt)",
+      "fallbacks": ["Source Serif 4", "Times New Roman"]
+    },
+    "meta": {
+      "family": "Source Sans 3",
+      "weight": "400",
+      "role": "autor, data, stopka (7–8 pt)",
+      "fallbacks": ["Inter", "Arial"]
+    }
+  },
+  "grammar": {
+    "body_size_pt": 9.2,
+    "lead_size_pt": 13.0,
+    "columns": 6,
+    "energy_budget": 0.35,
+    "max_transgressions": 1
+  }
+}

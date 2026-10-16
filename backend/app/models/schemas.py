@@ -253,6 +253,7 @@ class Element(BaseModel):
     flow_group: Optional[str] = None
     continuation_ref: Optional[str] = None
     claim_refs: List[str] = Field(default_factory=list)
+    photo_analysis: Optional[Dict[str, Any]] = None
 
 class PageMeta(BaseModel):
     trim: List[float] = Field(..., description="[w_mm, h_mm]")
@@ -519,6 +520,7 @@ class CriticHeuristics(BaseModel):
     breathing_space_score: float = 0.0     # 0..1
     tension_adherence_score: float = 0.0   # 0..1
     corpus_alignment_score: float = 0.0    # 0..1 — fit to measured DNA priors
+    aesthetic_index: float = 0.0           # 0..1 — Xerox PARC / Sophi.io / Poynter synthesis
     composite_soft_score: float = 0.0      # 0..1
 
 class CriticResult(BaseModel):

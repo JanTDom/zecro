@@ -49,38 +49,44 @@
       "role": "dolne zapowiedzi, roundel krzyżówki (NR21–22: 26–51 pt, tracking -30..-50)"
     },
     "display_italic": {
-      "family": "Avenir Next",
+      "family": "Upgrade",
       "weight": "900",
       "style": "italic",
       "tracking_em": -0.05,
-      "substitute_for": "Upgrade Black Italic",
       "role": "tytuł postaci (44–100 pt, tracking -50)",
       "fallbacks": [
+        "Avenir Next",
         "Myriad Pro"
       ]
     },
     "deck_italic": {
-      "family": "Myriad Pro",
-      "weight": "600",
+      "family": "Upgrade",
+      "weight": "500",
       "style": "italic",
       "tracking_em": -0.02,
-      "substitute_for": "Upgrade Medium Italic",
-      "role": "tytuł „Rozmowy Wukadki” (47–63 pt)"
+      "role": "tytuł „Rozmowy Wukadki” (47–63 pt)",
+      "fallbacks": [
+        "Myriad Pro"
+      ]
     },
     "label_italic": {
-      "family": "Myriad Pro",
-      "weight": "700",
+      "family": "Upgrade",
+      "weight": "600",
       "style": "italic",
       "tracking_em": -0.02,
-      "substitute_for": "Upgrade Semibold Italic",
-      "role": "„Rozmowy” (31,6 pt)"
+      "role": "„Rozmowy” (31,6 pt)",
+      "fallbacks": [
+        "Myriad Pro"
+      ]
     },
     "info": {
-      "family": "Myriad Pro",
+      "family": "Upgrade",
       "weight": "600",
       "tracking_em": 0.0,
-      "substitute_for": "Upgrade Semibold",
-      "role": "pasek z datą, imię postaci (12–17 pt)"
+      "role": "pasek z datą, imię postaci (12–17 pt)",
+      "fallbacks": [
+        "Myriad Pro"
+      ]
     },
     "pageref": {
       "family": "AmsiProNarw-Black",

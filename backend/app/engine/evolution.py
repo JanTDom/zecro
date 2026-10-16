@@ -310,11 +310,16 @@ class EvolutionaryLayoutGenerator:
         folio_h_mm = 16.0
         folio_y_mm = fmt.margin_top_mm
 
+        logo_asset = None
+        if getattr(self.dna, "logo_profile", None) and self.dna.logo_profile.asset_ref:
+            logo_asset = self.dna.logo_profile.asset_ref
+
         masthead_elem = Element(
             id="elem-masthead",
             role="logo",
             importance=1.0,
             content_ref="masthead",
+            image_url=logo_asset,
             text_content=material.masthead_title or self.dna.name.upper(),
             frame=Frame(
                 x=fmt.margin_left_mm,

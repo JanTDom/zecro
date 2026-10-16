@@ -19,12 +19,15 @@ import {
   RotateCcw,
   Sparkles,
   Eye,
+  ArrowRight,
 } from 'lucide-react';
+import { CreationStepper } from '../common/CreationStepper';
 
 export const DNAEditor: React.FC = () => {
-  const { activeProject, dna, reloadDNA, addToast } = useProject();
+  const { activeProject, dna, reloadDNA, addToast, setActiveTab, dnaSubTab, setDnaSubTab } = useProject();
   const [localDna, setLocalDna] = useState<TitleDNA | null>(dna ? JSON.parse(JSON.stringify(dna)) : null);
-  const [activeSubTab, setActiveSubTab] = useState<'grid' | 'typography' | 'palette' | 'photos' | 'transgressions' | 'masthead'>('grid');
+  const activeSubTab = dnaSubTab;
+  const setActiveSubTab = setDnaSubTab;
   const [isSaving, setIsSaving] = useState(false);
 
   // Sync if dna updates
@@ -99,6 +102,8 @@ export const DNAEditor: React.FC = () => {
 
   return (
     <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-8 animate-fade-in">
+      <CreationStepper currentStep={2} />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-ink-800 pb-6">
         <div>
@@ -118,7 +123,7 @@ export const DNAEditor: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="ghost"
             size="md"
@@ -135,6 +140,14 @@ export const DNAEditor: React.FC = () => {
             onClick={handleSave}
           >
             Zapisz styl gazety
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            rightIcon={<ArrowRight className="w-4 h-4" />}
+            onClick={() => setActiveTab('generate')}
+          >
+            Krok 3: Treść i generowanie →
           </Button>
         </div>
       </div>
@@ -217,7 +230,8 @@ export const DNAEditor: React.FC = () => {
       {activeSubTab === 'masthead' && <MastheadEditor onApproved={() => void reloadDNA()} />}
 
       {/* Main Grid: Controls + Live Specimen Preview */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {activeSubTab !== 'masthead' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Editor Controls (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
           {/* TAB 1: MODULAR GRID */}
@@ -798,6 +812,7 @@ export const DNAEditor: React.FC = () => {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };

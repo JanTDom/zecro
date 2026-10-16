@@ -259,7 +259,7 @@ class LayeredCover:
             st.bg_color = self.kit.color(bg)
         if inset:
             st.inset_mm = inset
-        tail = f" {page_ref}" if page_ref else ""
+        tail = f" {page_ref.replace(' ', '\u00a0')}" if page_ref else ""
         sentences = [s for s in re.split(r"(?<=[.!?…])\s+", (text or "").strip()) if s]
         iw = w - ((inset or [0, 0, 0, 0])[1] + (inset or [0, 0, 0, 0])[3])
         ih = h - ((inset or [0, 0, 0, 0])[0] + (inset or [0, 0, 0, 0])[2])
@@ -462,33 +462,8 @@ class LayeredCover:
     def snap_near_edges(self, lo: float = .3, hi: float = 2.5):
         """Rulebook U9/D29: plates whose parallel edges almost meet are snapped
         onto the larger plate's edge — no paper sliver, no step."""
-        plates = [e for e in self.out.elements if e.role == "band" and not e.frame.rotation_deg
-                  and not getattr(e.frame, "skew_y_deg", 0) and e.shape in (None, "rect")]
-        for a in plates:
-            for b in plates:
-                if a is b or a.frame.w * a.frame.h > b.frame.w * b.frame.h:
-                    continue                          # move the smaller plate (a)
-                fa, fb = a.frame, b.frame
-                if min(fa.y + fa.h, fb.y + fb.h) - max(fa.y, fb.y) >= 3:
-                    for ea in ("l", "r"):
-                        xa = fa.x if ea == "l" else fa.x + fa.w
-                        for xb in (fb.x, fb.x + fb.w):
-                            if lo < abs(xa - xb) < hi:
-                                if ea == "l":
-                                    fa.w += fa.x - xb; fa.x = xb
-                                else:
-                                    fa.w = xb - fa.x
-                                break
-                if min(fa.x + fa.w, fb.x + fb.w) - max(fa.x, fb.x) >= 3:
-                    for ea in ("t", "b"):
-                        ya = fa.y if ea == "t" else fa.y + fa.h
-                        for yb in (fb.y, fb.y + fb.h):
-                            if lo < abs(ya - yb) < hi:
-                                if ea == "t":
-                                    fa.h += fa.y - yb; fa.y = yb
-                                else:
-                                    fa.h = yb - fa.y
-                                break
+        from .layered_rules import snap_near_edges
+        snap_near_edges(self.out.elements, lo=lo, hi=hi)
 
     def _snap_cut_edges(self, segs, x, y, w, h, module, tol=1.0):
         mx0, my0, mx1, my1 = module
@@ -1315,14 +1290,15 @@ def _bottom_corner(c: LayeredCover, story, box: Optional[tuple[float, float]] = 
     text_x0, text_x1 = x + 4, c.R
     if framed == "cutout":
         # heads standing on the trim, as tall as the box: they belong to the
-        # box (anchored at its bottom corners), the headline sits between
-        full_h = c.trim_h + c.bleed - y + 6.0
+        # box (anchored at its bottom corners), the headline sits between.
+        # Height is scaled according to module height so heads reach the top of the box.
+        full_h = c.trim_h + c.bleed - y + 4.0
         for k, img in enumerate([im for im in story.images if im.alpha_mask_url][:2]):
             ab = (img.photo_analysis or {}).get("alpha_bbox") or [0, 0, 1, 1]
             crop = [ab[0], ab[1], ab[2], 1.0]
             aspect = ((ab[2] - ab[0]) * (img.width_px or 1)) / ((1.0 - ab[1]) * (img.height_px or 1))
-            pw = min(full_h * aspect, w * .36)
-            ph = pw / aspect
+            ph = full_h
+            pw = ph * aspect
             px = x - 2.0 if k == 0 else c.trim_w + c.bleed - pw
             el = c.photo(img, px, c.trim_h + c.bleed - ph, pw, ph, story=story, cutout=True, z=29, crop=crop,
                          importance=.5)
@@ -1373,18 +1349,23 @@ def _bottom_corner(c: LayeredCover, story, box: Optional[tuple[float, float]] = 
             text_x1 = min(c.R, (min(fl) if fl else px + pw * .2) - 2.0)
     ref_h = 4.0 if story.page_ref else 0.0
     # U16: the headline fills the box between the portraits (largest type)
-    lines, size = c.fill_block(story.headline, "teaser", (text_x1 - text_x0) / 1.012 - 1.0, h - 5 - ref_h,
+    headline_box_h = (c.trim_h + c.bleed - y) if framed == "cutout" else h
+    lines, size = c.fill_block(story.headline, "teaser", (text_x1 - text_x0) / 1.012 - 1.0, headline_box_h - 5 - ref_h,
                                max_lines=4, max_pt=120.0, case_upper=True)
     offs, hh = c.block(lines, "teaser", size, 1.2)
-    top = y + 2.5 + (h - 5 - ref_h - hh) / 2
+    top = y + 2.5 + (headline_box_h - 5 - ref_h - hh) / 2
     for line, off in zip(lines, offs):
         lw = kit.width(line, "teaser", size)
         c.line(line, "teaser", size, text_x0 + ((text_x1 - text_x0) - lw * 1.012 - 1.0) / 2, top + off, "ink",
                story=story, importance=.6, z=30, on=kit.g.get("cutout_ground", "yellow") if framed == "cutout" else "white")
     if story.page_ref:
         rw = kit.width(story.page_ref, "info", 7.5)
-        c.line(story.page_ref, "info", 7.5, text_x1 - rw - 1, c.B - 3.4, "ink", story=story, role="jump_line",
-               z=30, on="white")
+        if framed == "cutout":
+            c.line(story.page_ref, "info", 7.5, text_x0 + 1.0, top + hh + 2.5, "ink", story=story,
+                   role="jump_line", z=30, on=kit.g.get("cutout_ground", "yellow"))
+        else:
+            c.line(story.page_ref, "info", 7.5, text_x1 - rw - 1, c.B - 3.4, "ink", story=story,
+                   role="jump_line", z=30, on="white")
     return y - 2.0
 
 

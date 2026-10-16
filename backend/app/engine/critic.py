@@ -470,6 +470,19 @@ class LayoutCritic:
         if self.corpus_features and novelty < 0.08:
             violations.append(f"Layout is too close to a corpus page (novelty {novelty:.2f}).")
 
+        # 6. Aesthetic Constraints: Trapped Whitespace & Gaze Alignment
+        from .aesthetics import detect_trapped_whitespace, evaluate_gaze_direction
+        trapped_cm2, trapped_pockets = detect_trapped_whitespace(sg)
+        # Avoid trapped interior voids in dense editorial/popular architectures
+        if trapped_cm2 >= 35.0 and architecture in {"popular_collage", "popular_poster", "popular_type", "framed_cover"}:
+            violations.append(f"Layout contains severe trapped interior whitespace ({trapped_cm2:.1f} cm²); space must flow to margins.")
+
+        _, gaze_issues = evaluate_gaze_direction(sg)
+        for gi in gaze_issues:
+            # Gaze guidance is advisory unless severe off-page look is on a dominant portrait
+            if "dominant" in gi.lower() or "lead" in gi.lower():
+                violations.append(gi)
+
         return CriticHardGateResult(
             passed=(len(violations) == 0),
             violations=violations
@@ -577,14 +590,20 @@ class LayoutCritic:
         # never a template lookup: only aggregate statistics are used.
         corpus_alignment = self.evaluate_corpus_alignment(sg)
 
+        # 7. Comprehensive Aesthetic Index (Xerox PARC + Sophi.io + Poynter Eyetrack)
+        from .aesthetics import evaluate_page_aesthetics
+        aes_report = evaluate_page_aesthetics(sg)
+        aesthetic_index = aes_report.total_aesthetic_index
+
         # Composite soft score
         composite = (
-            0.22 * balance_score +
-            0.22 * reading_gravity_score +
-            0.18 * scale_score +
-            0.14 * space_score +
-            0.14 * tension_score +
-            0.10 * corpus_alignment
+            0.18 * balance_score +
+            0.18 * reading_gravity_score +
+            0.15 * scale_score +
+            0.12 * space_score +
+            0.12 * tension_score +
+            0.10 * corpus_alignment +
+            0.15 * aesthetic_index
         )
 
         return CriticHeuristics(
@@ -594,6 +613,7 @@ class LayoutCritic:
             breathing_space_score=round(space_score, 3),
             tension_adherence_score=round(tension_score, 3),
             corpus_alignment_score=round(corpus_alignment, 3),
+            aesthetic_index=round(aesthetic_index, 3),
             composite_soft_score=round(composite, 3)
         )
 

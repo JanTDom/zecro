@@ -176,13 +176,20 @@ class PDFRenderer:
             path.close()
             return path
 
-        def fill_frame(elem, color):
+        def fill_frame(elem, color, bleed_box=(0.0, 0.0, 0.0, 0.0)):
             c.setFillColorCMYK(*cmyk_from_hex(color))
             if is_rect(elem.shape):
                 fr = elem.frame
-                c.rect(origin + fr.x * MM_TO_PT, origin + (trim_h - (fr.y + fr.h) * MM_TO_PT), fr.w * MM_TO_PT, fr.h * MM_TO_PT, stroke=0, fill=1)
+                dx0, dy0, dx1, dy1 = bleed_box
+                rx = origin + (fr.x - dx0) * MM_TO_PT
+                ry = origin + (trim_h - (fr.y + fr.h + dy1) * MM_TO_PT)
+                rw = (fr.w + dx0 + dx1) * MM_TO_PT
+                rh = (fr.h + dy0 + dy1) * MM_TO_PT
+                c.rect(rx, ry, rw, rh, stroke=0, fill=1)
             else:
                 c.drawPath(shape_path(elem), stroke=0, fill=1)
+
+        trapping_bleeds = self._compute_trapping_bleeds(sg.elements)
 
         for elem in sorted(sg.elements, key=lambda e: e.z):
             f, st = elem.frame, elem.style
@@ -196,9 +203,17 @@ class PDFRenderer:
                 _t = _m.tan(_m.radians(f.skew_y_deg))
                 c.transform(1, _t, 0, 1, 0, -_t * x)  # y-up: the right end rises
             if st and st.bg_color and elem.role not in {"photo", "band"}:
-                fill_frame(elem, st.bg_color)
+                fill_frame(elem, st.bg_color, trapping_bleeds.get(elem.id, (0.0, 0.0, 0.0, 0.0)))
             border = bool(st and st.border_width_mm and st.border_color and elem.role not in {"rule", "photo"})
             if elem.role == "photo":
+                b_dx0, b_dy0, b_dx1, b_dy1 = trapping_bleeds.get(elem.id, (0.0, 0.0, 0.0, 0.0))
+                if any((b_dx0, b_dy0, b_dx1, b_dy1)) and elem.treatment != "cutout":
+                    px = f.x - b_dx0
+                    py = f.y - b_dy0
+                    pw = f.w + b_dx0 + b_dx1
+                    ph = f.h + b_dy0 + b_dy1
+                    x, y = origin + px * MM_TO_PT, origin + (trim_h - (py + ph) * MM_TO_PT)
+                    w, h = pw * MM_TO_PT, ph * MM_TO_PT
                 asset = local_asset(elem.image_url)
                 if asset:
                     from ..image_ops import cover_crop_box, crop_pixels
@@ -298,7 +313,7 @@ class PDFRenderer:
             elif elem.role == "rule":
                 c.setStrokeColorCMYK(0, 0, 0, 1); c.setLineWidth(max(.25, ((st.border_width_mm if st else None) or .2) * MM_TO_PT)); c.line(x, y + h / 2, x + w, y + h / 2)
             elif elem.role == "band":
-                fill_frame(elem, st.bg_color if st and st.bg_color else "#111111")
+                fill_frame(elem, st.bg_color if st and st.bg_color else "#111111", trapping_bleeds.get(elem.id, (0.0, 0.0, 0.0, 0.0)))
             else:
                 self._draw_text(c, elem, x, y, w, h, report)
             if border:
@@ -484,3 +499,55 @@ class PDFRenderer:
         page.mediabox = box((0, 0, media_w, media_h)); page.cropbox = box((origin, origin, origin + trim_w, origin + trim_h)); page.trimbox = box((origin, origin, origin + trim_w, origin + trim_h)); page.bleedbox = box((origin - bleed, origin - bleed, origin + trim_w + bleed, origin + trim_h + bleed))
         writer.add_page(page); writer.add_metadata({"/Title": "ZECRO — strona prasowa", "/Producer": "ZECRO ReportLab renderer"})
         with path.open("wb") as stream: writer.write(stream)
+
+    @staticmethod
+    def _compute_trapping_bleeds(elements: list, bleed_mm: float = 0.25, tol_mm: float = 0.08) -> dict[str, tuple[float, float, float, float]]:
+        """Calculates trapping bleeds (dx0, dy0, dx1, dy1 in mm) for elements that share
+        an edge with an element higher in the Z stack. The lower element expands under the higher
+        element by bleed_mm, preventing hairline anti-aliasing seam artifacts in PDF/PNG preview."""
+        def is_fill(e):
+            if e.role == "photo":
+                return True
+            if e.role in ("band", "plate"):
+                return True
+            if getattr(e, "style", None) and e.style.bg_color:
+                return True
+            return False
+
+        bleeds: dict[str, tuple[float, float, float, float]] = {}
+        for i, a in enumerate(elements):
+            if not is_fill(a):
+                continue
+            fa = a.frame
+            if getattr(a, "shape", None) not in (None, "rect") or getattr(fa, "rotation_deg", 0) or getattr(fa, "skew_y_deg", 0):
+                continue
+            dx0, dy0, dx1, dy1 = 0.0, 0.0, 0.0, 0.0
+            for j, b in enumerate(elements):
+                if i == j or not is_fill(b):
+                    continue
+                fb = b.frame
+                if (a.z, i) >= (b.z, j):
+                    continue
+                if b.role == "photo" and b.treatment == "cutout" and (b.mask_ref or getattr(b, "contour_points", None)):
+                    continue
+                if getattr(b, "shape", None) not in (None, "rect") or getattr(fb, "rotation_deg", 0) or getattr(fb, "skew_y_deg", 0):
+                    continue
+                if not (a.role == "photo" or b.role == "photo" or a.role in ("band", "plate") or b.role in ("band", "plate")):
+                    continue
+
+                # Right edge of A touches Left edge of B
+                if abs((fa.x + fa.w) - fb.x) < tol_mm and min(fa.y + fa.h, fb.y + fb.h) - max(fa.y, fb.y) > 0.5:
+                    dx1 = max(dx1, bleed_mm)
+                # Left edge of A touches Right edge of B
+                if abs(fa.x - (fb.x + fb.w)) < tol_mm and min(fa.y + fa.h, fb.y + fb.h) - max(fa.y, fb.y) > 0.5:
+                    dx0 = max(dx0, bleed_mm)
+                # Bottom edge of A touches Top edge of B
+                if abs((fa.y + fa.h) - fb.y) < tol_mm and min(fa.x + fa.w, fb.x + fb.w) - max(fa.x, fb.x) > 0.5:
+                    dy1 = max(dy1, bleed_mm)
+                # Top edge of A touches Bottom edge of B
+                if abs(fa.y - (fb.y + fb.h)) < tol_mm and min(fa.x + fa.w, fb.x + fb.w) - max(fa.x, fb.x) > 0.5:
+                    dy0 = max(dy0, bleed_mm)
+
+            if any((dx0, dy0, dx1, dy1)):
+                bleeds[a.id] = (dx0, dy0, dx1, dy1)
+        return bleeds

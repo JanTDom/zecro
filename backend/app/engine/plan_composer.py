@@ -108,6 +108,79 @@ class _Ctx:
         self.elements.append(el)
         return el
 
+    def photo_fill(self, image, rect: tuple[float, float, float, float], *, story=None, z=4,
+                   face_target=(.5, .35), scale=1.0, importance=.6, min_face_mm: float = 14.0):
+        """Rulebook U16: a photo fills its module edge to edge with its own
+        background (cover-crop, never letterboxed, never a figure on white).
+        The face is placed at ``face_target``; ``scale`` > 1 zooms in."""
+        x0, y0, x1, y1 = rect
+        W, H = x1 - x0, y1 - y0
+        aspect = (image.width_px or 1) / (image.height_px or 1)
+        h = max(H, W / aspect) * max(1.0, scale)
+        w = h * aspect
+        faces = (image.photo_analysis or {}).get("faces") or []
+        if faces:
+            f = faces[0]
+            fcx, fcy = (f[0] + f[2]) / 2, (f[1] + f[3]) / 2
+            face_h = (f[3] - f[1]) * h
+            if 0 < face_h < min_face_mm:
+                h *= min_face_mm / face_h
+                w = h * aspect
+        else:
+            fcx, fcy = (image.focal_point or [.5, .4])
+        fx = min(x0, max(x1 - w, x0 + face_target[0] * W - fcx * w))
+        fy = min(y0, max(y1 - h, y0 + face_target[1] * H - fcy * h))
+        crop = [(x0 - fx) / w, (y0 - fy) / h, (x1 - fx) / w, (y1 - fy) / h]
+        el = self.photo(story, image, x0, y0, W, H, str(self.genes.get("photo_treatment", "crop")))
+        el.crop_box = [round(c, 4) for c in crop]
+        el.z = z
+        el.importance = importance
+        el.constraints = [*(el.constraints or []), "fills_module"]
+        return el, (fx, fy, w, h)
+
+    def fill_block(self, text: str, role: str, width: float, height: float, *, max_lines: int = 5,
+                   max_pt: float = 120.0, min_size: float = 10.0, case_upper: bool = False,
+                   story=None, color=None, bg=None, dominant: bool = False):
+        """Rulebook U16/U5: headline breaking that fills the box with the largest type
+        without dangling prepositions/conjunctions at line ends."""
+        import itertools
+        from .copyfit import estimate_text_capacity
+        words = (text.upper() if case_upper else text).split()
+        dangling = {"i", "w", "z", "na", "do", "o", "a", "u", "za", "po", "od", "bo", "że", "dla", "się", "nie"}
+        best = None
+        for n in range(1, min(max_lines, len(words)) + 1):
+            for cuts in itertools.combinations(range(1, len(words)), n - 1):
+                b = [0, *cuts, len(words)]
+                lines = [" ".join(words[b[i]:b[i + 1]]) for i in range(n)]
+                test_size = max_pt
+                while test_size >= min_size:
+                    all_fit = True
+                    for l in lines:
+                        rep = estimate_text_capacity(l, width, 5000, 1, test_size, self.leading(role, test_size),
+                                                     font_family=self.family(role), bold=self.bold(role),
+                                                     gutter_mm=self.gutter)
+                        if rep.estimated_lines > 1:
+                            all_fit = False
+                            break
+                    if all_fit and (len(lines) * self.leading(role, test_size) * PT <= height):
+                        break
+                    test_size *= 0.95
+                if test_size < min_size:
+                    test_size = min_size
+                pen = sum(1 for l in lines[:-1] if l.split()[-1].lower() in dangling) * 0.12
+                score = test_size * (1 - pen)
+                if best is None or score > best[0]:
+                    best = (score, lines, test_size)
+        lines, size = best[1], best[2]
+        return self.text(role, story, "headline", 0, 0, width, height, size,
+                         value="\n".join(lines), dominant=dominant, color=color, bg_color=bg)
+
+    def snap_near_edges(self, lo: float = .3, hi: float = 2.5):
+        """Rulebook U18/D29: plates whose parallel edges almost meet are snapped."""
+        from .layered_rules import snap_near_edges
+        snap_near_edges(self.elements, lo=lo, hi=hi)
+
+
     # ---------------------------------------------------------- modules
     def headline_size(self, story, w: float, rank: str) -> float:
         sc = self.dna.typography.scales
@@ -513,6 +586,7 @@ def compose_planned_page(dna, material, genes: Optional[dict] = None) -> SceneGr
         for field in ("headline", "body"):
             if getattr(s, field, None) and f"{s.id}.{field}" not in rendered:
                 missing.append(f"{s.id}.{field}")
+    ctx.snap_near_edges()
     return _polish_display_headlines(SceneGraph(page=PageMeta(trim=[page_w, page_h], bleed_mm=fmt.bleed_mm, safe_margin_mm=min(left, top),
                                     grid={"cols": grid.columns, "gutter_mm": gut, "baseline_mm": grid.baseline_grid_pt * PT, "rows": grid.rows},
                                     title_dna_ref=dna.id, page_zone=zone),
@@ -821,6 +895,7 @@ def _compose_popular_cover(dna, material, genes: dict) -> SceneGraph:
         style_warnings.append(f"Do wiarygodnej okładki bulwarowej dodaj zdjęcia do co najmniej {min_photo_stories} różnych tematów; obecnie zdjęcia ma {len(photo_stories)}.")
     if len(stories) < 4:
         style_warnings.append("Okładka ma mało tematów. Dodaj kolejne krótkie zajawki, aby uzyskać typowy rytm gazety bulwarowej.")
+    ctx.snap_near_edges()
     return SceneGraph(
         page=PageMeta(trim=[fmt.trim_w_mm, fmt.trim_h_mm], bleed_mm=fmt.bleed_mm,
                       safe_margin_mm=min(left, top), grid={"cols": dna.grid.columns, "gutter_mm": dna.grid.gutter_mm,
@@ -1172,6 +1247,7 @@ def _compose_popular_poster_cover(dna, material, genes: dict, stories: list) -> 
             ctx.relations.append(Relation(type="belongs_to_story", members=members, story=story.id))
     missing = [f"{s.id}.{field}" for s in stories[:5] for field in ("headline", "body")
                if getattr(s, field, None) and not any(el.content_ref == f"{s.id}.{field}" for el in ctx.elements)]
+    ctx.snap_near_edges()
     return SceneGraph(
         page=PageMeta(trim=[fmt.trim_w_mm, fmt.trim_h_mm], bleed_mm=fmt.bleed_mm,
                       safe_margin_mm=min(left, top), grid={"cols": dna.grid.columns, "gutter_mm": dna.grid.gutter_mm,
@@ -1403,6 +1479,7 @@ def _compose_popular_type_cover(dna, material, genes: dict, stories: list) -> Sc
                         "reason": "Temat pozostaje w wydaniu; poza pięcioma miejscami na pierwszej stronie"})
     missing = [f"{s.id}.{field}" for s in stories[:5] for field in ("headline", "body")
                if getattr(s, field, None) and not any(el.content_ref == f"{s.id}.{field}" for el in ctx.elements)]
+    ctx.snap_near_edges()
     return SceneGraph(
         page=PageMeta(trim=[fmt.trim_w_mm, fmt.trim_h_mm], bleed_mm=fmt.bleed_mm,
                       safe_margin_mm=min(left, top), grid={"cols": dna.grid.columns, "gutter_mm": dna.grid.gutter_mm,
@@ -1546,6 +1623,7 @@ def _compose_editorial_or_service_cover(dna, material, genes: dict) -> SceneGrap
         members = [el.id for el in ctx.elements if el.story_ref == story.id]
         if members:
             ctx.relations.append(Relation(type="belongs_to_story", members=members, story=story.id))
+    ctx.snap_near_edges()
     return SceneGraph(page=PageMeta(trim=[fmt.trim_w_mm, fmt.trim_h_mm], bleed_mm=fmt.bleed_mm,
                                     safe_margin_mm=min(left, top), grid={"cols": dna.grid.columns,
                                     "gutter_mm": dna.grid.gutter_mm, "baseline_mm": dna.grid.baseline_grid_pt * PT,

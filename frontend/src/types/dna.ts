@@ -56,6 +56,19 @@ export interface TitleDNA {
   projectId: string;
   version: number;
   updatedAt: string;
+  logo_profile?: {
+    asset_ref?: string;
+    vector_ref?: string;
+    aspect_ratio?: number;
+    approved?: boolean;
+    layout_mode?: string;
+    dominant_colors?: string[];
+    [key: string]: any;
+  };
+  masthead?: {
+    logo_url?: string;
+    [key: string]: any;
+  };
   // Grid rules
   grid: {
     columns: number;
