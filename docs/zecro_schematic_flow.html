@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>ZECRO — Schemat Przepływu Systemu Generatywnego Składu Prasowego</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    width: 3840px;
+    height: 2160px;
+    background: #06080e;
+    background-image: 
+      radial-gradient(circle at 50% 10%, rgba(225, 38, 47, 0.12) 0%, transparent 50%),
+      radial-gradient(circle at 15% 45%, rgba(14, 165, 233, 0.08) 0%, transparent 45%),
+      radial-gradient(circle at 85% 55%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
+      linear-gradient(to bottom, #05070c 0%, #080c16 50%, #040609 100%);
+    color: #e2e8f0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow: hidden;
+    position: relative;
+    padding: 50px 80px;
+  }
+
+  /* Siatka podkładowa */
+  .grid-pattern {
+    position: absolute;
+    top: 0; left: 0; width: 3840px; height: 2160px;
+    background-size: 60px 60px;
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Warstwa wektorowych strzałek łączących */
+  .flow-canvas {
+    position: absolute;
+    top: 0; left: 0; width: 3840px; height: 2160px;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* Nagłówek telewizyjny 3D */
+  .header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 30px;
+    margin-bottom: 40px;
+  }
+
+  .logo-block {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .logo-3d-box {
+    width: 96px;
+    height: 96px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #e1262f 0%, #991b1b 50%, #450a0a 100%);
+    box-shadow: 
+      0 16px 36px rgba(225, 38, 47, 0.5),
+      inset 0 2px 4px rgba(255, 255, 255, 0.4),
+      inset 0 -4px 8px rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .logo-letter {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 56px;
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  }
+
+  .title-content h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 50px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .title-content h1 span.accent {
+    color: #e1262f;
+    text-shadow: 0 0 25px rgba(225, 38, 47, 0.6);
+  }
+
+  .title-content p.subtitle {
+    font-size: 19px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: #94a3b8;
+    margin-top: 4px;
+  }
+
+  .legend-bar {
+    display: flex;
+    gap: 24px;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 14px 28px;
+    border-radius: 16px;
+    backdrop-filter: blur(16px);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #cbd5e1;
+  }
+
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+  }
+
+  /* Główny obszar schematu */
+  .diagram-container {
+    position: relative;
+    z-index: 10;
+    height: 1720px;
+    width: 3680px;
+  }
+
+  /* Pudełka schematu 3D */
+  .node-box {
+    position: absolute;
+    background: linear-gradient(160deg, rgba(22, 30, 50, 0.85) 0%, rgba(11, 16, 28, 0.92) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 24px 28px;
+    box-shadow: 
+      0 20px 45px rgba(0, 0, 0, 0.6),
+      inset 0 1px 2px rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+  }
+
+  .node-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 24px; right: 24px;
+    height: 3px;
+    border-radius: 3px;
+  }
+
+  .node-cyan::before { background: #0ea5e9; box-shadow: 0 0 15px #0ea5e9; }
+  .node-purple::before { background: #a855f7; box-shadow: 0 0 15px #a855f7; }
+  .node-crimson::before { background: #e1262f; box-shadow: 0 0 20px #e1262f; }
+  .node-gold::before { background: #eab308; box-shadow: 0 0 15px #eab308; }
+  .node-green::before { background: #10b981; box-shadow: 0 0 15px #10b981; }
+
+  .node-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .node-badge {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .badge-cyan { background: rgba(14, 165, 233, 0.2); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.4); }
+  .badge-purple { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
+  .badge-crimson { background: rgba(225, 38, 47, 0.2); color: #f87171; border: 1px solid rgba(225, 38, 47, 0.4); }
+  .badge-gold { background: rgba(234, 179, 8, 0.2); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.4); }
+  .badge-green { background: rgba(16, 185, 129, 0.2); color: #4ade80; border: 1px solid rgba(16, 185, 129, 0.4); }
+
+  .node-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .node-desc {
+    font-size: 13.5px;
+    color: #94a3b8;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .node-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .node-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .node-item strong {
+    color: #f1f5f9;
+  }
+
+  .node-item span.tag {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: #64748b;
+  }
+
+  /* Etykiety na strzałkach */
+  .arrow-label {
+    position: absolute;
+    background: rgba(9, 14, 26, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    z-index: 20;
+    white-space: nowrap;
+  }
+
+  .label-cyan { color: #38bdf8; border-color: rgba(14, 165, 233, 0.4); }
+  .label-purple { color: #c084fc; border-color: rgba(168, 85, 247, 0.4); }
+  .label-crimson { color: #f87171; border-color: rgba(225, 38, 47, 0.5); }
+  .label-gold { color: #fde047; border-color: rgba(234, 179, 8, 0.4); }
+  .label-green { color: #4ade80; border-color: rgba(16, 185, 129, 0.4); }
+
+  /* Stopka */
+  .footer-bar {
+    position: absolute;
+    bottom: 35px;
+    left: 80px;
+    right: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .footer-text {
+    font-size: 14px;
+    color: #94a3b8;
+  }
+
+  .footer-text strong {
+    color: #f1f5f9;
+  }
+
+  .footer-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: #64748b;
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-pattern"></div>
+
+<!-- NAGŁÓWEK -->
+<header class="header">
+  <div class="logo-block">
+    <div class="logo-3d-box">
+      <div class="logo-letter">Z</div>
+    </div>
+    <div class="title-content">
+      <h1>ZECRO <span class="accent">AI ART DIRECTOR</span></h1>
+      <p class="subtitle">Schemat Przepływu Danych i Mechanizmów Generatywnego Składu Prasowego</p>
+    </div>
+  </div>
+
+  <div class="legend-bar">
+    <div class="legend-item"><div class="legend-dot" style="background:#0ea5e9;"></div> Dane wejściowe</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#a855f7;"></div> Sterowanie DNA</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e1262f;"></div> Silniki i Generator</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#eab308;"></div> Kontrola i Pętla Gustu</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div> Wyjście Hybrydowe</div>
+  </div>
+</header>
+
+<!-- KANWA STRZAŁEK SVG (WEKTOROWE POŁĄCZENIA CO W CO) -->
+<svg class="flow-canvas" viewBox="0 0 3840 2160">
+  <defs>
+    <!-- Głowice strzałek -->
+    <marker id="arrow-cyan" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 z" fill="#0ea5e9" />
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 z" fill="#a855f7" />
+    </marker>
+    <marker id="arrow-crimson" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 z" fill="#e1262f" />
+    </marker>
+    <marker id="arrow-gold" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 z" fill="#eab308" />
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 z" fill="#10b981" />
+    </marker>
+
+    <!-- Filtry świecenia (glow) -->
+    <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-crimson" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-gold" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- 1. Redakcja -> Editorial Writer & Gemini AI -->
+  <path d="M 520 380 L 660 380" stroke="#0ea5e9" stroke-width="4" fill="none" marker-end="url(#arrow-cyan)" filter="url(#glow-cyan)" />
+  <path d="M 520 440 L 600 440 L 600 680 L 660 680" stroke="#0ea5e9" stroke-width="4" fill="none" marker-end="url(#arrow-cyan)" filter="url(#glow-cyan)" />
+
+  <!-- 2. Editorial Writer & Gemini -> Plan Composer & Solver -->
+  <path d="M 1160 380 L 1320 380 L 1320 620 L 1400 620" stroke="#0ea5e9" stroke-width="4" fill="none" marker-end="url(#arrow-cyan)" filter="url(#glow-cyan)" />
+  <path d="M 1160 680 L 1400 680" stroke="#0ea5e9" stroke-width="4" fill="none" marker-end="url(#arrow-cyan)" filter="url(#glow-cyan)" />
+
+  <!-- 3. Title DNA (Archetypy & Siatka) -> Plan Composer -->
+  <path d="M 1160 1060 L 1320 1060 L 1320 740 L 1400 740" stroke="#a855f7" stroke-width="4" fill="none" marker-end="url(#arrow-purple)" />
+  <path d="M 1160 1420 L 1360 1420 L 1360 800 L 1400 800" stroke="#a855f7" stroke-width="4" fill="none" marker-end="url(#arrow-purple)" />
+
+  <!-- 4. Mikrosilniki wspomagające -> Plan Composer -->
+  <path d="M 1670 1200 L 1670 940" stroke="#e1262f" stroke-width="4" fill="none" marker-end="url(#arrow-crimson)" filter="url(#glow-crimson)" />
+
+  <!-- 5. Plan Composer -> Scene Graph JSON -->
+  <path d="M 1940 700 L 2100 700" stroke="#e1262f" stroke-width="5" fill="none" marker-end="url(#arrow-crimson)" filter="url(#glow-crimson)" />
+
+  <!-- 6. Scene Graph -> Hard Gate (Krytyk twardy) -->
+  <path d="M 2580 700 L 2720 700" stroke="#eab308" stroke-width="4" fill="none" marker-end="url(#arrow-gold)" filter="url(#glow-gold)" />
+
+  <!-- 7. PĘTLA ZWROTNA: Hard Gate FAIL -> Strzałka powrotna do Plan Composer (Mutacja/Korekta) -->
+  <path d="M 2990 540 L 2990 260 L 1670 260 L 1670 520" stroke="#f43f5e" stroke-width="4" stroke-dasharray="10 6" fill="none" marker-end="url(#arrow-crimson)" />
+
+  <!-- 8. Hard Gate PASS -> Soft Critic VLM & Pętla Gustu -->
+  <path d="M 2990 860 L 2990 1040" stroke="#eab308" stroke-width="4" fill="none" marker-end="url(#arrow-gold)" />
+
+  <!-- 9. Soft Critic -> Wybór optymalnego wariantu -> Rozgałęzienie formatów -->
+  <path d="M 2990 1360 L 2990 1520 L 3220 1520" stroke="#10b981" stroke-width="5" fill="none" marker-end="url(#arrow-green)" />
+  <path d="M 2990 1360 L 2990 1200 L 3220 1200" stroke="#10b981" stroke-width="5" fill="none" marker-end="url(#arrow-green)" />
+</svg>
+
+<!-- ETYKIETY NA STRZAŁKACH (CO W CO) -->
+<div class="diagram-container">
+
+  <!-- Etykiety przepływu -->
+  <div class="arrow-label label-cyan" style="top: 350px; left: 535px;">teksty źródłowe</div>
+  <div class="arrow-label label-cyan" style="top: 550px; left: 535px;">surowe fotografie</div>
+  <div class="arrow-label label-cyan" style="top: 480px; left: 1220px;">skrócony tekst + wagi</div>
+  <div class="arrow-label label-cyan" style="top: 650px; left: 1200px;">maski alfa + kontury</div>
+  <div class="arrow-label label-purple" style="top: 890px; left: 1220px;">archetyp + budżet energii</div>
+  <div class="arrow-label label-purple" style="top: 1080px; left: 1220px;">siatka + skala pism</div>
+  <div class="arrow-label label-crimson" style="top: 1060px; left: 1685px;">infografiki, odsyłacze, mikrotypografia</div>
+  <div class="arrow-label label-crimson" style="top: 670px; left: 1955px;">propozycja sceny makiety</div>
+  <div class="arrow-label label-gold" style="top: 670px; left: 2595px;">bramka Pass/Fail</div>
+  <div class="arrow-label label-crimson" style="top: 230px; left: 2200px;">BŁĄD PREPRESS / KOLIZJA ➔ RE-GENERACJA (MUTACJA GEOMETRII)</div>
+  <div class="arrow-label label-gold" style="top: 940px; left: 2840px;">SUKCES: ocena gustu VLM</div>
+  <div class="arrow-label label-green" style="top: 1170px; left: 3020px;">render natychmiastowy</div>
+  <div class="arrow-label label-green" style="top: 1490px; left: 3020px;">produkcja do druku DTP</div>
+
+  <!-- WĘZEŁ 1: REDAKCJA (ŹRÓDŁO MATERIAŁÓW) -->
+  <div class="node-box node-cyan" style="top: 300px; left: 60px; width: 460px; height: 360px;">
+    <div class="node-header">
+      <span class="node-badge badge-cyan">WEJŚCIE 01</span>
+      <h3 class="node-title">Redakcja i Materiały</h3>
+    </div>
+    <p class="node-desc">Dziennikarz lub redaktor wprowadza materiały do wydania. Parser określa hierarchię ważności.</p>
+    <div class="node-list">
+      <div class="node-item"><strong>Teksty artykułów</strong> (headline, lead, body)<span class="tag">txt</span></div>
+      <div class="node-item"><strong>Wagi ważności</strong> (Lead=1.0, 2nd=0.7, Briefs=0.3)<span class="tag">rank</span></div>
+      <div class="node-item"><strong>Surowe fotografie</strong> (DPI, twarze, kadry)<span class="tag">img</span></div>
+      <div class="node-item"><strong>Metadane wydania</strong> (data, numer, winieta)<span class="tag">meta</span></div>
+    </div>
+  </div>
+
+  <!-- WĘZEŁ 2A: EDITORIAL WRITER (ADIUSTACJA) -->
+  <div class="node-box node-cyan" style="top: 260px; left: 660px; width: 500px; height: 260px;">
+    <div class="node-header">
+      <span class="node-badge badge-cyan">MODUŁ 02A</span>
+      <h3 class="node-title">Editorial Writer (Adiustacja)</h3>
+    </div>
+    <p class="node-desc">Skraca i redaguje tekst do fizycznej ramy makiety. Zero halucynacji: zakaz dopisywania nieobecnych faktów.</p>
+    <div class="node-list">
+      <div class="node-item"><strong>Liczenie znaków i linii</strong> (target_words, target_lines)</div>
+      <div class="node-item"><strong>Rytm nagłówka</strong> (zależny od archetypu tytułu)</div>
+    </div>
+  </div>
+
+  <!-- WĘZEŁ 2B: GEMINI AI VISION (SZPAROWANIE) -->
+  <div class="node-box node-cyan" style="top: 560px; left: 660px; width: 500px; height: 260px;">
+    <div class="node-header">
+      <span class="node-badge badge-cyan">MODUŁ 02B</span>
+      <h3 class="node-title">Google Gemini AI Szparowanie</h3>
+    </div>
+    <p class="node-desc">Multimodalny model AI wycina tło ze zdjęć i wektoryzuje sylwetkę postaci do oblewania tekstem.</p>
+    <div class="node-list">
+      <div class="node-item"><strong>Maska alfa postaci</strong> (silhouette cutout)</div>
+      <div class="node-item"><strong>Wektorowy kontur polygon</strong> (dla shape-outside)</div>
+    </div>
+  </div>
+
+  <!-- WĘZEŁ 3A: TITLE DNA (ARCHETYPY) -->
+  <div class="node-box node-purple" style="top: 920px; left: 660px; width: 500px; height: 320px;">
+    <div class="node-header">
+      <span class="node-badge badge-purple">STEROWANIE 03A</span>
+      <h3 class="node-title">Archetypy TitleDNA</h3>
+    </div>
+    <p class="node-desc">Gramatyka wizualna w postaci danych (nie szablonów). Definiuje proporcje i styl:</p>
+    <div class="node-list">
+      <div class="node-item"><strong>Gazeta Środka (Mid-market)</strong> (zrównoważona 5 kol.)</div>
+      <div class="node-item"><strong>Gazeta Poważna</strong> (opiniotwórcza, tekstowa 6 kol.)</div>
+      <div class="node-item"><strong>Gazeta Bulwarowa</strong> (tabloid, mocna dominanta)</div>
+      <div class="node-item"><strong>Magazyn</strong> (reportaż, światło) · <strong>Program TV</strong> (ramówka)</div>
+    </div>
+  </div>
+
+  <!-- WĘZEŁ 3B: SIATKA I BUDŻET NAPIĘCIA -->
+  <div class="node-box node-purple" style="top: 1280px; left: 660px; width: 500px; height: 280px;">
+    <div class="node-header">
+      <span class="node-badge badge-purple">STEROWANIE 03B</span>
+      <h3 class="node-title">Siatka i Budżet Napięcia</h3>
+    </div>
+    <p class="node-desc">Ścisłe reguły geometryczne i limity dynamicznych efektów:</p>
+    <div class="node-list">
+      <div class="node-item"><strong>Siatka bazowa (Baseline Grid)</strong> (9.5–10.5 pt)</div>
+      <div class="node-item"><strong>Odstępy międzyłamowe (Gutters)</strong> (3.5–5 mm)</div>
+      <div class="node-item"><strong>Page Energy Budget</strong> (limit rotacji i apli)</div>
+    </div>
+  </div>
+
+  <!-- WĘZEŁ 4: SERCE SYSTEMU - GENERATOR & PLAN COMPOSER -->
+  <div class="node-box node-crimson" style="top: 520px; left: 1400px; width: 540px; height: 420px; box-shadow: 0 0 50px rgba(225, 38, 47, 0.25);">
+    <div class="node-header">
+      <span class="node-badge badge-crimson">SERCE SYSTEMU 04</span>
+      <h3 class="node-title">Plan Composer & Solver</h3>
+    </div>
+    <p class="node-desc">Algorytm eksplorujący przestrzeń kompozycji. Łączy teksty, wycięte zdjęcia i siatkę, budując unikalny układ strony od zera.</p>
+    <div class="node-list">
+      <div class="node-item"><strong>Wyznaczanie dominanty</strong> (lead story z foto)</div>
+      <div class="node-item"><strong>Boczny pas modułowy</strong> (rail "W skrócie")</div>
+      <div class="node-item"><strong>Pasek zapowiedzi</strong> (teaser band z paginacją)</div>
+      <div class="node-item"><strong>Wieloszpaltowe oblewanie</strong> (text wrap wokół konturu)</div>
+    </div>
+  </div>
+
+  <!-- WĘZEŁ 4B: MIKROSILNIKI WSPOMAGAJĄCE GENERATOR -->
+  <div class="node-box node-crimson" style="top: 1200px; left: 1400px; width: 540px; height: 360px;">
+    <div class="node-header">
+      <span class="node-badge badge-crimson">SILNIKI AKCYJNE 04B</span>
+      <h3 class="node-title">Wyspecjalizowane Podsilniki</h3>
+    </div>
+    <p class="node-desc">Automatyczne moduły wstrzykujące profesjonalne elementy DTP bezpośrednio do kompozycji:</p>
+    <div class="node-list">
+      <div class="node-item"><strong>Infografiki Prasowe SVG</strong> (wykresy, pigułki wiedzy, klocki danych)</div>
+      <div class="node-item"><strong>Odsyłacze (Jump Lines)</strong> (dzielenie artykułu: "dokończenie ze str. 1")</div>
+      <div class="node-item"><strong>Polska Mikrotypografia</strong> (twarde spacje pod spójniki, polskie cudzysłowy „...”)</div>
+    </div>
+  </div>
+
+  <!-- WĘZEŁ 5: ABSTRAKCYJNY GRAF SCENY -->
+  <div class="node-box node-gold" style="top: 560px; left: 2100px; width: 480px; height: 320px;">
+    <div class="node-header">
+      <span class="node-badge badge-gold">REPREZENTACJA 05</span>
+      <h3 class="node-title">Graf Sceny (Scene Graph)</h3>
+    </div>
+    <p class="node-desc">Abstrakcyjna, obiektowa reprezentacja strony w formacie JSON. Niezależna od silnika renderującego.</p>
+    <div class="node-list">
+      <div class="node-item"><strong>Współrzędne milimetrowe</strong> [x, y, w, h]</div>
+      <div class="node-item"><strong>Kolejność warstw Z-index</strong> (foto, apla, tekst)</div>
+      <div class="node-item"><strong>Wielokąty wycięć</strong> (clipping paths)</div>
+      <div class="node-item"><strong>Style akapitowe i typografia</strong></div>
+    </div>
+  </div>
+
+  <!-- WĘZEŁ 6A: TWARDA BRAMKA KRYTYKA (HARD GATE PASS/FAIL) -->
+  <div class="node-box node-gold" style="top: 540px; left: 2720px; width: 540px; height: 320px;">
+    <div class="node-header">
+      <span class="node-badge badge-gold">KRYTYK: ETAP 1</span>
+      <h3 class="node-title">Twarda Bramka (Hard Gate)</h3>
+    </div>
+    <p class="node-desc">Matematyczny filtr Pass/Fail. Jeśli strona ma błąd, jest BEZWZGLĘDNIE ODRZUCANA i wraca do generatora:</p>
+    <div class="node-list">
+      <div class="node-item"><strong>Zero kolizji ramek</strong> (brak nachodzenia elementów)</div>
+      <div class="node-item"><strong>Jedna dominanta</strong> (brak chaosu hierarchii)</div>
+      <div class="node-item"><strong>Zgodność prepress</strong> (limit farby TAC &lt; 240%)</div>
+      <div class="node-item"><strong>Brak wiszących spójników</strong> (sierotki na końcach linii)</div>
+    </div>
+  </div>
+
+  <!-- WĘZEŁ 6B: MIĘKKI SĘDZIA VLM & PĘTLA GUSTU -->
+  <div class="node-box node-gold" style="top: 1040px; left: 2720px; width: 540px; height: 320px;">
+    <div class="node-header">
+      <span class="node-badge badge-gold">KRYTYK: ETAP 2</span>
+      <h3 class="node-title">Sędzia VLM & Pętla Gustu</h3>
+    </div>
+    <p class="node-desc">Krytyk wzrokowy z wyuczonym gustem dyrektora artystycznego oceniający estetykę i nowość:</p>
+    <div class="node-list">
+      <div class="node-item"><strong>Ranking wzrokowy VLM</strong> (balans światła i plam)</div>
+      <div class="node-item"><strong>Pętla gustu (RLHF/DPO)</strong> (wybory A vs B dyrektora)</div>
+      <div class="node-item"><strong>Anty-kopiowanie (Novelty Search)</strong> (odległość od korpusu)</div>
+    </div>
+  </div>
+
+  <!-- WĘZEŁ 7A: WYJŚCIE - BŁYSKAWICZNY PODGLĄD & PDF Z PRZEGLĄDARKI -->
+  <div class="node-box node-green" style="top: 1040px; left: 3220px; width: 440px; height: 260px;">
+    <div class="node-header">
+      <span class="node-badge badge-green">PRODUKT A</span>
+      <h3 class="node-title">Błyskawiczny PDF</h3>
+    </div>
+    <p class="node-desc">Skład po stronie przeglądarki klienta:</p>
+    <div class="node-list">
+      <div class="node-item"><strong>0 sekund opóźnienia</strong> (natychmiastowy)</div>
+      <div class="node-item"><strong>Wektorowy SVG</strong> (idealna ostrość)</div>
+      <div class="node-item"><strong>Druk @page</strong> (milimetrowe pasowanie)</div>
+    </div>
+  </div>
+
+  <!-- WĘZEŁ 7B: WYJŚCIE - PRODUKCYJNY DTP (INDESIGN & PDF/X) -->
+  <div class="node-box node-green" style="top: 1360px; left: 3220px; width: 440px; height: 260px;">
+    <div class="node-header">
+      <span class="node-badge badge-green">PRODUKT B</span>
+      <h3 class="node-title">Produkcja DTP / Druk</h3>
+    </div>
+    <p class="node-desc">Standard dla profesjonalnych naświetlarni:</p>
+    <div class="node-list">
+      <div class="node-item"><strong>Adobe InDesign IDML</strong> (style akapitowe)</div>
+      <div class="node-item"><strong>Prepress PDF/X-1a</strong> (pasery, spady, CMYK)</div>
+      <div class="node-item"><strong>Czysty kanał 100% K</strong> dla body textu</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- STOPKA ARCHITEKTURY -->
+<footer class="footer-bar">
+  <div class="footer-text">
+    <strong>Zasada Fundamentu ZECRO:</strong> Kreatywność = Eksploracja (Generator nie kopiuje szablonu) × Selekcja (Krytyk twardy + Miękki gust AI Art Directora).
+  </div>
+  <div class="footer-meta">
+    ZECRO SYSTEM COMPONENT GRAPH · ARCHETYP: GAZETA ŚRODKA (MID-MARKET) · FULL 4K UHD INFOGRAPHIC SCHEMATIC
+  </div>
+</footer>
+
+</body>
+</html>
