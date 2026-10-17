@@ -26,6 +26,13 @@ export function errorMessage(error: unknown): string {
 
 const API_REQUEST_TIMEOUT_MS = 120_000;
 
+export interface FrozenClaim {
+  id: string;
+  text: string;
+  category: string;
+  preserved_count?: number;
+}
+
 /** API error that keeps a structured backend verdict (e.g. ``photo_needed``). */
 export class ApiError extends Error {
   code?: string;
@@ -630,4 +637,48 @@ export const api = {
     return request('/editorial-model/editions/validate', json('POST', payload));
   },
   async preflightCandidate(candidateId: string): Promise<Data> { return request(`/candidates/${candidateId}/preflight`, { method: 'POST' }); },
+  async ingestEditorialDoc(file: File): Promise<Data> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return request('/editorial/ingest-doc', {
+      method: 'POST',
+      body: formData,
+    });
+  },
+  async importIdmlDna(projectId: string, file: File): Promise<TitleDNA> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const raw = await request(`/projects/${encodeURIComponent(projectId)}/dna/import-idml`, {
+      method: 'POST',
+      body: formData,
+    });
+    return dnaFromApi(raw, projectId);
+  },
+  async exportFullEdition(projectId: string, format: 'pdf' | 'idml' = 'pdf'): Promise<ExportArtifact> {
+    const res = await request(`/projects/${encodeURIComponent(projectId)}/edition/export?format=${encodeURIComponent(format)}`, {
+      method: 'POST',
+    });
+    return {
+      id: res.id,
+      projectId: res.project_id,
+      candidateId: res.candidate_id,
+      format: res.format as any,
+      fileName: `edition_${projectId}.${format}`,
+      fileSizeBytes: res.file_size_bytes,
+      createdAt: res.created_at,
+      downloadUrl: apiUrl(`/exports/${res.id}/download`),
+      options: {
+        format: res.format as any,
+        includeBleed: true,
+        includeCropMarks: true,
+        colorProfile: 'CMYK_Newspaper_WAN_IFRA',
+        embedFonts: true,
+        preserveTextFrames: true,
+        exportClippingPaths: true,
+        dpi: 300,
+      },
+    };
+  },
+
 };
+

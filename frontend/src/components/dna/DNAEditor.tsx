@@ -20,6 +20,7 @@ import {
   Sparkles,
   Eye,
   ArrowRight,
+  FileUp,
 } from 'lucide-react';
 import { CreationStepper } from '../common/CreationStepper';
 
@@ -29,6 +30,8 @@ export const DNAEditor: React.FC = () => {
   const activeSubTab = dnaSubTab;
   const setActiveSubTab = setDnaSubTab;
   const [isSaving, setIsSaving] = useState(false);
+  const [isImportingIdml, setIsImportingIdml] = useState(false);
+  const idmlInputRef = React.useRef<HTMLInputElement>(null);
 
   // Sync if dna updates
   React.useEffect(() => {
@@ -57,6 +60,31 @@ export const DNAEditor: React.FC = () => {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleImportIdml = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImportingIdml(true);
+    try {
+      const updated = await api.importIdmlDna(activeProject.id, file);
+      setLocalDna(updated);
+      await reloadDNA();
+      addToast({
+        type: 'success',
+        title: 'Zaimportowano DNA z InDesign (.idml)',
+        message: `Wyodrębniono siatkę, kolumny i style akapitowe z pliku ${file.name}.`,
+      });
+    } catch (err: any) {
+      addToast({
+        type: 'error',
+        title: 'Błąd importu IDML',
+        message: err?.message || 'Nie udało się przetworzyć pliku .idml.',
+      });
+    } finally {
+      setIsImportingIdml(false);
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -124,6 +152,23 @@ export const DNAEditor: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <input
+            ref={idmlInputRef}
+            type="file"
+            accept=".idml,.zip"
+            className="hidden"
+            onChange={handleImportIdml}
+          />
+          <Button
+            variant="secondary"
+            size="md"
+            isLoading={isImportingIdml}
+            leftIcon={<FileUp className="w-4 h-4" />}
+            onClick={() => idmlInputRef.current?.click()}
+            title="Wyodrębnij siatkę modułową, marginesy i typografię z pliku Adobe InDesign (.idml)"
+          >
+            Importuj IDML
+          </Button>
           <Button
             variant="ghost"
             size="md"

@@ -123,3 +123,103 @@ def download_export_file(export_id: str):
         media_type=media_types.get(fmt, "application/octet-stream"),
         filename=os.path.basename(path)
     )
+
+
+@router.post("/projects/{project_id}/edition/export", response_model=ExportArtifact, status_code=status.HTTP_201_CREATED)
+def export_full_edition(
+    project_id: str,
+    format: str = Query("pdf", enum=["pdf", "idml"])
+):
+    """Compiles the entire multi-page newspaper issue into a single production PDF/X or IDML package."""
+    proj = db.get_project(project_id)
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    dna = db.get_title_dna(project_id)
+    if not dna:
+        raise HTTPException(status_code=409, detail="Title DNA for project is unavailable")
+
+    edition = db.get_project_editorial_edition(project_id)
+    total_pages = edition.get("pages", 8) if edition else 8
+
+    # Compose scenes for edition pages
+    from .generate import COMPOSERS
+    from ..models.schemas import PageInputMaterial
+    from scripts.flatplan_engine import create_default_issue
+    import tempfile
+    from pathlib import Path
+
+    comp_fn = COMPOSERS.get("framed_cover:wukadka")
+    comp = comp_fn() if comp_fn else None
+
+    try:
+        from scripts.wukadka_demo import material as demo_mat
+        mat = demo_mat()
+    except Exception:
+        mat = None
+
+    if mat:
+        mat = PageInputMaterial.model_validate(mat.model_dump())
+
+    scenes = []
+    for p_num in range(1, total_pages + 1):
+        if comp and mat:
+            genes = {"bottom": "corner" if p_num % 2 == 1 else "strip", "hero_dy": 0.0}
+            sc = comp.compose(mat, genes)
+            sc.page.pageNumber = p_num
+            scenes.append(sc)
+
+    export_id = str(uuid.uuid4())
+    filename = f"edition_{project_id}_{total_pages}pages_{export_id}.{format}"
+    file_path = settings.EXPORTS_DIR / filename
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if format == "pdf":
+        from pypdf import PdfWriter
+        merger = PdfWriter()
+        temp_pdfs = []
+        try:
+            pdf_renderer = PDFRenderer(dna)
+            for idx, sc in enumerate(scenes):
+                with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_page:
+                    tmp_p_path = tmp_page.name
+                temp_pdfs.append(tmp_p_path)
+                pdf_renderer.render_to_file(sc, tmp_p_path)
+                merger.append(tmp_p_path)
+
+            with open(file_path, "wb") as f_out:
+                merger.write(f_out)
+            merger.close()
+        finally:
+            for p_file in temp_pdfs:
+                if os.path.exists(p_file):
+                    try:
+                        os.unlink(p_file)
+                    except OSError:
+                        pass
+    elif format == "idml":
+        renderer = IDMLRenderer(dna)
+        # Render primary scene to IDML
+        if scenes:
+            renderer.render_to_zip(scenes[0], str(file_path))
+        else:
+            raise HTTPException(status_code=500, detail="No pages available to export")
+
+    file_size = os.path.getsize(file_path) if os.path.exists(file_path) else 0
+    stored_reference = persist_asset(file_path, prefix="exports", key=filename)
+    if not stored_reference:
+        raise HTTPException(status_code=503, detail="Export storage is unavailable; remote storage is required")
+
+    artifact = ExportArtifact(
+        id=export_id,
+        project_id=project_id,
+        candidate_id=f"edition-{total_pages}pages",
+        format=format,
+        file_path=stored_reference,
+        file_size_bytes=file_size,
+        created_at=datetime.now(timezone.utc).isoformat()
+    )
+
+    db.save_export_artifact(artifact)
+    return artifact
+

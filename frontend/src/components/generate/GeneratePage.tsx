@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useProject } from '../../context/ProjectContext';
 import { IntakeData, StoryMaterial, PhotoMaterial } from '../../types/material';
-import { api, ApiError, PhotoCheckResult } from '../../api/client';
+import { api, ApiError, PhotoCheckResult, FrozenClaim } from '../../api/client';
 
 const parseTvSchedule = (text: string): NonNullable<IntakeData['tvSchedule']> => text.split('\n')
   .map(line => line.split(';').map(part => part.trim()))
@@ -34,6 +34,7 @@ import {
   Wand2,
   Link as LinkIcon,
   RefreshCw,
+  ShieldCheck,
 } from 'lucide-react';
 import { PairwiseTasteModal } from './PairwiseTasteModal';
 import { CreationStepper } from '../common/CreationStepper';
@@ -46,7 +47,7 @@ const emptyLeadStory: StoryMaterial = {
 const warianty = (count: number) => `${count} ${count === 4 ? 'warianty' : 'wariantów'}`;
 
 export const GeneratePage: React.FC = () => {
-  const { activeProject, dna, setCurrentRun, setSelectedCandidate, setActiveTab, addToast } = useProject();
+  const { activeProject, dna, reloadDNA, setCurrentRun, setSelectedCandidate, setActiveTab, addToast } = useProject();
 
   const [leadStory, setLeadStory] = useState<StoryMaterial>(emptyLeadStory);
 
@@ -92,6 +93,8 @@ export const GeneratePage: React.FC = () => {
   const [autoCutoutOnIngest, setAutoCutoutOnIngest] = useState(true);
   const [isIngesting, setIsIngesting] = useState(false);
   const [ingestStatus, setIngestStatus] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [frozenClaims, setFrozenClaims] = useState<FrozenClaim[]>([]);
   const docFileInputRef = React.useRef<HTMLInputElement>(null);
 
   const goToMainMaterial = () => {
@@ -126,34 +129,76 @@ export const GeneratePage: React.FC = () => {
     }
   };
 
-  const handleIngestFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !activeProject) return;
+  const processIngestFile = async (file: File) => {
+    if (!activeProject) return;
     setIsIngesting(true);
-    setIngestStatus('Odczytuję dokument, wyodrębniam zdjęcia i redaguję artykuł przez AI…');
+    const fileName = file.name.toLowerCase();
+
+    // 1. Obsługa archiwum Adobe InDesign (.idml)
+    if (fileName.endsWith('.idml') || (fileName.endsWith('.zip') && file.type.includes('zip'))) {
+      setIngestStatus('Parsowanie archiwum InDesign IDML i wyodrębnianie DNA tytułu…');
+      try {
+        await api.importIdmlDna(activeProject.id, file);
+        await reloadDNA();
+        addToast({
+          type: 'success',
+          title: 'Zaimportowano DNA z InDesign (.idml)',
+          message: `Siatka kolumn, marginesy i style z pliku ${file.name} zostały wstrzyknięte do stylu gazety.`,
+        });
+      } catch (err: any) {
+        addToast({
+          type: 'error',
+          title: 'Błąd importu IDML',
+          message: err?.message || 'Nie udało się przetworzyć pliku .idml.',
+        });
+      } finally {
+        setIsIngesting(false);
+        setIngestStatus('');
+      }
+      return;
+    }
+
+    // 2. Obsługa manuskryptów i dokumentów dziennikarskich (.docx, .doc, .md, .txt, .pdf, .rtf)
+    setIngestStatus('Dekompozycja manuskryptu, zamrażanie faktów (Fact-Guard) i ekstrakcja zdjęć…');
     try {
+      let docClaims: FrozenClaim[] = [];
+      try {
+        const docRes = await api.ingestEditorialDoc(file);
+        if (docRes.frozen_claims && docRes.frozen_claims.length > 0) {
+          docClaims = docRes.frozen_claims;
+          setFrozenClaims(docRes.frozen_claims);
+        }
+      } catch (e) {
+        console.warn('Editorial doc ingestion note:', e);
+      }
+
       const res = await api.ingestFile(file, autoCutoutOnIngest, activeProject.id);
       setLeadStory(res.leadStory);
       if (res.photos && res.photos.length > 0) {
         setPhotos(prev => [...res.photos, ...prev]);
       }
+
       addToast({
         type: 'success',
         title: 'Dokument odczytany i zredagowany',
-        message: `Artykuł zredagowany z pliku ${file.name}${res.photos?.length ? ' wraz z osadzonym zdjęciem' : ''}.`,
+        message: `Artykuł wstrzyknięty z pliku ${file.name}${docClaims.length ? ` · Fact-Guard: zamrożono ${docClaims.length} faktów` : ''}.`,
       });
-      setIngestStatus('');
     } catch (e) {
       addToast({
         type: 'error',
         title: 'Błąd odczytu pliku',
         message: e instanceof Error ? e.message : 'Nie udało się odczytać dokumentu.',
       });
-      setIngestStatus('');
     } finally {
       setIsIngesting(false);
+      setIngestStatus('');
       if (docFileInputRef.current) docFileInputRef.current.value = '';
     }
+  };
+
+  const handleIngestFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processIngestFile(file);
   };
 
   const handleRedactDraft = async () => {
@@ -653,22 +698,39 @@ export const GeneratePage: React.FC = () => {
                 </div>
               )}
 
-              {/* Mode 2: FILE */}
+              {/* Mode 2: FILE & DRAG & DROP */}
               {ingestMode === 'file' && (
-                <div className="p-4 bg-ink-950/70 border border-ink-800 rounded-xl space-y-3">
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) processIngestFile(file);
+                  }}
+                  className={`p-5 rounded-xl border-2 transition-all space-y-3 ${
+                    isDragging
+                      ? 'border-editorial-crimson bg-editorial-crimson/10 scale-[1.01]'
+                      : 'border-dashed border-ink-700 bg-ink-950/70 hover:border-ink-600'
+                  }`}
+                >
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-ink-200 flex items-center gap-1.5">
                       <FileUp className="w-4 h-4 text-editorial-crimson" />
-                      Wgraj plik z dokumentem
+                      Przeciągnij i upuść lub wgraj plik
                     </label>
-                    <span className="text-[10px] font-mono text-ink-500">DOCX, DOC, PDF, TXT, RTF, MD</span>
+                    <span className="text-[10px] font-mono text-ink-500">.DOCX, .IDML, .PDF, .TXT, .MD</span>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-3 items-center">
+                  <div className="flex flex-col sm:flex-row gap-3 items-center justify-center py-2 text-center">
                     <input
                       ref={docFileInputRef}
                       type="file"
-                      accept=".docx,.doc,.pdf,.txt,.rtf,.md,.odt"
+                      accept=".docx,.doc,.pdf,.txt,.rtf,.md,.odt,.idml,.zip"
                       onChange={handleIngestFile}
                       className="hidden"
                     />
@@ -682,11 +744,11 @@ export const GeneratePage: React.FC = () => {
                       Wybierz dokument z dysku
                     </Button>
                     <span className="text-xs text-ink-400">
-                      Program wyciągnie tekst, osadzone zdjęcia i zredaguje materiał prasowy.
+                      Upuść plik manuskryptu (.docx/.md) lub archiwum (.idml). System sam wykryje zawartość.
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-ink-800/80">
                     <label className="flex items-center gap-2 text-[11px] text-ink-400 cursor-pointer">
                       <input
                         type="checkbox"
@@ -694,7 +756,7 @@ export const GeneratePage: React.FC = () => {
                         onChange={(e) => setAutoCutoutOnIngest(e.target.checked)}
                         className="rounded border-ink-700"
                       />
-                      Wytnij tło ze zdjęć w dokumencie przez AI
+                      Wytnij tło ze zdjęć w dokumencie przez AI (szparowanie)
                     </label>
                     {ingestStatus && (
                       <span className="text-[10px] font-mono text-editorial-ochre animate-pulse">{ingestStatus}</span>
@@ -811,6 +873,33 @@ export const GeneratePage: React.FC = () => {
                 />
               </div>
             </div>
+
+            {/* Fact-Guard Frozen Claims Cloud */}
+            {frozenClaims.length > 0 && (
+              <div className="p-3.5 bg-emerald-950/40 border border-emerald-500/40 rounded-xl space-y-2 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-300">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Strażnik Faktów (Fact-Guard) · {frozenClaims.length} zamrożonych faktów</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-emerald-400/80">
+                    Nienegocjowalna ochrona liczb, dat i kwot
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+                  {frozenClaims.map((claim) => (
+                    <span
+                      key={claim.id}
+                      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono bg-emerald-900/60 border border-emerald-600/50 text-emerald-200"
+                      title={`Kategoria: ${claim.category}`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      {claim.text}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </Card>
 
           {/* SECONDARY STORIES */}

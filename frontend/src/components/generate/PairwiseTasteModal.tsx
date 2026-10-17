@@ -143,6 +143,12 @@ export const PairwiseTasteModal: React.FC<PairwiseTasteModalProps> = ({
                   {calibStatus.valid && ` · LOO: ${Math.round((calibStatus.loo_accuracy || 0) * 100)}%`}
                 </span>
               )}
+              {pairData && (pairData as any).active_learning_entropy !== undefined && (
+                <span className="text-xs font-mono text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-800/40" title="Para dobrana metodą maksymalnej entropii (najwyższy przyrost wiedzy o Twoich preferencjach)">
+                  Maksymalna entropia wyboru (H = {(pairData as any).active_learning_entropy})
+                </span>
+              )}
+
             </div>
             <h2 className="text-2xl font-headline font-bold text-ink-100 mt-1">
               Który układ lepiej oddaje charakter tytułu?

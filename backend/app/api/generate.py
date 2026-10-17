@@ -860,28 +860,64 @@ def get_pairwise_candidates(project_id: str, composer: Optional[str] = "framed_c
     if mat:
         mat = PageInputMaterial.model_validate(mat.model_dump())
 
-    # Generujemy dwa odmienne warianty genetyczne dla pojedynku
-    if "wukadka" in composer_key:
-        genes_a = {"bottom": "corner", "skybox_order": "interview_first", "corner_photos": "framed", "hero_dy": 0.0}
-        genes_b = {"bottom": "strip", "skybox_order": "other_first", "corner_photos": "cutout", "hero_dy": 14.0, "hero_shift": 8.0}
-    else:
-        genes_a = {"layout_mode": "dominant-left", "photo_treatment": "crop", "variation": 0.25}
-        genes_b = {"layout_mode": "modular-grid", "photo_treatment": "cutout", "variation": 0.75}
+    # Generujemy pulę wariantów genetycznych i wybieramy parę o maksymalnej entropii (Uncertainty Sampling)
+    from scripts.tune_preference_model import (
+        LayoutCandidate, PreferenceWeights, select_active_learning_pair
+    )
+    from ..engine.critic_calibration import calibration_features
 
-    scene_a = comp.compose(mat, genes_a)
-    scene_b = comp.compose(mat, genes_b)
+    if "wukadka" in composer_key:
+        gene_pool = [
+            {"bottom": "corner", "skybox_order": "interview_first", "corner_photos": "framed", "hero_dy": 0.0},
+            {"bottom": "strip", "skybox_order": "other_first", "corner_photos": "cutout", "hero_dy": 14.0, "hero_shift": 8.0},
+            {"bottom": "corner", "skybox_order": "other_first", "corner_photos": "cutout", "hero_dy": 6.0, "hero_shift": 4.0},
+            {"bottom": "strip", "skybox_order": "interview_first", "corner_photos": "framed", "hero_dy": 10.0, "hero_shift": -4.0},
+        ]
+    else:
+        gene_pool = [
+            {"layout_mode": "dominant-left", "photo_treatment": "crop", "variation": 0.25},
+            {"layout_mode": "modular-grid", "photo_treatment": "cutout", "variation": 0.75},
+            {"layout_mode": "split-hero", "photo_treatment": "crop", "variation": 0.50},
+            {"layout_mode": "visual-opener", "photo_treatment": "bleed", "variation": 0.85},
+        ]
 
     critic = LayoutCritic(effective_dna)
-    crit_a = critic.evaluate(scene_a)
-    crit_b = critic.evaluate(scene_b)
+    layout_candidates = []
+    scenes = []
+    crits = []
+
+    taste_model = db.get_taste_model(project_id)
+    weights = PreferenceWeights()
+    if taste_model and taste_model.feature_weights:
+        for k, v in taste_model.feature_weights.items():
+            if hasattr(weights, k):
+                try:
+                    setattr(weights, k, float(v))
+                except Exception:
+                    pass
+
+    for idx, g in enumerate(gene_pool):
+        sc = comp.compose(mat, g)
+        cr = critic.evaluate(sc)
+        feats = calibration_features(sc, critic)
+        scenes.append(sc)
+        crits.append(cr)
+        layout_candidates.append(LayoutCandidate(f"c_{idx}", str(g.get("bottom", g.get("layout_mode", "standard"))), feats))
+
+    chosen_a, chosen_b, entropy = select_active_learning_pair(layout_candidates, weights)
+    idx_a = int(chosen_a.candidate_id.split("_")[1])
+    idx_b = int(chosen_b.candidate_id.split("_")[1])
+
+    scene_a = scenes[idx_a]
+    scene_b = scenes[idx_b]
+    crit_a = crits[idx_a]
+    crit_b = crits[idx_b]
+    features_a = chosen_a.features
+    features_b = chosen_b.features
 
     svg_renderer = SVGRenderer(effective_dna)
     svg_a = svg_renderer.render(scene_a)
     svg_b = svg_renderer.render(scene_b)
-
-    from ..engine.critic_calibration import calibration_features
-    features_a = calibration_features(scene_a, critic)
-    features_b = calibration_features(scene_b, critic)
 
     cand_a_id = str(uuid.uuid4())
     cand_b_id = str(uuid.uuid4())
@@ -916,7 +952,7 @@ def get_pairwise_candidates(project_id: str, composer: Optional[str] = "framed_c
         material=mat,
         candidates=[cand_a, cand_b],
         status="completed",
-        stats={"composer": composer_key, "pairwise": True},
+        stats={"composer": composer_key, "pairwise": True, "active_learning": True, "entropy": entropy},
         timestamp=datetime.now(timezone.utc).isoformat()
     )
     db.save_generation_run(run)
@@ -931,7 +967,10 @@ def get_pairwise_candidates(project_id: str, composer: Optional[str] = "framed_c
         "candidate_b": cand_b,
         "features_a": features_a,
         "features_b": features_b,
+        "selection_method": "uncertainty_sampling",
+        "active_learning_entropy": round(entropy, 3),
     }
+
 
 
 @router.post("/projects/{project_id}/pairs/vote")

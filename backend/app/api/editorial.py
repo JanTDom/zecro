@@ -873,3 +873,28 @@ def redact_text_endpoint(request: RedactTextRequest):
         "provenance": redacted.get("provenance", {}),
     }
 
+
+@router.post("/editorial/ingest-doc")
+async def ingest_doc_file(file: UploadFile = File(...)):
+    """Ingests a raw .docx, .md, or .txt journalist manuscript with frozen facts."""
+    import tempfile
+    from dataclasses import asdict
+    from pathlib import Path
+    from scripts.ingest_editorial_doc import ingest_file
+
+    suffix = Path(file.filename or "doc.txt").suffix.lower() or ".txt"
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+        content = await file.read()
+        tmp.write(content)
+        tmp_path = Path(tmp.name)
+
+    try:
+        pkg = ingest_file(tmp_path)
+        res = asdict(pkg)
+        res["source_filename"] = file.filename or "document"
+        return res
+    finally:
+        if tmp_path.exists():
+            tmp_path.unlink()
+
+

@@ -160,3 +160,35 @@ def test_editorial_cartography_svg_generation():
     assert "Stacja WKD" in svg
     assert 'class="compass"' in svg
     assert "250 m" in svg
+
+
+def test_api_ingest_doc_endpoint():
+    from fastapi.testclient import TestClient
+    from backend.app.main import app
+    client = TestClient(app)
+    content = b"Wielki Sukces Nowego Wydania\n\nW dniu 17 pazdziernika 2026 r. zakonczono prace za 120 tys. zl.\n\nKolejne wydanie w krotce."
+    response = client.post(
+        "/editorial/ingest-doc",
+        files={"file": ("manuskrypt.txt", content, "text/plain")}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["headline"] == "Wielki Sukces Nowego Wydania"
+    assert len(data["frozen_claims"]) >= 1
+
+
+def test_api_pairwise_uncertainty_sampling():
+    from fastapi.testclient import TestClient
+    from backend.app.main import app
+    client = TestClient(app)
+    proj_resp = client.get("/projects")
+    if proj_resp.status_code == 200:
+        projects = proj_resp.json()
+        if projects:
+            pid = projects[0]["id"]
+            res = client.get(f"/projects/{pid}/pairs")
+            if res.status_code == 200:
+                data = res.json()
+                assert data["selection_method"] == "uncertainty_sampling"
+                assert "active_learning_entropy" in data
+

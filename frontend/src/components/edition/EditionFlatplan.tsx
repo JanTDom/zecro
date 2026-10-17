@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, CircleAlert, LockKeyhole, Megaphone, RefreshCw } from 'lucide-react';
+import { CheckCircle2, CircleAlert, LockKeyhole, Megaphone, RefreshCw, FileDown, FileText } from 'lucide-react';
 import { api } from '../../api/client';
 import { useProject } from '../../context/ProjectContext';
 
@@ -87,9 +87,52 @@ export const EditionFlatplan: React.FC = () => {
     catch (error) { addToast({ type: 'error', title: 'Nie dodano krótkiej notki', message: error instanceof Error ? error.message : 'Błąd API' }); }
     finally { setBusy(false); }
   };
+  const handleExportEdition = async (format: 'pdf' | 'idml' = 'pdf') => {
+    if (!activeProject?.id) return;
+    setBusy(true);
+    try {
+      const artifact = await api.exportFullEdition(activeProject.id, format);
+      addToast({
+        type: 'success',
+        title: 'Wydanie skompilowane',
+        message: `Pobieranie ${artifact.fileName} (${Math.round((artifact.fileSizeBytes || 0) / 1024)} KB)...`,
+      });
+      window.open(artifact.downloadUrl, '_blank');
+    } catch (e) {
+      addToast({
+        type: 'error',
+        title: 'Błąd kompilacji wydania',
+        message: e instanceof Error ? e.message : 'Nie udało się wyeksportować wydania.',
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
   return <main className="p-6 max-w-[1400px] mx-auto space-y-5">
     <header className="flex items-end justify-between gap-3"><div><p className="text-xs uppercase tracking-widest text-ink-500">Plan wydania</p><h1 className="text-2xl font-semibold">Makieta numeru</h1><p className="text-sm text-ink-500">Tu rozplanujesz strony, reklamy i środkową rozkładówkę.</p></div>
-      <div className="flex gap-2"><button className="border rounded px-3 py-2 text-sm flex items-center gap-2" onClick={() => void load()} disabled={busy}><RefreshCw className="w-4 h-4" />{busy ? 'Ładuję…' : 'Odśwież'}</button><button className="bg-editorial-crimson text-white rounded px-3 py-2 text-sm" onClick={() => void save()} disabled={busy || !edition}>Zapisz wydanie</button></div></header>
+      <div className="flex flex-wrap gap-2">
+        <button className="border rounded px-3 py-2 text-sm flex items-center gap-2" onClick={() => void load()} disabled={busy}><RefreshCw className="w-4 h-4" />{busy ? 'Ładuję…' : 'Odśwież'}</button>
+        <button className="bg-editorial-crimson text-white rounded px-3 py-2 text-sm font-semibold" onClick={() => void save()} disabled={busy || !edition}>Zapisz wydanie</button>
+        <button
+          className="bg-ink-900 border border-ink-700 text-white rounded px-3 py-2 text-sm flex items-center gap-2 hover:bg-ink-800 transition"
+          onClick={() => void handleExportEdition('pdf')}
+          disabled={busy || !edition}
+          title="Kompiluj wszystkie strony numeru w jeden wielostronicowy plik PDF do druku (ze spadami)"
+        >
+          <FileDown className="w-4 h-4 text-editorial-crimson" />
+          Kompiluj numer (PDF)
+        </button>
+        <button
+          className="bg-ink-900 border border-ink-700 text-white rounded px-3 py-2 text-sm flex items-center gap-2 hover:bg-ink-800 transition"
+          onClick={() => void handleExportEdition('idml')}
+          disabled={busy || !edition}
+          title="Kompiluj pakiet wydania InDesign IDML"
+        >
+          <FileText className="w-4 h-4 text-amber-500" />
+          Eksportuj IDML
+        </button>
+      </div></header>
+
     {edition && <><div className="flex gap-4 text-xs text-ink-500"><span>{edition.pages} stron</span><span>układ arkusza: {edition.imposition}</span><span>środek: {edition.centerfold.join('–')}</span><span>krótkie notki: {(edition.shorts_blocks || []).reduce((n, block) => n + block.items.length, 0)}</span><span>poczekalnia: {(edition.waiting_room || []).length}</span></div>
       <div className="flex flex-wrap gap-2 items-center border rounded-lg bg-white p-3"><span className="text-xs font-semibold mr-2">Biblioteka reklam</span>{AD_MODULES.map(module => <button key={module} draggable onDragStart={event => event.dataTransfer.setData('application/x-zecro-ad-format', module)} className="border rounded px-2 py-1 text-[10px] cursor-grab" title="Przeciągnij na stronę">{AD_LABELS[module] || module}</button>)}</div>
       <section className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">{edition.page_plan.map(page => { const isCenter = edition.centerfold.includes(page.no); const active = selected === page.no; const occupied = adOccupation(page); return <button key={page.no} onClick={() => setSelected(page.no)} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); const format = event.dataTransfer.getData('application/x-zecro-ad-format'); if (format) void addAdAt(page.no, format); }} className={`text-left border rounded-lg p-2 bg-white transition ${active ? 'ring-2 ring-editorial-crimson' : ''} ${isCenter ? 'border-editorial-crimson' : 'border-ink-800'}`}><div className="aspect-[3/4] bg-paper-50 border border-ink-800 p-1.5 relative"><div className="text-[10px] font-mono">{page.no}</div>{page.fixed.length > 0 && <div className="mt-2 h-3 bg-ink-900/80 text-[7px] text-white text-center">winieta</div>}<div className="mt-2 space-y-1">{page.ads.map(ad => <div key={ad.id} className="h-5 bg-amber-100 border border-amber-500 text-[7px] p-1 flex items-center gap-1"><Megaphone className="w-2.5 h-2.5" />{AD_LABELS[ad.format] || ad.format}</div>)}</div><div className="absolute bottom-1 left-1.5 right-1.5 h-1 bg-emerald-200" /></div><div className="mt-1 flex items-center justify-between text-[10px]"><span>{PAGE_TYPE_LABELS[page.type] || page.type}</span>{page.ads.length ? <LockKeyhole className="w-3 h-3 text-amber-700" /> : <CheckCircle2 className="w-3 h-3 text-emerald-600" />}</div><div className="mt-1 text-[9px] text-ink-500">reklamy: {occupied}%</div></button>; })}</section>
