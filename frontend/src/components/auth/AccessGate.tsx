@@ -7,27 +7,14 @@ interface AccessGateProps {
 
 export function AccessGate({ children }: AccessGateProps) {
   const [unlocked, setUnlocked] = React.useState(false);
-  const [checkingSession, setCheckingSession] = React.useState(true);
   const [password, setPassword] = React.useState('');
   const [isChecking, setIsChecking] = React.useState(false);
   const [error, setError] = React.useState('');
 
   React.useEffect(() => {
-    let active = true;
-    fetch(apiUrl('/auth/session'), { credentials: 'include' })
-      .then(async response => {
-        const result = await response.json().catch(() => null);
-        if (active) setUnlocked(response.ok && result?.authenticated === true);
-      })
-      .catch(() => { if (active) setError('Nie można połączyć się z serwerem. Spróbuj ponownie za chwilę.'); })
-      .finally(() => { if (active) setCheckingSession(false); });
-    return () => { active = false; };
-  }, []);
-
-  React.useEffect(() => {
     const expire = (event: Event) => {
       setUnlocked(false);
-      setError(event instanceof CustomEvent && event.detail === 'logout' ? 'Wylogowano.' : 'Sesja wygasła. Wpisz hasło ponownie.');
+      setError(event instanceof CustomEvent && event.detail === 'logout' ? 'Wylogowano.' : 'Wpisz hasło dostępu.');
     };
     window.addEventListener('zecro-session-expired', expire);
     return () => window.removeEventListener('zecro-session-expired', expire);
@@ -60,8 +47,6 @@ export function AccessGate({ children }: AccessGateProps) {
   };
 
   if (unlocked) return <>{children}</>;
-
-  if (checkingSession) return <main className="access-gate" aria-live="polite"><p>Sprawdzam dostęp do studia…</p></main>;
 
   return (
     <main className="access-gate" aria-labelledby="access-gate-title">
@@ -102,7 +87,7 @@ export function AccessGate({ children }: AccessGateProps) {
             <span aria-hidden="true">→</span>
           </button>
           <p className="access-gate__hint" aria-live="polite">
-            {error || 'Dostęp jest ważny do zamknięcia tej sesji przeglądarki.'}
+            {error || 'Wpisz hasło dostępu, aby wejść do studia.'}
           </p>
         </form>
         <div className="access-gate__footer">
