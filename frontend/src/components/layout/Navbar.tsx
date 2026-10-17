@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenNewProject }) => {
 
   const mobileNav = [
     { id: 'dashboard' as const, label: 'Zacznij tutaj', icon: LayoutDashboard },
-    { id: 'help' as const, label: 'Dział Pomoc', icon: HelpCircle },
+    { id: 'help' as const, label: 'Pomoc', icon: HelpCircle },
     { id: 'generate' as const, label: 'Materiały i strona', icon: Sparkles },
     { id: 'gallery' as const, label: 'Warianty', icon: FileText },
     { id: 'projects' as const, label: 'Moje gazety', icon: Plus },
@@ -66,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenNewProject }) => {
             className="flex items-center gap-1.5 font-semibold text-editorial-crimson hover:text-editorial-crimson/80 bg-blue-50/80 px-2.5 py-1 rounded-md border border-editorial-crimson/20"
           >
             <HelpCircle className="w-3.5 h-3.5" />
-            Dział Pomoc
+            Pomoc
           </button>
         </div>
       </div>

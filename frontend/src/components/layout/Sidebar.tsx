@@ -64,7 +64,7 @@ export const Sidebar: React.FC = () => {
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-xs font-bold text-ink-100 flex items-center justify-between">
-            <span>Dział Pomoc</span>
+            <span>Pomoc</span>
             <span className="text-[10px] text-editorial-crimson font-mono">FAQ</span>
           </div>
           <div className="text-[10px] text-ink-500 truncate">Przewodnik, schemat i porady</div>

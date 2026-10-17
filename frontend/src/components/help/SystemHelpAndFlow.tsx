@@ -108,7 +108,7 @@ export const SystemHelpAndFlow: React.FC = () => {
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold font-headline tracking-tight text-ink-100">
-                Dział Pomoc i jak działa Zecro
+                Pomoc i jak działa system Zecro
               </h1>
               <p className="text-sm text-ink-500 mt-1 max-w-2xl">
                 Wszystko o zasadach generowania gazety, architekturze silnika, eliminacji błędów i przygotowaniu materiałów do druku.
@@ -368,7 +368,7 @@ export const SystemHelpAndFlow: React.FC = () => {
                   )}
                 >
                   <div className="text-[10px] font-mono text-amber-600 font-semibold">4.1 Bramka twarda</div>
-                  <div className="text-xs font-bold text-ink-100 mt-0.5">Test Pass / Fail</div>
+                  <div className="text-xs font-bold text-ink-100 mt-0.5">Test zgodności (pass/fail)</div>
                   <div className="text-[11px] text-ink-500 mt-1 leading-snug">Zero kolizji, limit farby TAC, poprawność mikroskopowa.</div>
                 </button>
 
@@ -382,7 +382,7 @@ export const SystemHelpAndFlow: React.FC = () => {
                   )}
                 >
                   <div className="text-[10px] font-mono text-amber-600 font-semibold">4.2 Miękki gust</div>
-                  <div className="text-xs font-bold text-ink-100 mt-0.5">Sędzia VLM & DPO</div>
+                  <div className="text-xs font-bold text-ink-100 mt-0.5">Sędzia VLM i DPO</div>
                   <div className="text-[11px] text-ink-500 mt-1 leading-snug">Ocena balansu bieli i metryka anty-plagiatowa.</div>
                 </button>
 
@@ -465,7 +465,7 @@ export const SystemHelpAndFlow: React.FC = () => {
                       {selectedNode === 'gemini' && 'Szparowanie i wektoryzacja konturu w Google Gemini AI Vision'}
                       {selectedNode === 'dna' && `Gramatyka TitleDNA dla stylu: ${archetypeLabel}`}
                       {selectedNode === 'generator' && 'Generator makiety i solver geometryczny (Plan Composer)'}
-                      {selectedNode === 'hardgate' && 'Twarda bramka zgodności geometrycznej (Pass / Fail)'}
+                      {selectedNode === 'hardgate' && 'Twarda bramka zgodności geometrycznej (pass/fail)'}
                       {selectedNode === 'taste' && 'Sędzia wzrokowy VLM i pętla gustu dyrektora artystycznego'}
                       {selectedNode === 'browserpdf' && 'Błyskawiczny wektorowy PDF w oknie przeglądarki'}
                       {selectedNode === 'dtp' && 'Produkcyjny eksport DTP (Adobe InDesign IDML i prepress PDF/X)'}
