@@ -158,9 +158,9 @@ export const PairwiseTasteModal: React.FC<PairwiseTasteModalProps> = ({
               onChange={(e) => setComposer(e.target.value)}
               className="bg-ink-800 border border-ink-700 text-ink-200 text-xs rounded-lg px-3 py-2 outline-none focus:border-editorial-crimson font-mono"
             >
-              <option value="framed_cover:wukadka">Tygodnik: Wukadka (okładka ramowa)</option>
-              <option value="title_kit:daily_broadsheet">Dziennik: Broadsheet (6 szpalt)</option>
-              <option value="title_kit:opinion_magazine">Magazyn: Magazyn Opinii (A4)</option>
+              <option value="framed_cover:wukadka">Tabloid: okładka ramowa</option>
+              <option value="title_kit:daily_broadsheet">Dziennik: broadsheet (6 szpalt)</option>
+              <option value="title_kit:opinion_magazine">Magazyn opinii (A4)</option>
             </select>
 
             <Button variant="ghost" size="sm" onClick={() => loadPair()} leftIcon={<RefreshCw className="w-4 h-4" />}>
