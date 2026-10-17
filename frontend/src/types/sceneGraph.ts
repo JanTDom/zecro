@@ -37,6 +37,7 @@ export interface SceneGraphElement {
     textAlign?: 'left' | 'justify' | 'center' | 'right';
     textTransform?: 'uppercase' | 'none' | 'capitalize';
     letterSpacingEm?: number;
+    paragraphSpacingPt?: number;
   };
   treatment?: {
     isCutout?: boolean;

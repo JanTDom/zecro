@@ -35,6 +35,7 @@ import {
   Link as LinkIcon,
   RefreshCw,
   ShieldCheck,
+  BarChart2,
 } from 'lucide-react';
 import { PairwiseTasteModal } from './PairwiseTasteModal';
 import { CreationStepper } from '../common/CreationStepper';
@@ -227,6 +228,56 @@ export const GeneratePage: React.FC = () => {
       setIngestStatus('');
     }
   };
+
+  const handleCreateInfographicFromClaims = async () => {
+    if (frozenClaims.length === 0) return;
+    try {
+      const items = frozenClaims.slice(0, 4).map((c, i) => {
+        const num = parseFloat(c.text.replace(/[^0-9.,]/g, '').replace(',', '.')) || (45 - i * 9);
+        return {
+          label: c.text.length > 20 ? c.text.slice(0, 18) + '…' : c.text,
+          value: Math.min(Math.max(num, 5), 100),
+          color: i === 0 ? '#cc0000' : '#111111',
+        };
+      });
+
+      const res = await api.generateInfographic({
+        title: `Wskaźniki: ${(leadStory.kicker || 'Raport').toUpperCase()}`,
+        kind: 'poll',
+        items,
+        cols: 2,
+      });
+
+      const svgDataUri = `data:image/svg+xml;utf8,${encodeURIComponent(res.svg)}`;
+      const newPhoto: PhotoMaterial = {
+        id: `infographic-${Date.now()}`,
+        url: svgDataUri,
+        previewUrl: svgDataUri,
+        aspectRatio: res.width_mm / res.height_mm,
+        focalPoint: [0.5, 0.5],
+        autoCutout: false,
+        placementHint: 'sidebar',
+        allowTextWrap: false,
+        caption: `Wykres modułowy: ${res.title}`,
+        credit: 'Dział Badań i Faktów Zecro',
+        importance: 4,
+      };
+
+      setPhotos((prev) => [newPhoto, ...prev]);
+      addToast({
+        type: 'success',
+        title: 'Utworzono infografikę prasową',
+        message: 'Wektorowy wykres słupkowy w siatce modułowej dodano do materiałów strony.',
+      });
+    } catch (e: any) {
+      addToast({
+        type: 'error',
+        title: 'Błąd generowania infografiki',
+        message: e?.message || 'Nie udało się stworzyć wykresu.',
+      });
+    }
+  };
+
 
   const handleFillSampleEditorial = () => {
     setLeadStory({
@@ -877,14 +928,25 @@ export const GeneratePage: React.FC = () => {
             {/* Fact-Guard Frozen Claims Cloud */}
             {frozenClaims.length > 0 && (
               <div className="p-3.5 bg-emerald-950/40 border border-emerald-500/40 rounded-xl space-y-2 animate-fade-in">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-xs font-bold text-emerald-300">
                     <ShieldCheck className="w-4 h-4 text-emerald-400" />
                     <span>Strażnik Faktów (Fact-Guard) · {frozenClaims.length} zamrożonych faktów</span>
                   </div>
-                  <span className="text-[10px] font-mono text-emerald-400/80">
-                    Nienegocjowalna ochrona liczb, dat i kwot
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCreateInfographicFromClaims}
+                      className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-emerald-800/80 hover:bg-emerald-700 border border-emerald-500/50 text-white transition-colors shadow-xs"
+                      title="Generuj wektorowy prasowy wykres słupkowy SVG pasujący do siatki szpalt"
+                    >
+                      <BarChart2 className="w-3.5 h-3.5 text-emerald-300" />
+                      Generuj wykres prasowy (SVG)
+                    </button>
+                    <span className="text-[10px] font-mono text-emerald-400/80 hidden sm:inline">
+                      Ochrona liczb i dat
+                    </span>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
                   {frozenClaims.map((claim) => (

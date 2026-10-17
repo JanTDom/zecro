@@ -898,3 +898,46 @@ async def ingest_doc_file(file: UploadFile = File(...)):
             tmp_path.unlink()
 
 
+class InfographicRequest(BaseModel):
+    title: str = "Wskaźniki i fakty wydania"
+    kind: Literal["poll", "locator_map"] = "poll"
+    items: Optional[List[Dict[str, Any]]] = None
+    location_label: Optional[str] = "Warszawa Centralna"
+    cols: int = Field(default=2, ge=1, le=4)
+
+
+@router.post("/editorial/generate-infographic")
+def generate_infographic_endpoint(req: InfographicRequest):
+    """Generates an editorial SVG chart or locator map ready for modular newspaper grid injection."""
+    from scripts.editorial_cartography import generate_poll_chart_svg, generate_locator_map_svg
+
+    cols_to_width = {1: 50.0, 2: 104.0, 3: 158.0, 4: 212.0}
+    width_mm = cols_to_width.get(req.cols, 104.0)
+    height_mm = 65.0
+
+    if req.kind == "locator_map":
+        svg = generate_locator_map_svg(
+            title=req.title,
+            location_label=req.location_label or "Lokalizacja",
+            width_mm=width_mm,
+            height_mm=height_mm,
+        )
+    else:
+        svg = generate_poll_chart_svg(
+            title=req.title,
+            items=req.items,
+            width_mm=width_mm,
+            height_mm=height_mm,
+        )
+
+    return {
+        "status": "ok",
+        "svg": svg,
+        "width_mm": width_mm,
+        "height_mm": height_mm,
+        "cols": req.cols,
+        "title": req.title,
+    }
+
+
+

@@ -31,6 +31,8 @@ import {
   History,
   BookOpen,
   Printer,
+  Share2,
+  Box,
 } from 'lucide-react';
 
 export const SceneGraphCanvas: React.FC = () => {
@@ -54,7 +56,9 @@ export const SceneGraphCanvas: React.FC = () => {
   const [showContours, setShowContours] = useState<boolean>(true);
   const [showReadingOrder, setShowReadingOrder] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'single' | 'spread'>('single');
+  const [is3DPreview, setIs3DPreview] = useState<boolean>(false);
   const [prepressMode, setPrepressMode] = useState<boolean>(false);
+  const [isExportingSocial, setIsExportingSocial] = useState<boolean>(false);
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [deltas, setDeltas] = useState<ElementDelta[]>([]);
   const [isLoggingDelta, setIsLoggingDelta] = useState<boolean>(false);
@@ -146,6 +150,80 @@ export const SceneGraphCanvas: React.FC = () => {
       message: `Zastosowano tracking: ${newTracking}em dla optymalnego wypełnienia szpalty.`,
     });
   };
+
+  const handleAdjustParagraphSpacing = (id: string, deltaPt: number) => {
+    const elem = elements.find((e) => e.id === id);
+    if (!elem) return;
+    const current = elem.style.paragraphSpacingPt || 0;
+    const next = Math.max(0, current + deltaPt);
+    handleUpdateStyle(id, { paragraphSpacingPt: next });
+    addToast({
+      type: 'info',
+      title: 'Wyrównano światła akapitów',
+      message: `Zastosowano odstęp międzyakapitowy ${next.toFixed(1)} pt dla domknięcia linii bazowej.`,
+    });
+  };
+
+  const handleAddPullquote = (baseElem: SceneGraphElement) => {
+    const newId = `pullquote-${Date.now()}`;
+    const quoteText = baseElem.content.split('.')[0] || '„Kluczowy cytat wydania”';
+    const newElem: SceneGraphElement = {
+      id: newId,
+      role: 'pullquote',
+      frame: {
+        x: baseElem.frame.x,
+        y: Math.min(pageFormat.heightMm - 30, baseElem.frame.y + baseElem.frame.height * 0.4),
+        width: baseElem.frame.width,
+        height: 25.0,
+      },
+      zIndex: baseElem.zIndex + 1,
+      content: quoteText,
+      style: {
+        fontFamily: 'PT Serif',
+        fontSizePt: 14,
+        color: '#c1121f',
+        textAlign: 'center',
+      },
+      transgressionsApplied: [],
+      tensionCost: 0.1,
+      readingOrderIndex: elements.length + 1,
+    };
+    setElements((prev) => [...prev, newElem]);
+    setSelectedElementId(newId);
+    addToast({
+      type: 'success',
+      title: 'Wstawiono wyimek',
+      message: 'Wyciągnięto cytat pochłaniający niedomiar w szpalcie.',
+    });
+  };
+
+  const handleExportSocial = async (ratio: '9:16' | '1:1') => {
+    if (!selectedCandidate) return;
+    setIsExportingSocial(true);
+    try {
+      const art = await api.exportSocialCard(selectedCandidate.id, ratio);
+      const link = document.createElement('a');
+      link.href = art.downloadUrl;
+      link.download = art.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      addToast({
+        type: 'success',
+        title: 'Kadr Social Media gotowy',
+        message: `Pobrano kadr cyfrowy wydania w formacie ${ratio}.`,
+      });
+    } catch (e: any) {
+      addToast({
+        type: 'error',
+        title: 'Błąd eksportu kadru społecznościowego',
+        message: e?.message || 'Nie udało się wygenerować grafiki.',
+      });
+    } finally {
+      setIsExportingSocial(false);
+    }
+  };
+
 
 
   const handlePointerDown = (event: React.PointerEvent, element: SceneGraphElement) => {
@@ -309,6 +387,18 @@ export const SceneGraphCanvas: React.FC = () => {
             <BookOpen className="w-3.5 h-3.5" />
             {viewMode === 'spread' ? 'Rozkładówka' : 'Pojedyncza'}
           </button>
+          {viewMode === 'spread' && (
+            <button
+              onClick={() => setIs3DPreview(!is3DPreview)}
+              className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 ${
+                is3DPreview ? 'bg-indigo-600 text-white font-bold' : 'text-ink-400 hover:text-white'
+              }`}
+              title="Włącz fizyczną symulację 3D łamania gazety przez grzbiet"
+            >
+              <Box className="w-3.5 h-3.5" />
+              {is3DPreview ? 'Widok 3D: Wł.' : 'Podgląd 3D'}
+            </button>
+          )}
           <button
             onClick={() => setPrepressMode(!prepressMode)}
             className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 ${
@@ -356,7 +446,19 @@ export const SceneGraphCanvas: React.FC = () => {
 
 
         {/* Right: Zoom & Save Action */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            isLoading={isExportingSocial}
+            leftIcon={<Share2 className="w-3.5 h-3.5 text-editorial-ochre" />}
+            onClick={() => handleExportSocial('9:16')}
+            title="Pobierz kadr społecznościowy w formacie 9:16 (Instagram Stories / Reels / TikTok)"
+            className="border-editorial-ochre/40 text-editorial-ochre hover:bg-editorial-ochre/10 text-xs"
+          >
+            Social 9:16
+          </Button>
+
           <div className="flex items-center gap-1 bg-ink-950 p-1 rounded-lg border border-ink-800">
             <button
               onClick={() => setZoomLevel((z) => Math.max(50, z - 10))}
@@ -390,15 +492,23 @@ export const SceneGraphCanvas: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Interactive Canvas Viewer (8 cols) */}
         <div className="lg:col-span-8 bg-ink-950 border border-ink-800 rounded-xl p-6 flex flex-col items-center justify-center overflow-auto min-h-[620px] shadow-2xl relative">
-          <div className="flex items-center justify-center gap-0">
+          <div
+            className="flex items-center justify-center gap-0 transition-all duration-500"
+            style={{
+              perspective: is3DPreview && viewMode === 'spread' ? '1400px' : undefined,
+              transformStyle: is3DPreview && viewMode === 'spread' ? 'preserve-3d' : undefined,
+            }}
+          >
             {/* Left Page (Verso) in Spread Mode */}
             {viewMode === 'spread' && (
               <div
-                className="relative rounded-l shadow-page-elevated border-y border-l border-paper-300 transition-transform origin-top select-none opacity-90 overflow-hidden"
+                className="relative rounded-l shadow-page-elevated border-y border-l border-paper-300 origin-right select-none opacity-90 overflow-hidden transition-all duration-500"
                 style={{
                   width: `${(pageFormat.widthMm / 315) * 520 * (zoomLevel / 100)}px`,
                   height: `${(pageFormat.heightMm / 470) * 780 * (zoomLevel / 100)}px`,
                   backgroundColor: prepressMode ? '#f4f1ea' : (dna.palette.backgroundTone || '#f9f6ef'),
+                  transform: is3DPreview ? 'rotateY(8deg) translateZ(10px)' : 'none',
+                  boxShadow: is3DPreview ? 'inset -35px 0 45px -10px rgba(0,0,0,0.4), -12px 18px 30px rgba(0,0,0,0.35)' : undefined,
                 }}
               >
                 <div className="p-4 border-b border-ink-200/50 flex justify-between items-center text-[10px] font-mono text-ink-500">
@@ -425,7 +535,16 @@ export const SceneGraphCanvas: React.FC = () => {
 
             {/* Spine Center Divider in Spread Mode */}
             {viewMode === 'spread' && (
-              <div className="w-[3px] h-[780px] bg-ink-800 relative z-20 flex flex-col justify-between items-center py-2" title="Grzbiet (oś zgięcia rozkładówki)">
+              <div
+                className="w-[4px] h-[780px] relative z-20 flex flex-col justify-between items-center py-2 transition-all duration-500"
+                style={{
+                  background: is3DPreview
+                    ? 'linear-gradient(to right, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.5) 100%)'
+                    : '#151821',
+                  boxShadow: is3DPreview ? '0 0 15px rgba(0,0,0,0.7)' : undefined,
+                }}
+                title="Grzbiet (oś zgięcia rozkładówki)"
+              >
                 <div className="w-1.5 h-1.5 rounded-full bg-editorial-crimson" />
                 <span className="text-[7px] font-mono text-editorial-crimson -rotate-90 uppercase tracking-widest whitespace-nowrap">
                   Grzbiet 0 mm
@@ -436,13 +555,15 @@ export const SceneGraphCanvas: React.FC = () => {
 
             {/* Main Active Page (Recto / Current Page) */}
             <div
-              className={`relative shadow-page-elevated border border-paper-300 transition-transform origin-top select-none ${
+              className={`relative shadow-page-elevated border border-paper-300 origin-left select-none transition-all duration-500 ${
                 viewMode === 'spread' ? 'rounded-r border-l-0' : 'rounded'
               }`}
               style={{
                 width: `${(pageFormat.widthMm / 315) * (viewMode === 'spread' ? 520 : 580) * (zoomLevel / 100)}px`,
                 height: `${(pageFormat.heightMm / 470) * (viewMode === 'spread' ? 780 : 860) * (zoomLevel / 100)}px`,
                 backgroundColor: prepressMode ? '#f4f1ea' : (dna.palette.backgroundTone || '#f9f6ef'),
+                transform: is3DPreview && viewMode === 'spread' ? 'rotateY(-8deg) translateZ(10px)' : 'none',
+                boxShadow: is3DPreview && viewMode === 'spread' ? 'inset 35px 0 45px -10px rgba(0,0,0,0.4), 12px 18px 30px rgba(0,0,0,0.35)' : undefined,
               }}
             >
               {/* Gutter safety zone on recto */}
@@ -498,7 +619,7 @@ export const SceneGraphCanvas: React.FC = () => {
                   >
                     {/* Live Copyfit HUD on Selected Text Element */}
                     {isSelected && copyfitInfo && (
-                      <div className="absolute -top-7 left-0 right-0 flex items-center justify-between bg-ink-950/95 text-white border border-editorial-crimson/60 px-2 py-0.5 rounded shadow-xl text-[9px] font-mono pointer-events-auto z-40 whitespace-nowrap">
+                      <div className="absolute -top-7 left-0 right-0 flex items-center justify-between bg-ink-950/95 text-white border border-editorial-crimson/60 px-2 py-0.5 rounded shadow-xl text-[9px] font-mono pointer-events-auto z-40 whitespace-nowrap gap-2">
                         <div className="flex items-center gap-1.5">
                           <span className="text-amber-400 font-bold">Copyfit:</span>
                           <span>{Math.round(elem.frame.width)}×{Math.round(elem.frame.height)} mm</span>
@@ -506,16 +627,38 @@ export const SceneGraphCanvas: React.FC = () => {
                             {copyfitInfo.text}
                           </span>
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAutoFitTracking(elem.id);
-                          }}
-                          className="ml-2 bg-editorial-crimson hover:bg-editorial-crimson/80 text-white px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider font-sans font-semibold transition"
-                          title="Dopasuj tracking tekstu o -0.015em dla optymalnego wypełnienia wiersza"
-                        >
-                          Dopasuj tracking
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAutoFitTracking(elem.id);
+                            }}
+                            className="bg-editorial-crimson hover:bg-editorial-crimson/80 text-white px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider font-sans font-semibold transition"
+                            title="Dopasuj tracking tekstu o -0.015em dla optymalnego wypełnienia wiersza"
+                          >
+                            Tracking
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAdjustParagraphSpacing(elem.id, 1.5);
+                            }}
+                            className="bg-ink-800 hover:bg-ink-700 text-ink-100 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider font-sans font-semibold transition"
+                            title="Wyrównaj światła akapitów o +1.5pt dla domknięcia do dolnej linii bazowej szpalty"
+                          >
+                            +1.5pt światła
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddPullquote(elem);
+                            }}
+                            className="bg-ink-800 hover:bg-ink-700 text-ink-100 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider font-sans font-semibold transition"
+                            title="Wstaw wyciągnięty cytat w środek szpalty, aby pochłonąć niedomiar"
+                          >
+                            + Wyimek
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -562,7 +705,13 @@ export const SceneGraphCanvas: React.FC = () => {
                     )}
 
                     {elem.role === 'image' && (
-                      <div className="w-full h-full relative overflow-hidden rounded">
+                      <div
+                        className="w-full h-full relative overflow-hidden rounded"
+                        style={{
+                          shapeOutside: elem.treatment?.isCutout ? 'polygon(50% 0%, 100% 25%, 85% 100%, 15% 100%, 0% 25%)' : undefined,
+                          clipPath: elem.treatment?.isCutout ? 'polygon(50% 0%, 100% 25%, 85% 100%, 15% 100%, 0% 25%)' : undefined,
+                        }}
+                      >
                         <img
                           src={elem.content}
                           alt="Zdjęcie na stronie"
@@ -574,10 +723,15 @@ export const SceneGraphCanvas: React.FC = () => {
                             <span>TAC: 220% (OK)</span>
                           </div>
                         )}
+                        {elem.treatment?.isCutout && (
+                          <div className="absolute bottom-1 left-1 bg-purple-950/80 border border-purple-500/50 text-purple-200 text-[7px] font-mono px-1.5 py-0.5 rounded shadow flex items-center gap-1 z-10">
+                            <span>Live Wrap (12px)</span>
+                          </div>
+                        )}
                         {elem.treatment?.isCutout && showContours && (
-                          <div className="absolute inset-0 border-2 border-dashed border-purple-500 bg-purple-500/10 flex items-end p-1">
+                          <div className="absolute inset-0 border-2 border-dashed border-purple-500 bg-purple-500/10 flex items-end p-1 pointer-events-none">
                             <span className="text-[8px] font-mono text-purple-900 bg-white/90 px-1 rounded uppercase font-bold">
-                              Tekst wokół wyciętego zdjęcia (4 mm)
+                              Oblewanie sylwetki (4 mm)
                             </span>
                           </div>
                         )}
@@ -585,15 +739,24 @@ export const SceneGraphCanvas: React.FC = () => {
                     )}
 
                     {elem.role === 'body' && (
-                      <p
-                        className="text-[8px] text-ink-50 text-justify leading-snug font-sans line-clamp-12"
+                      <div
+                        className="text-[8px] text-ink-50 text-justify leading-snug font-sans line-clamp-12 space-y-1"
                         style={{
                           color: elem.style.color || '#151821',
                           letterSpacing: elem.style.letterSpacingEm ? `${elem.style.letterSpacingEm}em` : undefined,
                         }}
                       >
-                        {elem.content}
-                      </p>
+                        {elem.content.split('\n\n').map((p, pIdx) => (
+                          <p
+                            key={pIdx}
+                            style={{
+                              marginBottom: elem.style.paragraphSpacingPt ? `${elem.style.paragraphSpacingPt * 0.3528}mm` : undefined,
+                            }}
+                          >
+                            {p}
+                          </p>
+                        ))}
+                      </div>
                     )}
 
                     {elem.role === 'pullquote' && (

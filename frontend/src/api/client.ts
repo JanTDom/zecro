@@ -679,6 +679,40 @@ export const api = {
       },
     };
   },
-
+  async generateInfographic(payload: {
+    title: string;
+    kind?: 'poll' | 'locator_map';
+    items?: Array<{ label: string; value: number; color?: string }>;
+    location_label?: string;
+    cols?: number;
+  }): Promise<{ status: string; svg: string; width_mm: number; height_mm: number; cols: number; title: string }> {
+    return request('/editorial/generate-infographic', json('POST', payload));
+  },
+  async exportSocialCard(candidateId: string, ratio: '9:16' | '1:1' = '9:16'): Promise<ExportArtifact> {
+    const res = await request(`/candidates/${encodeURIComponent(candidateId)}/export-social?ratio=${encodeURIComponent(ratio)}`, {
+      method: 'POST',
+    });
+    return {
+      id: res.id,
+      projectId: res.project_id,
+      candidateId: res.candidate_id,
+      format: res.format as any,
+      fileName: `social_${candidateId}_${ratio.replace(':', 'x')}.svg`,
+      fileSizeBytes: res.file_size_bytes,
+      createdAt: res.created_at,
+      downloadUrl: apiUrl(`/exports/${res.id}/download`),
+      options: {
+        format: 'svg',
+        includeBleed: false,
+        includeCropMarks: false,
+        colorProfile: 'sRGB',
+        embedFonts: true,
+        preserveTextFrames: true,
+        exportClippingPaths: true,
+        dpi: 150,
+      },
+    };
+  },
 };
+
 

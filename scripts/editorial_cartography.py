@@ -78,6 +78,78 @@ def generate_locator_map_svg(
     return svg
 
 
+def generate_poll_chart_svg(
+    title: str = "Sondaż Poparcia / Wyniki",
+    items: list[dict] | None = None,
+    width_mm: float = 104.0,  # 2 columns
+    height_mm: float = 65.0,
+    dpi: float = 72.0 / 25.4,
+) -> str:
+    """Generates an editorial newspaper horizontal bar chart SVG for survey or budget data."""
+    if not items:
+        items = [
+            {"label": "Wariant A", "value": 48.5, "color": "#cc0000"},
+            {"label": "Wariant B", "value": 32.0, "color": "#111111"},
+            {"label": "Niezdecydowani", "value": 19.5, "color": "#888888"},
+        ]
+
+    w = width_mm * dpi
+    h = height_mm * dpi
+
+    header_h = 24.0
+    margin_x = 12.0
+    margin_bottom = 14.0
+    chart_h = h - header_h - margin_bottom
+
+    row_count = max(len(items), 1)
+    bar_h = min(chart_h / (row_count * 1.6), 18.0)
+    gap = (chart_h - (bar_h * row_count)) / (row_count + 1) if row_count > 0 else 5.0
+
+    max_val = max((float(it.get("value", 0)) for it in items), default=100.0)
+    if max_val <= 0:
+        max_val = 100.0
+    scale_max = max(max_val * 1.15, 10.0)
+    bar_max_w = max(w - 110.0, 50.0)
+
+    bars_svg = []
+    current_y = header_h + gap
+    for it in items:
+        lbl = str(it.get("label", ""))
+        val = float(it.get("value", 0))
+        color = it.get("color") or ("#cc0000" if val == max_val else "#222222")
+        bar_w = (val / scale_max) * bar_max_w
+
+        bars_svg.append(f"""
+        <text x="{margin_x:.1f}" y="{current_y + bar_h * 0.72:.1f}" class="chart-label">{lbl[:22]}</text>
+        <rect x="75" y="{current_y:.1f}" width="{bar_w:.1f}" height="{bar_h:.1f}" fill="{color}" rx="1" />
+        <text x="{75 + bar_w + 6:.1f}" y="{current_y + bar_h * 0.72:.1f}" class="chart-val">{val:.1f}%</text>
+        """)
+        current_y += bar_h + gap
+
+    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w:.1f} {h:.1f}" width="{width_mm}mm" height="{height_mm}mm">
+  <defs>
+    <style>
+      .chart-bg {{ fill: #faf8f5; stroke: #111111; stroke-width: 1.5; }}
+      .chart-header-bg {{ fill: #e8e4dc; stroke: #111111; stroke-width: 1; }}
+      .chart-title {{ font-family: 'Barlow', 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 800; fill: #111111; text-transform: uppercase; letter-spacing: 0.5px; }}
+      .chart-label {{ font-family: 'Barlow', 'Helvetica Neue', Arial, sans-serif; font-size: 9px; font-weight: 700; fill: #222222; }}
+      .chart-val {{ font-family: 'Barlow', 'Helvetica Neue', Arial, sans-serif; font-size: 9.5px; font-weight: 800; fill: #111111; }}
+      .chart-source {{ font-family: 'PT Serif', Georgia, serif; font-size: 7px; fill: #666666; font-style: italic; }}
+    </style>
+  </defs>
+
+  <rect class="chart-bg" x="0.75" y="0.75" width="{w - 1.5:.1f}" height="{h - 1.5:.1f}" />
+  <rect class="chart-header-bg" x="0.75" y="0.75" width="{w - 1.5:.1f}" height="20" />
+  <text class="chart-title" x="{margin_x:.1f}" y="14">{title}</text>
+
+  {''.join(bars_svg)}
+
+  <line x1="{margin_x:.1f}" y1="{h - 10:.1f}" x2="{w - margin_x:.1f}" y2="{h - 10:.1f}" stroke="#d0cec5" stroke-width="0.75" />
+  <text class="chart-source" x="{margin_x:.1f}" y="{h - 3.5:.1f}">Źródło: Dział Badań i Faktów Zecro / Opracowanie redakcyjne</text>
+</svg>"""
+    return svg
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Zecro Editorial Cartography & SVG Generator")
     parser.add_argument("--title", default="Lokalizacja Inwestycji", help="Map header title")

@@ -192,3 +192,66 @@ def test_api_pairwise_uncertainty_sampling():
                 assert data["selection_method"] == "uncertainty_sampling"
                 assert "active_learning_entropy" in data
 
+
+def test_poll_chart_svg_generation():
+    from scripts.editorial_cartography import generate_poll_chart_svg
+    svg = generate_poll_chart_svg(
+        title="Wyniki Sondażu Prasowego",
+        items=[
+            {"label": "Projekt A", "value": 54.0},
+            {"label": "Projekt B", "value": 36.0},
+        ],
+        width_mm=104.0,
+        height_mm=65.0,
+    )
+    assert "<svg" in svg
+    assert "</svg>" in svg
+    assert "Wyniki Sondażu Prasowego" in svg
+    assert "Projekt A" in svg
+    assert "54.0%" in svg
+
+
+def test_api_generate_infographic_endpoint():
+    from fastapi.testclient import TestClient
+    from backend.app.main import app
+    client = TestClient(app)
+
+    payload = {
+        "title": "Wydatki Inwestycyjne 2026",
+        "kind": "poll",
+        "items": [
+            {"label": "Infrastruktura", "value": 62.5},
+            {"label": "Edukacja", "value": 37.5},
+        ],
+        "cols": 2
+    }
+    response = client.post("/editorial/generate-infographic", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert "<svg" in data["svg"]
+    assert "Infrastruktura" in data["svg"]
+    assert data["cols"] == 2
+    assert data["width_mm"] == 104.0
+
+
+def test_api_export_social_card_endpoint():
+    from fastapi.testclient import TestClient
+    from backend.app.main import app
+    client = TestClient(app)
+
+    # Sprawdźmy pobranie istniejącego kandydata
+    resp = client.get("/projects")
+    if resp.status_code == 200 and resp.json():
+        pid = resp.json()[0]["id"]
+        runs_resp = client.get(f"/projects/{pid}/runs")
+        if runs_resp.status_code == 200 and runs_resp.json():
+            cand_id = runs_resp.json()[0]["candidates"][0]["id"]
+            export_resp = client.post(f"/candidates/{cand_id}/export-social?ratio=9:16")
+            if export_resp.status_code == 201:
+                data = export_resp.json()
+                assert data["format"] == "svg"
+                assert "social_" in data["file_path"]
+                assert data["file_size_bytes"] > 0
+
+
