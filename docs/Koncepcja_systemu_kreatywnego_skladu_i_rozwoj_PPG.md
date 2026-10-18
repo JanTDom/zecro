@@ -1,142 +1,350 @@
-# Kreatywny system składu prasowego i rozwój bazy layoutów
+# Specyfikacja architektoniczna i algorytmiczna systemu generatywnego składu prasowego oraz integracji z ekosystemem PPG
 
-*Opis działania, kierunki rozwoju oraz możliwości połączenia z obecnym systemem wydawniczym w PPG*
+*Dokumentacja techniczna: model danych, solvery geometryczne, algorytmy ewolucyjne, kształtowanie glifów Knuth–Plass, potok wizyjny, pętla uczenia preferencji i dwukierunkowa wymiana IDML/Prepress*
 
 
-## 1. Punkt wyjścia: co już działa w PPG i gdzie dziś dobijamy do ściany
+## 1. Definicja problemu i różnica paradygmatu wobec obecnego systemu w PPG
 
-Zacznijmy od rzeczy oczywistej. Zdaję sobie doskonale sprawę z tego, że w PPG funkcjonuje już system operujący na layoutach i że codzienna produkcja gazet opiera się na wypracowanych tam schematach. Przy takiej skali wydawniczej i tylu grzbietach trudno sobie w ogóle wyobrazić pracę bez narzędzia, które porządkuje kolumny i pozwala sprawnie wypchnąć wydanie do drukarni. Tyle że obecne rozwiązanie – mimo swoich zalet – ma jedno twarde ograniczenie, o którym w codziennej pracy wszyscy wiemy. Operuje na zamkniętym zbiorze gotowych układów.
+Zdaję sobie sprawę, że w strukturach produkcyjnych PPG funkcjonuje już zautomatyzowany system zarządzania makietami i składu kolumn prasowych. Narzędzie to realizuje model deterministycznej indeksacji zamkniętego zbioru szablonów (Closed-Set Template Matching). W architekturze tej przestrzeń dopuszczalnych układów strony jest skończonym, statycznym słownikiem predefiniowanych topologii T = {t_1, t_2, ..., t_k}, zaprojektowanych wcześniej przez zespół graficzny. Proces łamania polega tam na kwerendzie do bazy wzorców i wstrzyknięciu bieżących rekordów tekstowo-fotograficznych w sztywno zdefiniowane ramki (Slot-Filling).
 
-Dopóki materiał spływający z redakcji dokładnie pasuje do tego, co miał w głowie grafik rysujący dany szablon rok czy dwa lata temu, wszystko idzie gładko. W praktyce rzadko jednak tak bywa. Przychodzi główny temat z jednym świetnym, ale pionowym zdjęciem, które w standardowym poziomym okienku traci całą siłę. Albo pojawia się materiał wymagający zestawienia krótkiej osi czasu, komentarza i małej mapki, a w puli pod ręką są akurat same klasyczne makiety pod długie artykuły. I co wtedy robi redaktor pod presją czasu? Albo przycina i spłaszcza materiał pod sztywną formatkę ze szkodą dla tematu, albo w kółko sięga po te same trzy, cztery najbezpieczniejsze szablony, o których wie, że się nie rozsypią. Po miesiącu kolejne numery zaczynają wyglądać jak odbite od jednej sztancy.
+Model zamkniętego zbioru wykazuje strukturalną niewydolność w dwóch przypadkach. Po pierwsze, gdy wektor cech napływającego pakietu redakcyjnego (liczba artykułów na kolumnie, rozkład długości tekstów wyrażony w wierszach znormalizowanych, proporcje aspektowe fotografii, obecność wyimków, tabel lub mapek) wykracza poza parametry z góry przewidziane w słowniku T. Wymusza to wówczas albo destrukcyjną ingerencję w materiał (agresywne cięcie tekstu, nieoptymalne kadrowanie obrazu niszczące punkt ogniskowy), albo powstawanie defektów składu: niedopełnienia szpalt (underset), przepełnienia (overset) i uwięzionego światła wewnętrznego (trapped whitespace). Po drugie, w warunkach presji wydawniczej redaktorzy konwergują do wąskiego podzbioru kilku najbardziej uniwersalnych makiet, co prowadzi do entropii wizualnej i powtarzalności kolejnych wydań.
 
-Proponowany przeze mnie system ma to zmienić. Zamiast kolejnego katalogu sztywnych klatek wprowadza do procesu składu realną kreatywność, która owocuje zupełnie nowymi rozwiązaniami na stronie. Nie chodzi o to, żeby wywracać pracę redakcji do góry nogami, tylko żeby komputer przestał być bierną szafą z ograniczoną liczbą wcześniej narysowanych szablonów. Ma działać jak sprawny łamacz i dyrektor artystyczny: rozumieć, jaki materiał dostał na stół, i potrafić ułożyć pod niego świeżą, dobrą kompozycję, jakiej w zamkniętym zbiorze po prostu nie było.
+Proponowany system zastępuje statyczne przeszukiwanie tablicy szablonów paradygmatem obliczeniowej kreatywności (Computational Creativity), zdefiniowanym jako iloczyn szerokiej eksploracji przestrzeni stanów i wielokryterialnej selekcji: Kreatywność = Eksploracja × Selekcja. Zamiast dopasowywać treść do martwego rysunku, silnik traktuje charakterystykę pisma jako zbiór reguł formalnych i więzów matematycznych, syntezując nowe, nieistniejące wcześniej w bazie rozwiązania kompozycyjne bezpośrednio pod geometrię i semantykę konkretnego materiału.
 
+| Wymiar architektoniczny | Obecny system PPG (zamknięty zbiór) | Tryb pośredni (hybrydowy dla PPG) | Pełna synteza generatywna |
+| --- | --- | --- | --- |
+| Reprezentacja wiedzy o układzie | Statyczna biblioteka szablonów T = {t_1, ..., t_k} | Szablony T_PPG jako populacja startowa + gramatyka TitleDNA | Deklaratywna gramatyka TitleDNA + priory korpusowe |
+| Mechanizm alokacji geometrii | Sztywne przypisanie treści do predefiniowanych slotów (Slot-Filling) | Relaksacja więzów szablonu bazowego, mutacja genomu i korekta strefowa | Solver strefowy (ZoneSolver) + algorytm ewolucyjny na genomie LayoutGenome |
+| Reakcja na nietypowy pakiet treści | Przycięcie materiału, puste światło lub ręczna przebudowa w DTP | Adaptacja podziału szpalt, szparowanie, dodanie modułów wtórnych | Synteza nowej topologii dopasowanej do rzeczywistych wymiarów glifów i zdjęć |
+| Ewolucja bazy wzorców | Brak (wymaga ręcznego rysowania nowych makiet przez grafików) | Automatyczna kanonizacja i zapis skorygowanych układów jako nowych wzorów t_{k+1} | Ciągła eksploracja z kontrolą odległości euklidesowej od korpusu (d >= 0.15) |
 
-## 2. Dwa tory działania: nowe publikacje oraz dopracowywanie obecnych layoutów
 
-Cały projekt od początku buduję z myślą o dwóch równoległych zastosowaniach. Pierwsze to stawianie od zera nowych gazet, wkładek i dodatków. Drugie, na co dzień być może nawet bardziej przydatne, to gałąź dopracowywania i podciągania layoutów, które już mamy.
+## 2. Zakres operacyjny: dwie główne gałęzie + wariant pośredni dla PPG
 
+Architektura systemu obsługuje dwa główne strumienie produkcyjne oraz hybrydowy tryb pośredni zaprojektowany specjalnie pod migrację i rozszerzenie obecnej bazy layoutów PPG.
 
-### Tworzenie nowych gazet, wkładek i dodatków specjalnych
 
-W dużym wydawnictwie co chwilę pojawia się temat na coś więcej niż standardowy grzbiet codziennego dziennika. Wkładki tematyczne, dodatki komercyjne dla klientów i samorządów, wydania specjalne na wybory, święta czy początek sezonu, informatory, przewodniki, a czasem zupełnie nowe tytuły lokalne. Przy tradycyjnym obiegu pracy każdy taki pomysł oznacza jedno: trzeba znaleźć wolny czas u projektanta, wymyślić makietę, rozrysować kolumny i złożyć je ręcznie. Wąskim gardłem nie jest brak treści ani brak klientów, tylko czas i koszt pracy graficznej. Przez to mniejsze dodatki albo w ogóle nie spinają się budżetowo, albo wychodzą na starych, opatrzonych szablonach pożyczonych z głównej gazety.
+### 2.1. Gałąź A – synteza od zera (Greenfield Generation): nowe gazety, wkładki i dodatki
 
-Tutaj ten problem znika. Możemy w kilka chwil zdefiniować charakter nowej publikacji, format papieru i jej własne zasady wizualne. Inaczej przecież układa się poważny dodatek gospodarczy, inaczej gęsty przewodnik telewizyjny czy informator samorządowy, a zupełnie inaczej żywą wkładkę sportową albo pismo o lżejszym, popularnym zacięciu. System potrafi wygenerować pod to kompletne strony – od okładki, przez strony wewnętrzne, aż po rozkładówki – pilnując, żeby całość miała spójny charakter i wyglądała jak zaprojektowana specjalnie pod to jedno wydanie.
+Pierwsza gałąź realizuje pełną syntezę nowych produktów wydawniczych bez konieczności uprzedniego rysowania księgi makiet w programie DTP. Dotyczy to uruchamiania nowych tytułów lokalnych i regionalnych, wkładek tematycznych, dodatków komercyjnych i samorządowych, wydań specjalnych oraz przewodników telewizyjnych (tv_listing). Na wejściu definiowany jest wyłącznie obiekt gramatyki tytułu (TitleDNA) określający fizyczny format arkusza (np. Berliner 289 × 380 mm, Tabloid, Broadsheet lub formaty niestandardowe), parametry siatki modułowej i wektor stylu. Generator automatycznie wyprowadza z tych reguł kompletne kolumny otwierające (front_page), kolumny wewnętrzne (inside), rozkładówki (spread verso/recto) oraz strony zamykające (back_page).
 
 
-### Gałąź dopracowywania i ratowania istniejących layoutów
+### 2.2. Gałąź B – refaktoryzacja i optymalizacja istniejących layoutów (Layout Refinement)
 
-Druga gałąź projektu dotyczy stron, które już dziś powstają w wydawnictwie. Nie oszukujmy się – w codziennym młynie wiele kolumn wychodzi technicznie poprawnie, ale wizualnie są po prostu płaskie, nudne albo mają widoczne mankamenty, na których ręczne poprawianie nikt przed zamknięciem wydania nie ma już piętnastu minut. Ktoś wlał tekst w gotowy szablon, ale na dole szpalty została dziura albo sztucznie rozciągnięte światło. Zdjęcie jest wykadrowane tak zachowawczo, że nic się na nim nie dzieje. Dwa artykuły obok siebie zlewają się w jedną bryłę, bo ich tytuły mają niemal identyczny ciężar i stoją na tej samej linii.
+Druga gałąź operuje na kolumnach i makietach już istniejących w bieżącym obiegu redakcyjnym. Moduł dekompilacji (dissect_indesign.py) parsuje gotową lub roboczą kolumnę z formatu IDML bądź pakietu produkcyjnego, buduje jej abstrakcyjny graf sceny (SceneGraph) i przekazuje go do modułu diagnostycznego. Krytyk identyfikuje naruszenia twardych więzów oraz suboptymalności kompozycyjne: kolizje brył tekstowych, brak jednoznacznej dominanty optycznej, zachwianie balansu osiowego, wdowy i bękarty łamowe, niską efektywną rozdzielczość rastrową po wykadrowaniu czy martwe strefy w dolnych partiach kolumny. Następnie uruchamiana jest lokalna optymalizacja geometrii i mikrotypografii (zmiana podziału szpaltowego, konwersja statycznego zdjęcia na wycinek szparowany z oblewaniem konturowym, wstawienie wyimka lub ramki faktograficznej w celu skompensowania niedoboru wierszy, wyrównanie do linii bazowej), zwracająca zoptymalizowane warianty tej samej strony.
 
-Gałąź dopracowywania bierze taki obecny, roboczy layout na warsztat. Nie musi go burzyć do zera. Analizuje ułożoną już stronę, wyłapuje jej słabe punkty i proponuje kilka wariantów poprawki. Może podbić główne zdjęcie i zmniejszyć podrzędne, żeby na kolumnie wreszcie pojawił się jeden wyraźny punkt zaczepienia dla oka. Może zaproponować wycięcie postaci z tła i oblanie jej tekstem, dołożyć krótki wyimek albo ramkę z liczbami, która rozbije monotonną szarość długiego artykułu, albo przełamać szpalty tak, żeby tekst zamknął się równo do linii bazowej. Redaktor kładzie obok siebie wersję wyjściową oraz propozycje systemu i jednym ruchem wybiera tę, która wygląda najlepiej.
 
+### 2.3. Opcja pośrednia (ewolucyjna rozbudowa zamkniętego zbioru PPG)
 
-## 3. Opcja pośrednia: start z zamkniętego zbioru i organiczne powiększanie palety wzorów
+Dla organizacji posiadającej już działający system oparty na zamkniętym zbiorze szablonów najniższy próg wejścia zapewnia tryb pośredni (procedura Seed-Mutate-Canonicalize). Pozwala on rozpocząć pracę na zamkniętym zbiorze makiet PPG, poddawać je algorytmicznej korekcie pod bieżące materiały i zapisywać zatwierdzone modyfikacje jako nowe wzory:
 
-Zdaję sobie sprawę, że przejście od razu z zamkniętego katalogu szablonów na pełne generowanie każdej strony od zera może budzić w redakcjach obawy. Ludzie są przyzwyczajeni do swoich makiet, a produkcja musi być przewidywalna. Dlatego w projekcie przewidziana jest bardzo konkretna opcja pośrednia, która łączy bezpieczeństwo obecnego rozwiązania w PPG z możliwościami nowego silnika.
+```text
+PROCEDURA: SEED-MUTATE-CANONICALIZE (Rozbudowa zamkniętego zbioru PPG)
+Wejście: Zbiór szablonów bazowych T_PPG = {t_1, ..., t_k}, pakiet treści M (PageInputMaterial),
+         gramatyka tytułu D (TitleDNA), model preferencji W (TasteModel).
 
-Mechanizm jest prosty. Na początku w ogóle nie rezygnujemy z zamkniętego zbioru layoutów, który dziś działa w PPG. Bierzemy ten istniejący zestaw jako punkt startowy. Kiedy przychodzi materiał na stronę, system sięga po wzór z dotychczasowej puli, ale nie traktuje go jak betonowej formy. Widząc, że dzisiejszy zestaw tekstów i zdjęć ma inne proporcje niż przewidywał szablon, system sam wprowadza korekty. Przesuwa podział kolumn, zmienia głębokość wejścia tekstu, dopasowuje wielkość i krój tytułu, wymienia zwykłe prostokątne zdjęcie na wersję ze szparowaniem albo dokłada mały boks informacyjny w miejscu, gdzie inaczej zostałaby pusta dziura.
+1. INICJALIZACJA (Seed Selection):
+   a) Dla każdego t_i ∈ T_PPG oblicz błąd niedopasowania pojemności slotów ΔC(t_i, M).
+   b) Wybierz podzbiór K najbliższych szablonów bazowych jako populację początkową P_0.
 
-I teraz rzecz najważniejsza. Kiedy taka skorygowana strona zostanie zatwierdzona przez redaktora i pójdzie do druku, system nie zapomina o tym, co zrobił. Automatycznie czyści taki zmodyfikowany układ z bieżących tekstów oraz fotografii i zapisuje samą jego strukturę jako kolejny, nowy wzór w bazie. Od razu przypisuje mu też metryczkę: pod jaką liczbę tekstów, jaką objętość znaków i jaki rodzaj zdjęć ten układ sprawdza się najlepiej.
+2. ADAPTACYJNA KOREKTA I MUTACJA (Constraint-Guided Mutation):
+   Dla każdego osobnika g ∈ P_0:
+   a) Przelicz rzeczywistą wysokość łamów algorytmem HarfBuzz + Knuth-Plass (measure_text).
+   b) Jeżeli występuje niedobór/nadmiar wierszy (|Δlines| > 3%):
+      - zmodyfikuj geny podziału pionowego (skyline_split, bottom_split, photo_height_ratio),
+      - przelicz rozpiętość szpaltową nagłówka i zdjęcia (hl_col_span, photo_col_span),
+      - aktywuj szparowanie (treatment='cutout') i oblewanie konturowe (TextWrap mode='contour')
+        lub wstrzyknij moduł wtórny (pullquote / infobox) z ustrukturyzowanych danych artykułu.
 
-W ten sposób startujemy z zamkniętego, dobrze znanego zbioru, ale z każdym kolejnym tygodniem pracy paleta dostępnych wzorów sama wielokrotnie się powiększa. Co więcej, nie są to szablony wymyślone teoretycznie przy biurku, tylko układy wypracowane na prawdziwych materiałach i zweryfikowane w boju przez naszych własnych ludzi. Po kilku miesiącach wydawnictwo dysponuje kilkukrotnie bogatszą biblioteką makiet, nie dokładając grafikom ani jednej godziny ręcznego rysowania formatek.
+3. SELEKCJA DWUWARSTWOWA I KOREKTA REDAKCYJNA:
+   a) Odrzuć warianty naruszające CriticHardGate (total_fitness = 0.0).
+   b) Oceń pozostałe warianty funkcją celu i zaprezentuj top-N redaktorowi.
+   c) Zarejestruj wybór człowieka oraz wektor korekty ręcznej Δx = φ(G_final) - φ(G_selected).
 
+4. ABSTRAKCJA I ZAPIS NOWEGO WZORCA (Template Canonicalization):
+   a) Oczyść zatwierdzony graf sceny G_final z instancyjnych referencji tekstowych i bitmapowych,
+      pozostawiając znormalizowaną topologię ramek, role, wagi i reguły TextPlan.
+   b) Wyznacz 10-wymiarowy wektor cech v_10 = extract_corpus_feature_vector(G_final)
+      oraz 18-wymiarowy wektor strategii v_18 = extract_strategy_feature_vector(G_final).
+   c) Oblicz minimalną odległość euklidesową d_min = min_{t ∈ T_PPG} ||v_10 - v_10(t)||_2.
+   d) Jeżeli d_min >= 0.15, zapisz G_final do repozytorium wzorców jako T_PPG <- T_PPG ∪ {t_{k+1}}.
+```
 
-## 4. Sama logika systemu – jak to działa od podszewki
 
-Żeby dobrze zrozumieć, dlaczego to narzędzie nadaje się do profesjonalnej prasy, trzeba powiedzieć jedno: to nie jest program do generowania ładnych obrazków w pikselach. W prasie obrazek strony jest bezużyteczny, bo nie da się w nim w ostatniej chwili poprawić literówki w nazwisku, zmienić podpisu pod zdjęciem ani przygotować poprawnych separacji barwnych dla drukarni. Tutaj cała logika opiera się na strukturze redakcyjnej i twardych zasadach DTP.
+## 3. Architektura systemowa i formalny model danych
 
+System realizuje architekturę potokową o ścisłej separacji komponentów, połączonych walidowanymi kontraktami JSON Schema. Niedopuszczalne jest stosowanie jednomodelowych architektur typu tekst-do-bitmapy, ponieważ uniemożliwiają one edycję post-factum, kontrolę typograficzną i przygotowanie do druku. Kanoniczny przepływ danych obejmuje cztery odseparowane warstwy obliczeniowe oraz pętlę zwrotną uczenia preferencji:
 
-### Zapis strony jako struktury obiektów i reguły tytułu
+```text
+[Pakiet Treści + Zasoby Foto]
+        │
+        ▼
+[1. GRAMATYKA: TitleDNA + Katalog Transgresji + Priory Korpusu]
+        │
+        ▼
+[2. GENERATOR: Fotoedycja -> Planer Slotu -> Solver Strefowy + Algorytm Ewolucyjny]
+        │  (generuje populację N kandydatów w postaci grafów sceny SceneGraph)
+        ▼
+[3. KRYTYK DWUWARSTWOWY: Bramka Twarda (PASS/FAIL) -> Ranking Miękki (Heurystyki + VLM + Model Gustu)]
+        │                                                                 ▲
+        ├────────────── Pętla Gustu (Bradley-Terry + Delty Geometryczne) ─┘
+        ▼
+[4. RENDERER I PREPRESS: Szybki podgląd (SVG/HTML) | Produkcja (IDML + PDF/X + Symulator RIP)]
+```
 
-Dla systemu każda strona to precyzyjny opis elementów zawieszonych na siatce modułowej. Program rozróżnia role poszczególnych klocków: wie, czym różni się nadtytuł od tytułu głównego, lead od tekstu podstawowego, wyimek od ramki z faktami, a zdjęcie otwierające od małego portretu autora. Wie też, które klocki należą do tego samego artykułu i w jakiej kolejności czytelnik powinien prowadzić po nich wzrok.
 
-Z kolei styl konkretnej gazety czy dodatku nie jest zapisany jako sztywna makieta, tylko jako zestaw parametrów – swego rodzaju gramatyka danego tytułu. Mamy tam rozpisane szpalty, odstępy, marginesy, dozwolone kroje i rozmiary pisma, paletę barw oraz zasady kadrowania zdjęć. Obok standardowych reguł zaszyty jest też słownik kontrolowanych przełamań siatki, czyli takich zabiegów, które odróżniają żywą, dobrze złamaną gazetę od nudnego formularza. Może to być nałożenie nagłówka na spokojną partię fotografii, lekkie przekrzywienie belki w wydaniu o charakterze tabloidowym, wypchnięcie wyciętej postaci ponad krawędź modułu czy celowa asymetria szpalt. Żeby jednak nie przedobrzyć, każdy tytuł ma swój własny limit takich zabiegów na jedną stronę. Poważny dziennik ma ten limit ustawiony bardzo nisko, a dynamiczna okładka sportowa czy bulwarowa znacznie wyżej – ale nawet tam program pilnuje, żeby po jednym mocnym chwycie reszta kolumny zachowała porządek.
+### 3.1. Kontrakt gramatyki tytułu (TitleDNA)
 
+Charakter każdego tytułu prasowego, wkładki lub dodatku jest zdefiniowany deklaratywnie jako obiekt danych TitleDNA (walidowany przez title_dna.schema.json), nigdy jako zaszyty w kodzie szablon. Struktura ta zawiera:
 
-### Ścisły podział ról: osobny moduł wymyśla, osobny ocenia
+- Parametry formatu i siatki modułowej (GridSpec): wymiary netto arkusza po obcięciu (trim_w_mm, trim_h_mm), wielkość spadu drukarskiego (bleed_mm, standardowo 3.0 mm), marginesy bezpieczne (margin_top_mm, margin_bottom_mm, margin_left_mm, margin_right_mm), liczbę szpalt (columns, np. 5 dla formatu okołotabloidowego/Berliner, 6–12 dla szerokich siatek modularnych), liczbę wierszy modułowych (rows), szerokość rynny międzyszpaltowej (gutter_mm, np. 4.0–4.233 mm) oraz krok linii bazowej (baseline_grid_pt, np. 12.0 pt).
 
-W człowieku, który łamie gazetę, cały czas ścierają się dwie postawy: jedna chce spróbować czegoś odważnego i nowego, a druga pilnuje, żeby tekst się zmieścił i wszystko dało się przeczytać. W naszym systemie te dwie funkcje rozdzieliliśmy na dwa niezależne moduły.
+- Skalę i reguły typograficzne (TypographySpec): mapowanie ról redakcyjnych na rodziny i odmiany fontów OpenType/TrueType (headline, body, sans), zdefiniowane stopnie pisma dla poszczególnych ról (headline_xl, headline_l, deck, lead, body, caption, folio), dopuszczalne zakresy trackingu oraz mnożniki interlinii.
 
-Pierwszy moduł (generator) odpowiada wyłącznie za poszukiwanie pomysłów. Bierze paczkę tekstów i zdjęć na daną stronę, sprawdza, co jest tematem głównym, a co pobocznym, i składa z tego kilkanaście lub kilkadziesiąt różnych propozycji układu. Próbuje różnych podejść: tu postawi na jedno ogromne zdjęcie otwierające, tam na asymetryczny podział z pionową szyną boczną, a jeszcze gdzie indziej na gęsty, rytmiczny układ kilku krótszych form. Nie jest uwiązany do jednego szablonu.
+- Wektor mieszania stylów (style_blend): trójwymiarowy wektor ciągły z przedziału [0.0, 1.0] sterujący rozkładami prawdopodobieństwa w generatorze: dense_to_photo (balans między gęstym składem tekstowym a dominacją fotografii), opinion_to_tabloid (natężenie ekspresji typograficznej i kontrastu skali) oraz classical_to_avantgarde (skłonność do asymetrii i przełamań siatki).
 
-Zaraz po nim wchodzi drugi moduł – dwustopniowy krytyk. Na pierwszym stopniu działa jak bezlitosny korektor techniczny. Sprawdza twarde warunki, z którymi się nie dyskutuje: czy żaden tekst nie został ucięty i nie wystaje z ramki, czy elementy nie weszły na siebie przez pomyłkę, czy kontrast liter na tle jest czytelny, czy zdjęcia przy docelowym rozmiarze na stronie mają rozdzielczość wystarczającą do druku i czy na kolumnie jest dokładnie jedna wyraźna dominanta, a nie trzy równe zdjęcia walczące ze sobą o uwagę. Jeśli którykolwiek z tych warunków nie jest spełniony, wariant odpada od razu albo wraca do automatycznej korekty. Nie ma tu przymykania oka na zasadzie „ładnie wygląda, to nic, że ucięło trzy ostatnie wiersze”.
+- Katalog transgresji i budżet energii strony (page_energy_budget): skwantyfikowany limit sumarycznego napięcia kompozycyjnego na jednej kolumnie. Każde kontrolowane odstępstwo od ortogonalnej siatki (np. rotacja nagłówka lub belki o kąt z przedziału [-3.5°, +3.5°], wyjście wyciętego obiektu poza ramkę modułu, nałożenie tekstu na fotografię z podkładką kontrastową scrim, skrajna skala elementu dominującego) posiada zdefiniowany koszt (cost), maksymalną krotność (max_per_page) oraz warunek logiczny aktywacji (precondition, np. page_energy >= 0.6 AND element.importance >= 0.7). Moduł TransgressionManager odrzuca każdy układ, dla którego suma kosztów przekracza budżet zdefiniowany w TitleDNA.
 
-Dopiero te propozycje, które przejdą przez twarde sito techniczne, trafiają na drugi stopień oceny. Tutaj system ocenia już samą kompozycję, wyważenie ciężarów na stronie, ilość oddechu, dopasowanie zdjęcia do wymowy nagłówka oraz zgodność z charakterem pisma. Odrzuca też warianty zbyt podobne do siebie lub kopiujące wcześniejsze strony, dzięki czemu redaktor dostaje na stół kilka naprawdę różnych, gotowych do użycia propozycji.
 
+### 3.2. Graf sceny (SceneGraph) i plan slotu tekstowego (TextPlan)
 
-## 5. Praca z tekstem, ochrona faktów i obsługa fotografii
+Jednostką wymiany pomiędzy generatorem, krytykiem i wszystkimi rendererami jest graf sceny (SceneGraph, zdefiniowany w scene_graph.schema.json). Składa się on z obiektu PageMeta oraz uporządkowanej kolekcji węzłów Element. Każdy węzeł posiada jednoznaczną rolę semantyczną (role ∈ {logo, folio, kicker, headline, deck, byline, lead, body, photo, caption, pullquote, infobox, rule, band}), wagę redakcyjną (importance ∈ [0.0, 1.0]), referencję do pakietu treści (content_ref, story_ref, claim_refs, source_refs), wektor geometrii ramki Frame(x, y, w, h, rotation_deg, skew_y_deg) wyrażony w milimetrach, indeks głębokości w stosie warstw (z), definicję stylu (ElementStyle), parametry oblewania tekstem (TextWrap: mode ∈ {none, bbox, contour}, offset_mm), wielokąt konturu wycięcia (contour_points) oraz punkt ogniskowy (focal_point = [f_x, f_y]).
 
-Każdy, kto pracował w redakcji, wie, że najładniejsza makieta rozbija się w zderzeniu z prawdziwym tekstem, który prawie nigdy nie ma takiej długości, jakiej życzyłby sobie grafik. Dlatego w tym systemie praca z tekstem i zdjęciem jest wbudowana w sam środek układania strony.
+Każda ramka tekstowa w grafie sceny jest powiązana z kontraktem TextPlan (text_plan.schema.json). Obiekt ten przechowuje wyliczoną pojemność docelową: liczbę słów (target_words, min_words, max_words), liczbę znaków (target_chars), dokładną pojemność wierszową (target_lines), liczbę łamów wewnętrznych (columns), politykę obsługi nadmiaru tekstu (overflow_policy ∈ {shorten, alternate, continue, reflow, manual}), limity mikrotypograficzne (max_tracking, max_leading_adjustment_pt, min_font_size_pt, widow_lines, orphan_lines), listę tokenów nierozdzielnych (no_break_tokens) oraz flagę blokady redakcyjnej (locked).
 
 
-### Dokładne liczenie wierszy i nienaruszalność faktów
+## 4. Algorytmy eksploracji i syntezy układów (Generator)
 
-Program nie szacuje objętości tekstu „na oko” po samej liczbie znaków. Mierzy go na konkretnych czcionkach używanych w danym tytule, biorąc pod uwagę szerokość szpalty, interlinię, dzielenie wyrazów i polskie reguły składu. Automatycznie pilnuje przy tym, żeby na końcach wierszy nie wisiały pojedyncze spójniki i przyimki („w”, „i”, „z”, „o”), pilnuje polskich cudzysłowów i półpauz, wyłapuje samotne wiersze na górze lub na dole szpalty oraz pilnuje, by w ostatniej linijce dużego tytułu nie zostało jedno krótkie słowo.
+Warstwa generatora składa się z trzech współpracujących mechanizmów: deterministycznego solvera siatki (GridSolver), solvera strefowego sterowanego rangami (ZoneSolver / PlanComposer) oraz wielokryterialnego silnika ewolucyjnego operującego na ciągło-dyskretnym genomie układu.
 
-A co w sytuacji, gdy artykuł jest za długi o dziesięć wierszy albo nowy układ strony wymaga krótszego, bardziej zwartego tytułu i dodatkowego wyimka? System potrafi sam przygotować krótsze lub dłuższe warianty pod dokładną pojemność ramki, ale trzyma go bardzo twarda blokada faktograficzna. Zanim program dotknie tekstu, wyciąga z niego i zamraża wszystkie twarde informacje: daty, kwoty, wartości procentowe, nazwiska, nazwy miejscowości i instytucji. Podczas skracania lub redagowania nagłówka nie wolno mu dodać żadnej informacji spoza źródła, zaokrąglić liczby ani zmienić sensu wypowiedzi. Co więcej, redaktor może jednym ruchem zablokować wybrane akapity lub cały tekst (na przykład przy autoryzowanym wywiadzie czy komunikacie prawnym) – wtedy system ma całkowity zakaz skracania słów i musi dopasować rozmiar ramek na stronie do tekstu.
 
+### 4.1. Dekompozycja strefowa i alokacja oparta na rangach (ZoneSolver)
 
-### Fotoedycja przed łamaniem, szparowanie i oblewanie konturem
+Przed uruchomieniem alokacji geometrycznej artykuły wejściowe są sortowane malejąco według rangi redakcyjnej (rank_order: lead = 0, second = 1, third = 2, short = 3, brief/column/box = 4, teaser = 5) oraz wagi ciągłej importance. Przestrzeń robocza kolumny (po odjęciu marginesów oraz strefy winiety/paginy o wysokości 18.0 mm dla pierwszej strony lub 9.0 mm dla stron wewnętrznych) dzielona jest na strefy funkcjonalne. Funkcja span_to_w_mm(cols) przelicza rozpiętość szpaltową na wymiar milimetrowy zgodnie z zależnością:
 
-Podobnie wygląda praca ze zdjęciami. Zanim system ułoży geometrię strony, najpierw przygląda się fotografiom przypiętym do materiału. Gdy zdjęć jest kilka, pomaga wybrać to, które niesie najwięcej życia, emocji i najlepiej koresponduje z tytułem. Wyznacza na zdjęciu główny punkt ostrości i sprawdza, w którą stronę zwrócone są twarze lub ruch bohaterów. Dzięki temu przy automatycznym kadrowaniu nikt nie straci połowy głowy, a zdjęcie na stronie zostanie umieszczone tak, by fotografowana osoba patrzyła do środka kolumny, w stronę artykułu, a nie „uciekała” wzrokiem za krawędź papieru.
+```text
+w_col_mm = (trim_w_mm - margin_left_mm - margin_right_mm - (C_total - 1) * gutter_mm) / C_total
+span_to_w_mm(k) = k * w_col_mm + (k - 1) * gutter_mm
+```
 
-System sam ocenia również, czy dane zdjęcie nadaje się do szparowania (czyli wycięcia sylwetki z tła). Jeśli na zdjęciu jest wyraźna postać, a charakter strony na to pozwala, program automatycznie odcina tło, tworzy gładką wektorową ścieżkę obcinającą i wylicza wokół niej linię oblewania tekstem z bezpiecznym odstępem. Od razu sprawdza też, czy oblewanie nie poszatkowało sąsiedniej szpalty na zbyt wąskie, nieczytelne schodki. Wbudowaliśmy tu także twardy bezpiecznik redakcyjny: jeśli tekst dotyczy tragedii, wypadku lub ma charakter żałobny, wszelkie wycinanki, okrągłe wstawki, dynamiczne skosy i krzykliwe naklejki są z urzędu blokowane. W takich tematach system wymusza czysty, spokojny kadr dokumentalny.
+Dla stron wieloartykułowych kompozytor alokuje moduły bez używania sztywnych szablonów, rozwiązując problem podziału powierzchni pomiędzy temat otwierający (dominanta fotograficzno-tytułowa), artykuły drugiego planu oraz pionową lub poziomą szynę modułów skrótowych (brief/short), z zachowaniem ciągłości wątków tekstowych (text_threads).
 
 
-## 6. Uczenie się gustu redakcji w trakcie codziennej pracy
+### 4.2. Kodowanie genomowe (LayoutGenome) i eksploracja ewolucyjna
 
-Nawet najlepiej spisane reguły nie zastąpią oka doświadczonego redaktora czy dyrektora artystycznego. Trudno przecież opisać w instrukcji wszystkie niuanse, które decydują o tym, że w jednym tytule wolimy cięższe, bardziej zwarte nagłówki u góry, a w innym więcej światła i lżejszy dół strony. Człowiek rzadko umie to wyłożyć w teorii, ale bezbłędnie wskazuje lepszą wersję, kiedy widzi przed sobą dwie propozycje.
+W celu uzyskania wysokiej różnorodności topologicznej każdy kandydat układu reprezentowany jest przez instancję klasy LayoutGenome (zdefiniowanej w module evolution.py). Chromosom układu zawiera jawne geny strukturalne i parametryczne:
 
-Dlatego system uczy się gustu z codziennych decyzji zespołu. Za każdym razem, gdy redaktor wybiera jeden z zaproponowanych wariantów strony albo wskazuje lepszy układ w szybkim porównaniu dwóch wersji, program zapamiętuje, jakie cechy kompozycyjne wygrały. Jeszcze więcej daje mu śledzenie ręcznych poprawek. Jeżeli łamacz lub redaktor weźmie zaproponowaną stronę, ale przed zamknięciem przesunie tytuł o szpaltę w lewo, powiększy główne zdjęcie i skróci podpis – system zapisuje dokładnie tę różnicę między wersją wyjściową a ostateczną. Po serii takich drobnych korekt model oceniania dostraja się do nawyków konkretnej redakcji i konkretnego tytułu. Nie kopiuje starych stron, tylko przejmuje wyczucie proporcji ludzi, którzy z nim pracują.
+- Gen architektury globalnej (layout_mode): zmienna kategoryczna przyjmująca wartości ze zbioru {dominant-left, dominant-right, stacked, photo-top, type-led, modular-grid}. Wagi losowania poszczególnych architektur są dynamicznie ważone przez rozkład strategii zaobserwowany w korpusie referencyjnym (strategy_distribution: balanced-grid, dense-classic, dominant-hero, visual-opener, modular-rhythm) według formuły w_i' = w_i * (0.72 + 2.1 * S_obs), przy czym tryby odrzucone we wcześniejszej ocenie wizualnej są tłumione mnożnikiem 0.35.
 
+- Gen morfologii okładkowej (cover_morphology): określa topologię stron tytułowych i magazynowych (m.in. okładka ramowa framed_cover, hero z ukośnym wejściem tytułu, szparowana postać przecinająca pole winiety, kolaż dwuskalarny, układ asymetryczny z pionową szyną i naklejką, rozkładówka otwierająca opening_spread).
 
-## 7. Możliwość połączenia z tym, co już jest w PPG
+- Geny ekspozycji nagłówka głównego: kolumna startowa hl_col_start ∈ [0, C_total - 3], rozpiętość szpaltowa hl_col_span, mnożnik skali stopnia pisma hl_scale_mult ∈ {0.9, 1.0, 1.15, 1.35}, kąt rotacji hl_rotation_deg ∈ {0.0°, -3.5°, +3.5°} oraz tryb podania poster_headline_treatment ∈ {banner, overlay}.
 
-Najważniejsze pytanie organizacyjne brzmi: jak to spiąć z obecnym systemem wydawniczym w PPG, żeby nie rozwalać dobrze naoliwionego procesu i nie dokładać ludziom podwójnej roboty? Projekt od początku jest ułożony tak, by mógł działać jako moduł współpracujący z obecnymi narzędziami, a nie konkurencyjna wyspa.
+- Geny geometrii i traktowania fotografii: lokacja photo_placement ∈ {top_hero, inline_side, bottom_anchor, cutout_overlap}, rozpiętość photo_col_span ∈ [2, min(4, C_total)], kolumna początkowa photo_col_start, współczynnik wysokości photo_height_ratio oraz sposób opracowania krawędzi treatment ∈ {crop, cutout, framed}.
 
+- Geny podziału ciągłego dla układów typograficznych: udział szerokości zdjęcia type_led_photo_share ∈ [0.34, 0.48], położenie belki poprzecznej type_led_strap_y ∈ [0.45, 0.58], punkt podziału strefy nadwinietowej type_led_skyline_split ∈ [0.45, 0.62] oraz podział strefy dolnej type_led_bottom_split ∈ [0.38, 0.60].
 
-### Ten sam standard plików produkcyjnych na wyjściu
+Algorytm ewolucyjny inicjalizuje populację osobników, aplikuje operatory mutacji punktowej (perturbacje granic stref, zmiana lokacji zdjęcia, przełączenie szparowania, modyfikacja skali nagłówka) oraz krzyżowania jednopunktowego genomów, a następnie poddaje każdego osobnika ocenie przez dwuwarstwowego krytyka. Selekcja do puli wynikowej maksymalizuje jednocześnie jakość kompozycyjną (total_fitness) oraz odległość w 18-wymiarowej przestrzeni strategii (extract_strategy_feature_vector), gwarantując, że prezentowane redaktorowi warianty reprezentują odmienne architektury informacji, a nie drobne przesunięcia tej samej makiety.
 
-Wewnątrz systemu – na etapie szukania pomysłów, sprawdzania wariantów i szybkiego podglądu na ekranie – używamy lekkiego renderowania, żeby wszystko działało sprawnie. Kiedy jednak strona zostaje zaakceptowana, z dokładnie tego samego zapisu geometrycznego program wypuszcza pełnoprawne pliki produkcyjne: otwarty format IDML (który otwiera się wprost w programie Adobe InDesign jako normalny, edytowalny dokument z osobnymi ramkami, stylami akapitowymi, warstwami, ścieżkami szparowania i oblewaniem) oraz gotowy do druku plik PDF sprawdzony pod kątem wymogów drukarni (spady, rozdzielczość zdjęć, czysta czerń dla tekstu, limit nafarbienia dla papieru gazetowego). Z drugiej strony system potrafi też wczytać istniejące pliki IDML oraz paczki InDesigna i rozłożyć je z powrotem na czynniki pierwsze. To oznacza pełną dwukierunkową drożność z każdym standardowym środowiskiem DTP.
 
+## 5. Dwuwarstwowy krytyk, geometria obliczeniowa i metryki percepcyjne
 
-### Trzy ścieżki wpięcia w obieg PPG
+Moduł oceny (LayoutCritic w critic.py oraz silnik percepcyjny w aesthetics.py) jest całkowicie odseparowany od generatora. Działa w architekturze dwustopniowej: najpierw jako bezwzględna bramka logiczna (Hard Gate), a następnie jako model rankingowy.
 
-W praktyce połączenie z obecnym systemem PPG możemy zrealizować w jednym z trzech modeli – albo przechodzić przez nie po kolei:
 
-Pierwszy model to silnik poszerzający obecną bazę szablonów (opisana wyżej opcja pośrednia). Obecny system PPG pozostaje głównym narzędziem pracy, ale nasz moduł bierze z niego makiety z zamkniętego zbioru, pomaga je elastycznie dopasować i podrasować pod nietypowe materiały, a wypracowane i zatwierdzone przez redakcję nowe układy odsyła z powrotem do biblioteki PPG jako kolejne gotowe wzory. W ten sposób obecny system zyskuje świeżą krew i znacznie szerszą paletę układów bez zmiany codziennych przyzwyczajeń większości zespołu.
+### 5.1. Warstwa pierwsza: twarda bramka walidacyjna (CriticHardGate – logika PASS/FAIL)
 
-Drugi model to dedykowane studio do nowych gazet, wkładek, dodatków oraz trudnych stron (takich jak jedynki czy rozkładówki tematyczne). Zwykłe, rutynowe strony informacyjne w środku numeru mogą być dalej składane dotychczasowym sposobem z zamkniętej puli. Natomiast wszystko to, co wymaga indywidualnego podejścia, szybkiego uruchomienia nowego produktu albo mocnego efektu wizualnego, powstaje tutaj i na koniec trafia do wspólnego potoku produkcyjnego jako gotowa kolumna IDML lub PDF.
+Naruszenie któregokolwiek z twardych więzów skutkuje natychmiastowym wyzerowaniem funkcji celu (total_fitness = 0.0) i odrzuceniem kandydata lub skierowaniem go do pętli naprawy. Twarde więzy nigdy nie są uśredniane z oceną estetyczną. Poniższa tabela zestawia procedury weryfikacyjne bramki twardej:
 
-Trzeci model to automatyczny korektor i doradca podpięty pod obecny skład. System bierze kolumny ułożone w dotychczasowym narzędziu PPG, przepuszcza je przez swojego krytyka i w ciągu kilkunastu sekund wskazuje strony, które wymagają interwencji – bo rozjechała się hierarchia nagłówków, zostało martwe światło albo zdjęcie ma za niskie PPI po wykadrowaniu – od razu podsuwając gotową, przeliczoną wersję naprawczą.
+| Procedura bramki twardej | Sformułowanie matematyczne / algorytmiczne | Warunek odrzucenia (FAIL) |
+| --- | --- | --- |
+| Kolizja wielokątów zorientowanych (_overlap_extent) | Transformacja afiniczna wierzchołków (rotation_deg, skew_y_deg) + przecięcie wielokątów Shapely Polygon.intersection | Pole przecięcia > 0 bez autoryzacji transgresji overlap |
+| Legalność kolażu foto (_photo_inset_allowed) | Stosunek pola A_inter / A_base oraz bufor wokół focal_point [f_x, f_y] | Pokrycie > 20% powierzchni zdjęcia bazowego lub wejście w bufor ±6.0 mm wokół punktu ogniskowego |
+| Detekcja pustych kwadrantów (_largest_empty_editorial_region) | Dyskretyzacja pola zadruku na macierz 40 × 60 i poszukiwanie maksymalnego pustego prostokąta | Przekroczenie progu niezaprojektowanej pustej powierzchni konstrukcyjnej |
+| Geometria maski szparowania (cutout_geometry_issue) | Wzór Gaussa (Shoelace Formula): A = 0.5 * |Σ(x_i * y_{i+1} - x_{i+1} * y_i)| w oknie ramki | Pokrycie < 6%, rozpiętość < 18% × 30% (fragment) lub pokrycie > 88% (pozorny prostokąt) |
+| Efektywna rozdzielczość druku (effective_print_dpi) | DPI_eff = min(W_px * Δx_crop / (W_mm / 25.4), H_px * Δy_crop / (H_mm / 25.4)) | DPI_eff < 180–200 PPI (gazeta) lub < 300 PPI (magazyn) |
+| Domknięcie wierszowe i mikrotypografia | Pomiar uharfbuzz + Knuth-Plass (overset_lines, has_stranded_headline_word) | overset_lines > 0 lub samotny krótki wyraz w ostatnim wierszu tytułu |
 
 
-## 8. Możliwy dalszy rozwój projektu
+### 5.2. Warstwa druga: heurystyki kompozycyjne i indeks estetyczny (PARC + Sophi + Poynter)
 
-Rdzeń systemu już działa i ma za sobą najważniejsze sprawdzenia architektoniczne. Patrząc w przód, widzę cztery bardzo konkretne kierunki rozwoju, które krok po kroku mogą zdjąć z barków redakcji oraz studia DTP kolejne pracochłonne zajęcia.
+Kandydaci, którzy przeszli bramkę twardą, podlegają ocenie ciągłej w module evaluate_heuristics oraz evaluate_page_aesthetics. Silnik ten łączy trzy uznane modele percepcji układu prasowego:
 
+Po pierwsze, model równowagi optycznej Xerox PARC (Harrington et al.). Każdemu elementowi i przypisywana jest masa optyczna M_i = A_i * ρ(role_i) * κ_i, gdzie A_i = w_i * h_i jest powierzchnią ramki w mm², ρ(role_i) współczynnikiem gęstości percepcyjnej (photo: 1.0, logo: 0.85, band/plate: 0.80, kicker: 0.70, headline: 0.65, deck/jump_line: 0.40, lead: 0.35, caption: 0.30, byline: 0.25, body: 0.22, rule: 0.20, folio: 0.15), natomiast κ_i stanowi mnożnik korekcyjny (1.15 dla wycinków szparowanych cutout, 1.05 dla zdjęć na spad full-bleed oraz min(2.5, max(0.8, sqrt(font_size_pt / 14.0))) dla nagłówków ekspozycyjnych). Ze środka ciężkości optycznego kolumny (x_opt = Σ(M_i * c_{x,i}) / Σ M_i, y_opt = Σ(M_i * c_{y,i}) / Σ M_i) wyliczany jest wskaźnik równowagi bocznej względem osi symetrii oraz wskaźnik równowagi pionowej (equilibrium_score), przyjmujący maksimum w psychologicznym centrum optycznym strony położonym na wysokości 44–46% od górnej krawędzi cięcia.
 
-### Kierunek pierwszy: fabryka dodatków i samouczący się katalog wzorów dla PPG
+Po drugie, algorytm detekcji uwięzionego światła (Trapped Whitespace podług metodologii Sophi.io / The Globe and Mail). Algorytm odróżnia celowy oddech kompozycyjny przy krawędziach zewnętrznych od przypadkowych kieszeni pustego papieru zamkniętych pomiędzy sąsiadującymi ramkami wewnątrz kolumny (trapped_whitespace_cm2). Równolegle oceniany jest globalny udział bieli (whitespace_ratio = 1 - occupied_area / total_page_area), osiągający optimum w przedziale [0.12, 0.35].
 
-Najbliższy etap to uruchomienie w praktyce dwóch rzeczy: szybkiej linii produkcyjnej dla wkładek, dodatków specjalnych i nowych tytułów oraz spięcie systemu z wybraną pulą obecnych layoutów PPG w wariancie pośrednim. Już sam ten krok pozwoli z jednej strony dużo szybciej i taniej wypuszczać produkty komercyjne czy tematyczne, a z drugiej – zacznie automatycznie zasilać obecny katalog PPG nowymi, sprawdzonymi w praktyce wariantami układów.
+Po trzecie, reguły okulograficzne Poynter Institute Eyetrack (Garcia & Stark). System oblicza: jednoznaczność punktu wejścia wzroku (entry_point_score), zakotwiczenie dolnej krawędzi kolumny zapobiegające wrażeniu „wiszenia” składu (bottom_anchor_score), zgodność wektora spojrzenia postaci ze strukturą szpalt (gaze_alignment_score – wektor wzroku lub ruchu musi być skierowany ku środkowi kolumny i powiązanemu tekstowi, nigdy poza linię cięcia) oraz grawitację ścieżki czytania (reading_gravity_score). Ta ostatnia penalizuje skoki wsteczne w górę osi Y (Δy = y_{t+1} - y_t < -10.0 mm) pomiędzy kolejnymi węzłami wektora reading_order.
 
+Syntetyczny wynik miękki (composite_soft_score) wyliczany jest jako kombinacja liniowa siedmiu składowych znormalizowanych do przedziału [0, 1]:
 
-### Kierunek drugi: planowanie całych wydań (flatplan) i układanie stron wokół reklam
+```text
+S_soft = 0.18 * balance_score
+       + 0.18 * reading_gravity_score
+       + 0.15 * rhythm_and_scale_score
+       + 0.12 * breathing_space_score
+       + 0.12 * tension_adherence_score
+       + 0.10 * corpus_alignment_score
+       + 0.15 * aesthetic_index
+```
 
-Kolejny krok to przejście z poziomu pojedynczych stron i rozkładówek na poziom całego numeru. System może prowadzić pełną makietę wydania: pilnować składek drukarskich (podzielności przez cztery strony), dbać o odpowiedni rytm całego grzbietu i automatycznie rozmieszczać materiały redakcyjne wokół wykupionych powierzchni reklamowych. Każdy w wydawnictwie zna sytuację, w której dział sprzedaży w ostatniej chwili dopina reklamę na pół strony albo zdejmuje ogłoszenie i cała kolumna idzie do przebudowy. System potrafi w takiej chwili sam przeliczyć pozostałą przestrzeń redakcyjną, dobrać nowy układ dla artykułów, a jeśli dłuższy tekst trzeba przenieść między stronami – automatycznie podzielić go i dopisać odpowiednie odsyłacze kontynuacji.
+Ostateczna wartość funkcji dopasowania (total_fitness) łączy wynik miękki S_soft, odległość nowości względem korpusu (novelty_vs_corpus, karzącą przybliżenia poniżej d < 0.15 w 10-wymiarowej przestrzeni cech), ocenę wyuczonego modelu preferencji dyrektora artystycznego (pref_score) oraz kalibrację archetypową:
 
+```text
+total_fitness = hard_gate.passed * (w_heur * S_soft + w_cal * S_cal + w_nov * Novelty + w_pref * S_pref)
+```
 
-### Kierunek trzeci: automatyczne mapki lokalne, wykresy i tabele bezpośrednio z tekstu
 
-W prasie regionalnej i lokalnej czytelnik bardzo ceni konkrety, które można objąć wzrokiem w trzy sekundy: prostą mapkę pokazującą, gdzie dokładnie powstanie obwodnica, słupki z wynikami budżetu obywatelskiego, tabelę opłat czy krótkie kalendarium. Dziś pod większość zwykłych artykułów nikt takich rzeczy nie rysuje, bo grafikom po prostu nie starczyłoby doby. Rozbudowa modułu danych pozwoli systemowi samemu wyłapywać z tekstu liczby, zestawienia lub nazwy miejsc i generować z nich czyste, wektorowe tabelki, wykresy oraz mapki sytuacyjne – od razu dopasowane co do milimetra do szerokości szpalty i kolorystyki konkretnej gazety.
+## 6. Silnik kształtowania glifów HarfBuzz, algorytm Knuth–Plass i kontrakt Fact-Guard
 
+W przeciwieństwie do uproszczonych systemów szacujących objętość tekstu na podstawie średniej liczby znaków, nasz silnik pomiaru i składu (shaper.py oraz copyfit.py) wykonuje pełne kształtowanie glifów (glyph shaping) i optymalne łamanie akapitów na identycznych plikach fontów, które trafiają później do wynikowego pliku produkcyjnego PDF/IDML.
 
-### Kierunek czwarty: symulacja druku gazetowego na ekranie i pakiety cyfrowe
 
-Ostatni obszar rozwoju to domknięcie obu końców wydawniczego łańcucha. Z jednej strony dajemy redaktorowi realistyczny podgląd zachowania strony w druku gazetowym jeszcze przed wypuszczeniem plików – system symuluje chłonność papieru, przyrost punktu rastrowego i ostrzega, jeśli w cieniach zdjęcia jest za dużo farby, zanim wyjdzie to dopiero na maszynie drukarskiej. Z drugiej strony, skoro mamy już zatwierdzoną stronę z pełną hierarchią ważności, sprawdzonymi faktami i wykadrowanymi zdjęciami, ten sam mechanizm może od ręki wyprowadzić z niej gotowe formatki pod wydania cyfrowe i media społecznościowe, zachowując spójny styl wizualny tytułu bez ręcznego przeklejania elementów przez grafików.
+### 6.1. Pomiar metryk OpenType (HarfBuzz) i polskie dzielenie wyrazów (Pyphen)
 
+Każdy łańcuch tekstowy jest przetwarzany przez bibliotekę uharfbuzz. Z pliku fontu odczytywana jest wartość jednostek na firet (upem), a po ułożeniu glifów w buforze z aktywną tablicą kerningu (kern=True, liga=False) sumowane są wektory przesunięcia poziomego x_advance z korektą o zadany tracking:
 
-## 9. Podsumowanie
+```text
+advance(text) = (Σ glyph_positions[i].x_advance) / upem
+width_pt(text, size_pt, tracking_em) = advance(text) * size_pt + tracking_em * size_pt * len(text)
+```
 
-Ujmując rzecz krótko: nie proponuję burzenia tego, co dziś działa w PPG, ani zastępowania jednego zamkniętego pudełka drugim. Proponuję dołożenie do naszego warsztatu silnika, który rozwiązuje największą bolączkę zamkniętych systemów szablonowych – brak elastyczności i brak świeżych pomysłów przy nietypowych materiałach. Możemy na nim szybko robić nowe gazety, wkładki i dodatki, możemy nim na bieżąco podciągać i dopracowywać obecne layouty, a zaczynając od bezpiecznej opcji pośredniej – możemy pozwolić, by system korygował dzisiejsze szablony pod żywe teksty i sam wielokrotnie rozbudował naszą paletę gotowych wzorów.
+Przed przekazaniem tekstu do łamania wykonywane jest wiązanie polskiej mikrotypografii (zastąpienie spacji zwykłych po jednoliterowych spójnikach i przyimkach a, i, o, u, w, z spacjami niełamliwymi U+00A0, konwersja cudzysłowów na polskie „…” oraz dywizów międzywyrazowych na półpauzy –). Następnie słownik Pyphen (pl_PL, przy minimalnym pozostawieniu 2 znaków po lewej i 3 znaków po prawej stronie podziału: left=2, right=3) wyznacza dopuszczalne punkty podziału wyrazów. Silnik egzekwuje przy tym twarde reguły zecerskie (reguła U5): całkowity zakaz dzielenia wyrazów krótszych niż 6 liter, skrótowców pisanych wersalikami, nazw własnych rozpoczynających się wielką literą oraz tekstów ekspozycyjnych o stopniu pisma >= 14.0 pt (HYPHENATE_BELOW_PT = 14.0).
+
+
+### 6.2. Algorytm łamania akapitu metodą programowania dynamicznego Knuth–Plass
+
+Każdy akapit jest transformowany na sekwencję trójkowych obiektów modelu TeX/Knuth–Plass: sztywnych pudełek sylabowych (box), elastycznego kleju międzywyrazowego (glue) oraz punktów karnych podziału (penalty). W celu odwzorowania rygorów justowania gazetowego zdefiniowano dwupoziomową elastyczność wiersza: spacja międzywyrazowa posiada rozciągliwość WORD_STRETCH = 0.50 i kurczliwość WORD_SHRINK = 0.20 swojej szerokości naturalnej, natomiast same pudełka wyrazowe dopuszczają mikro-rozciąganie międzyliterowe LETTER_STRETCH = 0.025 (+2.5%) oraz mikro-ściskanie LETTER_SHRINK = 0.015 (-1.5%).
+
+Dla każdego kandydata na punkt przełamania b i aktywnego węzła początkowego a wyliczany jest współczynnik dopasowania wiersza r (adjustment ratio) względem docelowej szerokości szpalty L_w, miara niedopasowania (badness) oraz skumulowany koszt przełamania (demerits d):
+
+```text
+r = (L_w - W_{a,b}) / Y_{a,b}   dla W_{a,b} < L_w  (rozciąganie)
+r = (L_w - W_{a,b}) / Z_{a,b}   dla W_{a,b} > L_w  (ściskanie)
+
+badness = 100 * |r|^3
+d = (1 + badness + max(0, p_b))^2 - (p_b^2 jeśli -INF < p_b < 0) + Δ_hyphen
+```
+
+Gdzie p_b = 50 oznacza karę za podział wyrazu dywizem. Algorytm programowania dynamicznego wyszukuje ścieżkę najkrótszą w acyklicznym grafie przełamań (minimalizując sumaryczne demerits dla całego akapitu), stosując dodatkowe więzy strukturalne: zakaz dzielenia wyrazu w pierwszym wierszu akapitu, karę Δ_hyphen = +3000 za dwa kolejne wiersze zakończone dywizem oraz bezwzględną blokadę przekroczenia dwóch dywizów z rzędu (MAX_HYPHEN_RUN = 2). Przeszukiwanie odbywa się w progresywnej kaskadzie progów tolerancji tol ∈ {1.5, 3.0, 6.0, 20.0}, co gwarantuje znalezienie globalnie najczystszego składu bez korytarzy białych plam.
+
+
+### 6.3. Strażnik faktów (Fact-Guard) i dwukierunkowy copyfitting
+
+W przypadku wykrycia niedopasowania objętości tekstu do pojemności ramki (overset lub underset przekraczający ±3% budżetu wierszowego) uruchamiana jest procedura dwukierunkowa. Jeżeli tekst lub wybrane akapity posiadają flagę locked=True (np. autoryzowane wypowiedzi, cytaty, klauzule prawne), tekst jest traktowany jako niezmiennik, a solver przelicza wysokość ramki lub przenosi nadmiar do powiązanej ramki kontynuacji (jump_if_needed). Jeżeli redaktor dopuszcza adaptację redakcyjną (shorten_to_fit / expand / generowanie wariantów nagłówka micro, short, medium, long, exact_fit), moduł source_guard.py przed wywołaniem modelu językowego ekstrahuje z tekstu źródłowego zbiór twardych twierdzeń i encji (daty, wartości liczbowe, waluty, statystyki, nazwiska, nazwy instytucji). Wygenerowany wariant podlega deterministycznej walidacji względem zamrożonego słownika faktów oraz ponownemu pomiarowi w HarfBuzz/Knuth–Plass; jakakolwiek zmiana liczby, zaokrąglenie kwoty lub halucynacja spoza źródła powoduje automatyczne odrzucenie wariantu.
+
+
+## 7. Potok wizyjny, segmentacja masek alfa i wektoryzacja konturów
+
+Przetwarzanie fotografii wyprzedza etap układania geometrii strony (fotoedycja przed geometrią – moduł photo_editor.py oraz image_ops.py). Dla każdego zasobu obrazowego wyznaczany jest ustrukturyzowany wektor metadanych wizyjnych: punkt ogniskowy focal_point = [f_x, f_y], klasyfikacja semantyczna obiektu głównego (pozwalająca na automatyczną blokadę szparowania dla kadrów krajobrazowych, architektury lub scen zbiorowych bez wyraźnej sylwetki), wektor orientacji twarzy i ruchu, ocena dynamiki reporterskiej oraz współrzędne obszarów o niskiej wariancji tonalnej (safe zones), na które można bezpiecznie wprowadzić tekst nagłówka.
+
+
+### 7.1. Ekstrakcja pierścieni krawędziowych i redukcja Ramera–Douglasa–Peuckera
+
+Dla zdjęć zakwalifikowanych do szparowania (treatment='cutout') uruchamiany jest deterministyczny potok wektoryzacji maski alfa (_portable_alpha_rings w image_ops.py). Kanał alfa jest progowany binarnie (threshold), a następnie dla każdego piksela pierwszoplanowego ekstrahowane są wyłącznie jego odsłonięte krawędzie skierowane zgodnie z ruchem wskazówek zegara. Algorytm łączy skierowane krawędzie w zamknięte pętle wielokątne, obliczając dla każdej pętli pole ze znakiem (signed_area). Pętle o polu dodatnim i udziale powierzchni powyżej min_component_ratio tworzą zewnętrzne obrysy sylwetki, natomiast pętle o polu ujemnym zawierające się wewnątrz obrysu (weryfikowane testem przecięcia półprostej – Ray-Casting Algorithm) rejestrowane są jako otwory wewnętrzne (holes), co pozwala poprawnie obsłużyć np. przestrzeń między ramieniem a tułowiem.
+
+Surowy łańcuch pikseli krawędziowych (liczący tysiące wierzchołków) jest następnie upraszczany do gładkiej ścieżki wektorowej za pomocą rekurencyjnego algorytmu Ramera–Douglasa–Peuckera (simplify_douglas_peucker). Dla każdego odcinka łączącego wierzchołek początkowy P_1 = (x_1, y_1) i końcowy P_2 = (x_2, y_2) wyznaczany jest punkt pośredni P_i maksymalizujący odległość prostopadłą d_⊥ wyliczaną z iloczynu wektorowego w przestrzeni 2D:
+
+```text
+d_⊥(P_i, P_1 P_2) = |(x_2 - x_1)(y_1 - y_i) - (y_2 - y_1)(x_1 - x_i)| / hypot(x_2 - x_1, y_2 - y_1)
+```
+
+Jeżeli max_i(d_⊥) > tolerance (gdzie tolerancja jest przeskalowana do fizycznych milimetrów docelowej ramki: tol = max(0.5, tolerance_mm / max(s_x, s_y))), łańcuch jest dzielony w punkcie P_i i rekurencyjnie upraszczany; w przeciwnym razie zastępowany jest pojedynczym wektorem [P_1, P_2]. Wygenerowany wielokąt stanowi jednocześnie ścieżkę obcinającą (Clipping Path) dla obrazu oraz bazę do wyznaczenia odsuniętego o offset_mm wielokąta oblewania tekstem (TextWrap contour).
+
+
+### 7.2. Kategoryczna bramka etyczna (Ethical Framing Guard)
+
+W potoku fotoedycji zaszyta jest nienegocjowalna blokada kategoryczna dla materiałów oznaczonych semantycznie jako tragedie, wypadki śmiertelne lub publikacje żałobne. W przypadku wykrycia tej kategorii system programowo blokuje operatory szparowania (allow_cutout = False), wyłącza okrągłe wstawki portretowe (circular insets), ukośne belki (diagonal-break) oraz ozdobne stemple graficzne, wymuszając czysty, ortogonalny kadr dokumentalny o proporcjach 16:9 lub 3:2.
+
+
+## 8. Aktywne uczenie preferencji (Taste Loop) – model Bradleya–Terry’ego
+
+Transfer gustu dyrektora artystycznego lub zespołu redakcyjnego do funkcji oceniającej odbywa się bez konieczności ręcznego programowania reguł estetycznych. Moduł TasteLoopTrainer (w pliku taste_loop.py) implementuje uczenie preferencyjne na podstawie dwóch klas sygnałów zbieranych w trakcie normalnej pracy nad wydaniem:
+
+- Sygnały wyboru i porównań parami (pairwise_comparison / selection): gdy człowiek wybiera wygrywającego kandydata G_win ponad alternatywę G_lose, system ekstrahuje ich 10-wymiarowe wektory cech geometrycznych x_win = φ(G_win) oraz x_lose = φ(G_lose) (obejmujące znormalizowane współrzędne i wymiary nagłówka głównego [hl_x, hl_y, hl_w, hl_h], geometrię głównej fotografii [photo_x, photo_y, photo_w, photo_h], flagę szparowania is_cutout oraz zużyty budżet energii used_energy) i konstruuje wektor różnicowy Δx = x_win - x_lose z etykietą docelową y = 1.
+
+- Sygnały delty ręcznej korekty na płótnie (manual_edit_delta): gdy redaktor lub grafik modyfikuje wybrany wariant przed wysłaniem do druku (przesuwa ramkę, zmienia rozpiętość szpaltową, powiększa zdjęcie), stan przed koreką G_before jest traktowany jako wariant przegrywający, a stan po korekcie G_after jako wygrywający, co daje kierunkowy gradient poprawki Δx = φ(G_after) - φ(G_before).
+
+Na zgromadzonym zbiorze par trenujemy wektor wag preferencji w ∈ R^10 w logistycznym modelu Bradleya–Terry’ego. Prawdopodobieństwo, że układ o wektorze cech x_win jest preferowany względem x_lose, wyraża się funkcją sigmoidalną iloczynu skalarnego:
+
+```text
+P(G_win > G_lose | w) = σ(w^T * Δx) = 1 / (1 + exp(-clip(w^T * Δx, -15.0, +15.0)))
+```
+
+Optymalizacja wag w przebiega metodą spadku wzdłuż gradientu (Gradient Descent, 60 epok, współczynnik uczenia η = 0.1) minimalizującą funkcję straty entropii krzyżowej z regularyzacją Tichonowa L_2 (λ = 0.01), zapobiegającą przeuczeniu przy małej liczbie próbek:
+
+```text
+grad_i = (σ(w^T * Δx) - 1.0) * Δx_i + λ * w_i
+w_i <- w_i - η * grad_i
+```
+
+Gdy liczba zebranych sygnałów osiągnie co najmniej 4 pary, najnowsze 25% obserwacji (heldout_count = max(1, N // 4)) jest automatycznie wydzielane poza zbiór treningowy jako zbiór walidacyjny held-out. System na bieżąco oblicza i raportuje zestaw sześciu metryk operacyjnych:
+
+| Metryka ewaluacyjna | Definicja formalna | Interpretacja produkcyjna |
+| --- | --- | --- |
+| Validity Rate | N_pass / N_generated | Odsetek kandydatów przechodzących wszystkie reguły CriticHardGate |
+| Strategy Diversity | Średnia odległość parami ||v_18(G_i) - v_18(G_j)||_2 w puli top-N | Gwarancja, że proponowane warianty reprezentują różne architektury strony |
+| Corpus Novelty | min(1.0, min_{c ∈ Corpus} ||v_10(G) - v_10(c)||_2 / 0.5) | Ochrona przed duplikacją istniejących makiet (próg kary d < 0.15) |
+| Held-Out Win-Rate | (1 / |H|) * Σ I(w^T * Δx_h >= 0) | Zdolność wyuczonego modelu gustu do przewidywania wyborów redaktora na nowych danych |
+| Time-to-Approve | Średni czas (s) oraz liczba iteracji do zatwierdzenia kolumny | Bezpośredni wskaźnik redukcji ręcznej pracy zespołu DTP/redakcji |
+| Prepress Integrity | Odsetek eksportów IDML/PDF przechodzących audyt ISO 12647-3 bez błędów | Pewność naświetlenia płyt CTP bez przekroczeń TAC, braku spadów czy błędów overprintu |
+
+
+## 9. Integracja z obecnym systemem PPG, kompilacja IDML i symulacja RIP/Prepress
+
+Połączenie nowego silnika z obecną infrastrukturą wydawniczą w PPG nie wymaga zastępowania dotychczasowego systemu. Integracja opiera się na natywnych standardach wymiany danych DTP oraz rozdziale formatu oceny od formatu produkcyjnego.
+
+
+### 9.1. Dwukierunkowa wymiana przez archiwa IDML i dekompilację InDesign
+
+Na etapie eksploracji i oceny wariantów system renderuje graf sceny do lekkich struktur wektorowych SVG oraz HTML/CSS Paged Media, co pozwala na błyskawiczną ocenę dziesiątek kandydatów. Po zatwierdzeniu wybranego wariantu ten sam obiekt SceneGraph jest przekazywany do kompilatora produkcyjnego IDMLRenderer (idml_renderer.py), który buduje pełny pakiet Adobe InDesign Markup Language (.idml) zgodny ze specyfikacją pakietową OCF/ZIP:
+
+- Rozwiązywanie wątków tekstowych (_text_threads): kompilator waliduje spójność łańcuchów ramek dla artykułów wielołamowych i wieloramkowych, generuje pliki Stories/u_story_<id>.xml i wiąże poszczególne ramki TextFrame na kolumnie za pomocą wskaźników PreviousTextFrame oraz NextTextFrame, eliminując ryzyko osieroconych lub cyklicznych referencji.
+
+- Transformacja układu współrzędnych i geometrii ścieżek: wszystkie wymiary milimetrowe grafu sceny są przeliczane na punkty PostScript (mnożnik MM_TO_PT = 2.83464567). Dla elementów nieprostokątnych oraz szparowanych fotografii generowane są natywne węzły Polygon i PathGeometry z wierzchołkami PathPointType oraz aktywnymi właściwościami TextWrapPreference (oblewanie po konturze obiektu z zadanym offsetem).
+
+- Separacja barwna CMYK i style akapitowe: kolory zdefiniowane w palecie tytułu są konwertowane do przestrzeni CMYK i zapisywane w Resources/Graphic.xml jako próbki barwne (Swatches), przy czym dla tekstów czarnych wymuszana jest próbka czystej czerni procesowej Color/Black (C=0, M=0, Y=0, K=100). Style typograficzne są mapowane na definicje ParagraphStyle w Resources/Styles.xml.
+
+W kierunku odwrotnym moduł dissect_indesign.py realizuje inżynierię wsteczną istniejących plików z obecnego systemu PPG: odczytuje z paczek IDML oraz katalogów roboczych InDesigna ustawienia siatki bazowej (GridPreference / BaselineGridIncrement z Resources/Preferences.xml), próbki CMYK/Spot, definicje stylów akapitowych oraz geometrię ramek z plików Spreads/Spread_*.xml. Pozwala to na automatyczne zaimportowanie dowolnej obecnej makiety z zamkniętego zbioru PPG, poddanie jej optymalizacji w naszym silniku i odesłanie z powrotem jako gotowego pliku IDML.
+
+
+### 9.2. Symulacja naświetlania CTP i kontrola Prepress (norma ISO 12647-3)
+
+Przed przekazaniem pliku PDF/X lub IDML do naświetlarni system wykonuje deterministyczny audyt prepress oraz symulację zachowania farby w druku zwojowym coldset (moduł rip_simulator.py oraz preflight_check.py):
+
+- Kontrola całkowitego pokrycia farbą (Total Area Coverage – TAC / TIC): dla każdego obszaru barwnego i cieni fotografii wyliczana jest suma składowych procesowych TAC = C + M + Y + K. Dla papieru gazetowego (newsprint 45 g/m²) egzekwowany jest twardy limit TAC <= 240% (zgodnie z normą ISO 12647-3). Przekroczenie progu 240% generuje ostrzeżenie średniego ryzyka, a powyżej 260% błąd krytyczny (ryzyko przebicia farby na drugą stronę wstęgi, odciągania i zerwania papieru w maszynie rotacyjnej) wraz z procedurą redukcji składowych chromatycznych metodą GCR (Grey Component Replacement) pod profil ICC WAN-IFRA Newspaper.
+
+- Modelowanie przyrostu punktu rastrowego (Dot Gain) i detekcja zalania cieni (Shadow Crush): symulator odwzorowuje fizyczne rozlewanie się kropli farby na chłonnym podłożu gazetowym, gdzie przyrost punktu w tonach średnich wynosi 26–30%. Zastosowany model nieliniowy T_print = T_nominal + G * (1 - (T_nominal / 100)^1.5) (przy współczynniku G = 28.0 dla papieru gazetowego wobec G = 15.0 dla papieru powlekanego) wykazuje, że nominalny raster 50% daje na papierze gazetowym zaczernienie rzędu 78.3%. Jeżeli partie cieni po uwzględnieniu krzywej przyrostu przekraczają próg 78% (shadow_crush_warning), system wymusza korektę krzywej tonalnej o 5–8% w tonach średnich.
+
+- Weryfikacja nadruku czerni (Overprint 100% K) i zalewkowania (Trapping): wszystkie teksty ciągłe, podpisy, paginy i linie szpaltowe złożone w 100% K muszą posiadać aktywny atrybut overprint=True (zakaz wycinania białego tła knockout w płytach C, M, Y, który przy naturalnym braku pasowania płyt w rotacji gazetowej daje nieczytelne białe obwódki wokół liter). Na stykach pól barwnych kontrolowane jest zalewkowanie (trapping >= 0.15 mm), a dla rozkładówek egzekwowane są spady zewnętrzne 3.0 mm przy zerowym spadzie wewnętrznym w grzbiecie (0.0 mm inner spine bleed).
+
+
+## 10. Mapa rozwoju systemu i rozszerzenia algorytmiczne
+
+Dalszy rozwój architektury został podzielony na cztery powiązane moduły inżynieryjne, które rozszerzają możliwości silnika od pojedynczej kolumny do pełnej automatyzacji całego wydania i wielokanałowej dystrybucji.
+
+
+### 10.1. Etap 1: wdrożenie pętli hybrydowej w PPG i fabryki dodatków tematycznych
+
+Pierwszy etap obejmuje bezpośrednie podpięcie dekompilatora IDML pod zamknięty zbiór obecnych szablonów PPG. Istniejące makiety zostaną zindeksowane do postaci wektorów cech w FEATURE_INDEX.json oraz obiektów bazowych SceneGraph. Pozwoli to natychmiast uruchomić opisaną w punkcie 2.3 opcję pośrednią (korekta obecnych layoutów pod bieżący materiał i automatyczny zapis zwalidowanych mutacji jako nowych wzorców w katalogu PPG) oraz równoległą linię do generowania od zera nowych wkładek, dodatków komercyjnych i wydań specjalnych.
+
+
+### 10.2. Etap 2: optymalizacja kombinatoryczna całego wydania (Flatplan & Ad-Anchoring Engine)
+
+Rozszerzenie solvera z poziomu pojedynczej kolumny i rozkładówki na poziom architektury całego numeru (IssuePlan / FlatPlan w module flatplan_engine.py). Problem alokacji materiałów i reklam w całym wydaniu jest formułowany jako zadanie programowania całkowitoliczbowego z więzami (CP-SAT / Knapsack with Editorial Priorities):
+
+- Więzy składki drukarskiej (Signature Compliance): całkowita liczba stron wydania lub wkładki musi spełniać kongruencję N_pages ≡ 0 (mod 4) przy N_pages >= 4.
+
+- Bilansowanie gęstości reklamowej i algorytmy kotwiczenia reklam (Ad Anchoring): dla każdej strony kontrolowany jest współczynnik pokrycia reklamą ad_density = A_ads / A_printable <= 0.40. Moduły reklamowe (w jednostkach SCM – Standard Column Module) są kotwiczone algorytmicznie od dolnych narożników zewnętrznych w układzie schodkowym (Staircase) lub studniowym (Editorial Well), a pozostała wielokątna przestrzeń redakcyjna jest automatycznie przeliczana przez ZoneSolver bez ryzyka sąsiedztwa dwóch konkurujących reklam lub odcięcia nagłówka od tekstu.
+
+- Automatyczne zarządzanie kontynuacjami wielostronicowymi: gdy artykuł główny z pierwszej strony wymaga podziału i przeniesienia na kolumnę wewnętrzną, planer automatycznie rezerwuje sparowany slot docelowy, dzieli strumień tekstowy w punkcie minimalizującym błąd Knuth–Plass i wstrzykuje obustronnie powiązane odsyłacze kontynuacji (jump lines).
+
+
+### 10.3. Etap 3: kartografia redakcyjna i synteza wektorowych infografik z danych (Data-to-Chart)
+
+Rozbudowa modułu editorial_cartography.py oraz infographics.py o automatyczną transformację danych liczbowe-geograficznych wyekstrahowanych z artykułu (przez kontrakt Fact-Guard) na gotowe do druku elementy wektorowe SVG/PDF osadzane bezpośrednio w grafie sceny. Obejmuje to generowanie prasowych mapek lokalizacyjnych (Press Locator Maps), wykresów słupkowych i sondażowych oraz tabel modułowych. Każdy taki obiekt jest generowany dokładnie w wymiarze k * w_col_mm + (k - 1) * gutter_mm (wielokrotność szpalty danego tytułu), z wysokością skwantowaną do wielokrotności linii bazowej baseline_grid_pt oraz w bezpiecznej przestrzeni barwnej CMYK (z wariantem monochromatycznym 100% K + rastry szarości dla kolumn czarno-białych).
+
+
+### 10.4. Etap 4: klasteryzacja strategii korpusowych i wielokanałowe bliźniaki cyfrowe (Digital Twins)
+
+Ostatni kierunek rozwoju dotyczy uczenia nienadzorowanego na archiwach wydawniczych oraz automatycznej rekonfiguracji zatwierdzonego grafu sceny na formaty nieprasowe. W miejsce regułowego przypisywania sygnatur strategii wprowadzona zostanie klasteryzacja wielowymiarowych wektorów topologicznych z historycznych wydań (wyznaczanie centroidów, macierzy kowariancji i anty-wzorców dla każdej strefy wydania). Równolegle, ten sam zatwierdzony i zweryfikowany faktograficznie graf sceny SceneGraph będzie służył jako źródło prawdy do bezstratnego rzutowania na siatki cyfrowe (responsywne wydania webowe, karty social media, formatki mobilne), przy zachowaniu pełnej spójności typograficznej i kolorystycznej z wydaniem drukowanym.
