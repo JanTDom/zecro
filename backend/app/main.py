@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from .config import settings
 from . import auth
-from .api import projects, corpus, dna, generate, preferences, export, assets, archetypes, editorial, editorial_model, production, ai, settings_integrations, logo, page_plan, studio
+from .api import projects, corpus, dna, generate, preferences, export, assets, archetypes, editorial, editorial_model, production, ai, settings_integrations, logo, page_plan, studio, osint
 from .models.database import db
 from .storage.asset_store import storage_configured
 
@@ -57,6 +57,7 @@ app.include_router(settings_integrations.public_router)
 app.include_router(logo.router)
 app.include_router(page_plan.router)
 app.include_router(studio.router)
+app.include_router(osint.router)
 
 # Mount local storage for assets
 app.mount("/static/uploads", StaticFiles(directory=str(settings.UPLOADS_DIR)), name="uploads")

@@ -19,7 +19,8 @@ export type NavigationTab =
   | 'copy'
   | 'canvas' 
   | 'compare'
-  | 'help';
+  | 'help'
+  | 'osint';
 
 export interface ToastMessage {
   id: string;

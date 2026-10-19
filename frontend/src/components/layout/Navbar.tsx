@@ -29,6 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenNewProject }) => {
   }, []);
 
   const mobileNav = [
+    { id: 'osint' as const, label: 'Szyba śledcza', icon: Sparkles },
     { id: 'dashboard' as const, label: 'Zacznij tutaj', icon: LayoutDashboard },
     { id: 'help' as const, label: 'Pomoc', icon: HelpCircle },
     { id: 'generate' as const, label: 'Materiały i strona', icon: Sparkles },
