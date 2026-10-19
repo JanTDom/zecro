@@ -1,6 +1,6 @@
 import React from 'react';
 import { useProject, NavigationTab } from '../../context/ProjectContext';
-import { BookOpen, Camera, CheckCircle2, ChevronDown, Download, FileStack, FolderKanban, GitCompare, Grid3X3, HelpCircle, Inspect, LayoutDashboard, Newspaper, Radar, Settings2, SlidersHorizontal, Sparkles, Type } from 'lucide-react';
+import { BookOpen, Camera, CheckCircle2, ChevronDown, Download, FileStack, FolderKanban, GitCompare, Grid3X3, HelpCircle, Inspect, LayoutDashboard, Newspaper, Settings2, SlidersHorizontal, Sparkles, Type } from 'lucide-react';
 import { clsx } from 'clsx';
 
 type Item = { id: NavigationTab; label: string; icon: React.ElementType; done?: boolean; anchor?: string; exportStep?: boolean };
@@ -20,7 +20,6 @@ export const Sidebar: React.FC = () => {
     { id: 'gallery', label: '7. Eksport PDF / InDesign', icon: Download, exportStep: true },
   ];
   const advanced: Item[] = [
-    { id: 'osint', label: 'Szyba śledcza · LIVE OSINT', icon: Radar },
     { id: 'help', label: 'Pomoc i jak to działa', icon: HelpCircle },
     { id: 'dashboard', label: 'Ekran startowy', icon: LayoutDashboard },
     { id: 'corpus', label: 'Przykłady stylu', icon: FileStack },

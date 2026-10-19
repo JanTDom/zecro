@@ -332,10 +332,6 @@ function tasteFromApi(raw: Data): TasteModelMetrics {
 }
 
 export const api = {
-  async getOsintSources(): Promise<{ sources: any[] }> { return request('/osint/sources'); },
-  async scanOsint(sources: any[], publisherSourceId?: string): Promise<any> {
-    return request('/osint/scan', json('POST', { sources, publisher_source_id: publisherSourceId || null }));
-  },
   async getProjects(): Promise<Project[]> { return (await request<Data[]>('/projects')).map(projectFromApi); },
   async getProject(id: string): Promise<Project> { return projectFromApi(await request(`/projects/${id}`)); },
   async getAIDirectorContract(projectId: string): Promise<Data> { return request(`/projects/${projectId}/ai-director`); },

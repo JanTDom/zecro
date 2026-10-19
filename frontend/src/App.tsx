@@ -15,7 +15,6 @@ import { IntegrationsSettings } from './components/settings/IntegrationsSettings
 import { PagePlanner } from './components/plan/PagePlanner';
 import { EditionFlatplan } from './components/edition/EditionFlatplan';
 import { SystemHelpAndFlow } from './components/help/SystemHelpAndFlow';
-import { OsintDashboard } from './components/osint/OsintDashboard';
 
 interface MainContentProps {
   onOpenNewProject: () => void;
@@ -32,9 +31,6 @@ const MainContent: React.FC<MainContentProps> = ({ onOpenNewProject, onOpenExpor
       break;
     case 'help':
       content = <SystemHelpAndFlow />;
-      break;
-    case 'osint':
-      content = <OsintDashboard />;
       break;
     case 'corpus':
       content = <CorpusManager />;
