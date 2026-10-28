@@ -187,11 +187,13 @@ def calibrated_score(calibration: dict[str, Any], features: dict[str, float]) ->
 
 
 def save_calibration(data: dict[str, Any]) -> Path:
+    target_path = CALIBRATION_DIR / f"{data.get('archetype', 'unknown')}.json"
+    if not data or not data.get("valid"):
+        return target_path
     CALIBRATION_DIR.mkdir(parents=True, exist_ok=True)
-    path = CALIBRATION_DIR / f"{data['archetype']}.json"
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    target_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     _CACHE.pop(data["archetype"], None)
-    return path
+    return target_path
 
 
 def iter_pairs(path: Path) -> Iterable[dict[str, Any]]:

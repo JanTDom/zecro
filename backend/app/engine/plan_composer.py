@@ -296,6 +296,19 @@ class _Ctx:
                     if el:
                         members.append(el.id); cur += qh + 8
                         self.fit.append({"action": "pullquote_from_text", "story": story.id, "reason": "wypełnienie wolnego miejsca dosłownym cytatem"})
+            else:
+                from .infographics import extract_story_facts, create_fact_box
+                facts = extract_story_facts(story, max_facts=3)
+                if facts and slack >= 32.0:
+                    fb_h = min(slack - 6.0, 42.0)
+                    fb_frame = Frame(x=x + 1.0, y=cur + 3.0, w=w - 2.0, h=fb_h)
+                    fb_el = create_fact_box("W SKRÓCIE", facts, frame=fb_frame)
+                    fb_el.story_ref = story.id
+                    self.elements.append(fb_el)
+                    self.order.append(fb_el.id)
+                    members.append(fb_el.id)
+                    cur += fb_h + 4.0
+                    self.fit.append({"action": "factbox_rescue", "story": story.id, "reason": "kompensacja wolnego miejsca ramką faktów ze źródła"})
         self.relations.append(Relation(type="belongs_to_story", members=members, story=story.id))
         return cur - y
 
@@ -501,7 +514,20 @@ def compose_planned_page(dna, material, genes: Optional[dict] = None) -> SceneGr
                     ctx.rule(rail_x, ry, rail_w, b.id); ry += 1.5
             spare = bottom - ry
             if spare > 25:
-                ctx.fit.append({"action": "rail_spare", "mm": round(spare, 1), "reason": "krótkie wiadomości nie wypełniają szpalty"})
+                from .infographics import create_editorial_badge_box
+                badge_h = min(spare - 4.0, 22.0)
+                badge_frame = Frame(x=rail_x, y=ry + 2.0, w=rail_w, h=badge_h)
+                badge_el = create_editorial_badge_box(
+                    text="RAPORT REDAKCJI",
+                    category="SPECJALNE",
+                    frame=badge_frame,
+                    bg_color=dna.palette.secondary or "#C2410C",
+                    text_color="#FFFFFF"
+                )
+                ctx.elements.append(badge_el)
+                ctx.order.append(badge_el.id)
+                ry += badge_h + 3.0
+                ctx.fit.append({"action": "rail_spare_rescue_badge", "mm": round(spare, 1), "reason": "zagospodarowanie dolnej strefy szyny odznaką redakcyjną"})
             briefs_rendered = True
         else:
             briefs_rendered = False

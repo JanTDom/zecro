@@ -22,6 +22,19 @@ class DisplayHeadline:
     line_widths_pt: tuple[float, ...]
 
 
+@dataclass(frozen=True)
+class StagedDisplayHeadline:
+    lead_word: str
+    lead_size_pt: float
+    sub_lines: tuple[str, ...]
+    sub_size_pt: float
+    font_family: str
+    case: str
+    text: str
+    lead_line_width_pt: float
+    sub_line_widths_pt: tuple[float, ...]
+
+
 def compose_display_headline(
     text: str,
     *,
@@ -133,3 +146,93 @@ def compose_display_headline(
 
 def has_stranded_headline_word(lines: list[str] | tuple[str, ...]) -> bool:
     return len(lines) > 1 and len(lines[-1].split()) == 1
+
+
+def compose_staged_display_headline(
+    text: str,
+    *,
+    width_mm: float,
+    height_mm: float,
+    preferred_size_pt: float,
+    minimum_size_pt: float = 18.0,
+    font_families: list[str],
+    case_options: tuple[str, ...] = ("normal",),
+    leading_ratio: float = 1.06,
+) -> StagedDisplayHeadline | None:
+    """Compose a dynamic poster-style headline: large lead screamer word + sub-headline."""
+    words = str(text or "").split()
+    if len(words) < 3 or width_mm <= 0 or height_mm <= 0:
+        return None
+
+    lead_word = words[0]
+    sub_text = " ".join(words[1:])
+    measure_pt = width_mm * PT_PER_MM * 0.965
+    families = list(dict.fromkeys(str(f).strip() for f in font_families if str(f).strip()))
+    if not families:
+        families = ["Inter, sans-serif"]
+
+    best: StagedDisplayHeadline | None = None
+    best_score = -1.0
+
+    for family in families:
+        path = resolve_font(family, bold=True, text=" ".join(words))
+        for case in case_options:
+            dw_lead = lead_word.upper() if case == "upper" else lead_word
+            dw_sub = sub_text.upper() if case == "upper" else sub_text
+
+            lead_h_mm = height_mm * 0.48
+            sub_h_mm = height_mm - lead_h_mm
+
+            lead_max_size = lead_h_mm * PT_PER_MM / leading_ratio
+            if path:
+                lead_w_pt = width_pt(dw_lead, lead_max_size, path)
+                if lead_w_pt > measure_pt:
+                    lead_size = lead_max_size * (measure_pt / max(1.0, lead_w_pt))
+                else:
+                    lead_size = min(lead_max_size, preferred_size_pt * 1.5)
+                actual_lead_w = width_pt(dw_lead, lead_size, path)
+            else:
+                lead_units = max(1.0, len(dw_lead) * 0.52)
+                lead_size = min(lead_max_size, measure_pt / lead_units, preferred_size_pt * 1.5)
+                actual_lead_w = lead_units * lead_size
+
+            if lead_size < minimum_size_pt:
+                continue
+
+            sub_plan = compose_display_headline(
+                dw_sub,
+                width_mm=width_mm,
+                height_mm=sub_h_mm,
+                preferred_size_pt=min(preferred_size_pt, lead_size * 0.72),
+                minimum_size_pt=minimum_size_pt * 0.75,
+                font_families=[family],
+                case_options=(case,),
+                min_lines=1,
+                max_lines=2,
+                allow_internal_single_word=True,
+            )
+            if not sub_plan:
+                continue
+
+            score = (
+                0.5 * (lead_size / preferred_size_pt)
+                + 0.3 * (sub_plan.font_size_pt / preferred_size_pt)
+                + 0.2 * (actual_lead_w / measure_pt)
+            )
+            if score > best_score:
+                best_score = score
+                combined = f"{dw_lead}\n{sub_plan.text}"
+                best = StagedDisplayHeadline(
+                    lead_word=dw_lead,
+                    lead_size_pt=round(lead_size, 1),
+                    sub_lines=sub_plan.lines,
+                    sub_size_pt=sub_plan.font_size_pt,
+                    font_family=family,
+                    case=case,
+                    text=combined,
+                    lead_line_width_pt=actual_lead_w,
+                    sub_line_widths_pt=sub_plan.line_widths_pt,
+                )
+
+    return best
+

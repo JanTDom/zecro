@@ -180,3 +180,68 @@ def create_market_ticker_box(
             valign="center",
         ),
     )
+
+
+def create_editorial_badge_box(
+    text: str,
+    category: str = "PILNE",
+    frame: Optional[Frame] = None,
+    bg_color: str = "#C2410C",
+    text_color: str = "#FFFFFF",
+) -> Element:
+    """Create an authentic editorial badge or stamp to anchor columns or headlines."""
+    if frame is None:
+        frame = Frame(x=10.0, y=10.0, w=40.0, h=16.0)
+
+    clean_cat = (category or "").strip().upper()
+    clean_text = polish_microtypography((text or "").strip().upper())
+    if clean_cat and clean_cat != clean_text:
+        full_content = f"[{clean_cat}]\n{clean_text}"
+    else:
+        full_content = clean_text
+
+    return Element(
+        id=f"badge_{uuid.uuid4().hex[:6]}",
+        role="infobox",
+        importance=0.55,
+        text_content=full_content,
+        frame=frame,
+        z=3,
+        style=ElementStyle(
+            font_family="Inter, sans-serif",
+            font_size_pt=8.5,
+            font_weight="bold",
+            line_height=1.15,
+            color=text_color,
+            bg_color=bg_color,
+            border_width_mm=0.5,
+            border_color="#FFFFFF",
+            padding_mm=2.0,
+            align="center",
+            valign="center",
+        ),
+    )
+
+
+def extract_story_facts(story: Any, max_facts: int = 3) -> List[str]:
+    """Extract factual snippets with numbers/statistics or structured infobox without hallucinating."""
+    import re
+    facts: List[str] = []
+    infobox = getattr(story, "infobox", None)
+    if infobox and isinstance(infobox, dict):
+        for k, v in infobox.items():
+            facts.append(f"{k}: {v}")
+            if len(facts) >= max_facts:
+                return facts
+
+    # Extract sentences with numbers, dates or currency from body/lead
+    body = (getattr(story, "lead", None) or "") + " " + (getattr(story, "body", None) or "")
+    sentences = [s.strip() for s in re.split(r"[.!?]\s+", body) if s.strip()]
+    for s in sentences:
+        if re.search(r"\b\d+(?:[.,]\d+)?(?:\s?(?:zł|mln|mld|%|tys\.|proc\.|lat|km|godz\.))?\b", s):
+            if 15 <= len(s) <= 120 and s not in facts:
+                facts.append(s)
+                if len(facts) >= max_facts:
+                    break
+    return facts
+

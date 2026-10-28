@@ -3,8 +3,31 @@ from backend.app.engine.infographics import (
     create_quote_callout_box,
     create_fact_box,
     create_market_ticker_box,
+    create_editorial_badge_box,
+    extract_story_facts,
 )
 from backend.app.models.schemas import Frame
+
+
+def test_create_editorial_badge_box():
+    badge = create_editorial_badge_box("TYLKO U NAS", category="ŚLEDZTWO")
+    assert badge.role == "infobox"
+    assert "ŚLEDZTWO" in badge.text_content
+    assert "TYLKO" in badge.text_content and "NAS" in badge.text_content
+    assert badge.style.bg_color == "#C2410C"
+    assert badge.style.color == "#FFFFFF"
+
+
+def test_extract_story_facts():
+    class DummyStory:
+        lead = "Wypadek na trasie S8 pod Warszawą."
+        body = "Zderzyły się 3 pojazdy o godz. 14:30. Straty oszacowano na 250 tys. zł, a korek miał 12 km."
+        infobox = None
+
+    facts = extract_story_facts(DummyStory())
+    assert len(facts) >= 1
+    assert any("250 tys. zł" in f or "12 km" in f for f in facts)
+
 
 def test_create_weather_ear_box():
     box = create_weather_ear_box("Gdańsk", 21, 14, "slonce", date_str="16.10")

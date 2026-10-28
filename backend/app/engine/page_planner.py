@@ -14,6 +14,63 @@ from ..models.schemas import PagePlan, PagePlanSlot, StoryInput, Story
 _RANK_ORDER = {"lead": 0, "second": 1, "third": 2, "column": 3, "box": 4, "brief": 5, "short": 6, "teaser": 7}
 
 
+@dataclass
+class PagePacingProfile:
+    page_number: int
+    side: str  # "recto" (odd) or "verso" (even)
+    energy: float  # 0.4 (quiet/breathe) to 1.0 (loud/cover)
+    rhythm: str  # "poster" | "quiet_context" | "analytical_spread" | "feature_lead" | "dense_report"
+    recommended_mode: str  # "photo-top" | "dominant-left" | "dominant-right" | "stacked" | "modular-grid"
+    negative_space_bias: float  # 0.0 (compact) to 0.3 (breathing)
+
+
+def calculate_issue_pacing(page_number: int, total_pages: int = 8) -> PagePacingProfile:
+    """Calculates macro-dramaturgical pacing across the newspaper issue."""
+    side = "recto" if page_number % 2 == 1 else "verso"
+
+    if page_number == 1:
+        # Cover: loud, poster-driven, maximum visual energy
+        return PagePacingProfile(
+            page_number=1, side="recto", energy=1.0, rhythm="poster",
+            recommended_mode="photo-top", negative_space_bias=0.05
+        )
+    elif page_number == 2:
+        # Inside left (Verso): quiet, context-setting, breathing room
+        return PagePacingProfile(
+            page_number=2, side="verso", energy=0.55, rhythm="quiet_context",
+            recommended_mode="dominant-left", negative_space_bias=0.20
+        )
+    elif page_number == 3:
+        # Inside right (Recto): secondary anchor, reportage lead
+        return PagePacingProfile(
+            page_number=3, side="recto", energy=0.80, rhythm="feature_lead",
+            recommended_mode="dominant-right", negative_space_bias=0.10
+        )
+    elif total_pages >= 4 and page_number in {total_pages // 2, total_pages // 2 + 1}:
+        # Center spread: panoramic, balanced analytical canvas
+        return PagePacingProfile(
+            page_number=page_number, side=side, energy=0.85, rhythm="analytical_spread",
+            recommended_mode="photo-top" if side == "verso" else "dominant-left",
+            negative_space_bias=0.12
+        )
+    elif page_number >= total_pages and total_pages > 1:
+        # Back cover: strong visual closure or culture/sport anchor
+        return PagePacingProfile(
+            page_number=page_number, side=side, energy=0.90, rhythm="poster",
+            recommended_mode="photo-top", negative_space_bias=0.08
+        )
+    else:
+        # Standard inside page: alternating rhythm
+        is_dense = page_number % 2 == 0
+        return PagePacingProfile(
+            page_number=page_number, side=side,
+            energy=0.65 if is_dense else 0.75,
+            rhythm="dense_report" if is_dense else "feature_lead",
+            recommended_mode="modular-grid" if is_dense else "dominant-left",
+            negative_space_bias=0.05 if is_dense else 0.15
+        )
+
+
 def _rank(story: Any) -> str:
     value = getattr(story, "rank", None)
     if value in _RANK_ORDER:

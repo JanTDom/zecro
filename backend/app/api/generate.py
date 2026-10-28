@@ -1062,7 +1062,7 @@ def record_pairwise_vote(project_id: str, vote: PairVoteRequest):
     if total_pairs >= 6:
         try:
             calib_fit = fit_calibration(pairs_list, archetype=archetype, source="human")
-            if calib_fit.get("valid") or total_pairs >= 10:
+            if calib_fit.get("valid"):
                 save_calibration(calib_fit)
                 calibration_result = calib_fit
         except Exception:
@@ -1135,7 +1135,8 @@ def force_recalibrate_taste(project_id: str):
         raise HTTPException(status_code=400, detail="Plik z parami jest pusty")
 
     calib_fit = fit_calibration(pairs, archetype=archetype, source="human")
-    save_calibration(calib_fit)
+    if calib_fit.get("valid"):
+        save_calibration(calib_fit)
 
     return {
         "status": "calibrated",

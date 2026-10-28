@@ -41,6 +41,7 @@ DEFAULTS: dict[str, dict[str, Any]] = {
     "stacked_rail_cover": {"skyline_mm": 26.0, "masthead_mm": 40.0, "rail_share": .35, "stack_share": .50,
                            "stamp_mm": 30.0},
     "dense_mosaic": {"top_row_mm": 36.0, "plate_mm": 62.0, "hero_share": .66, "bottom_mm": 62.0, "stamp_mm": 36.0},
+    "versus_split": {"photo_share": .50, "strip_mm": 55.0, "badge_mm": 24.0},
 }
 CATALOG = tuple(DEFAULTS)
 
@@ -138,6 +139,9 @@ def feasible_morphologies(dna, material, stories: Optional[list] = None) -> dict
         elif name == "dense_mosaic":
             if len(stories) >= 5 and sum(1 for st in stories[:5] if st.images) >= 3:
                 out[name] = "co najmniej trzy tematy ze zdjęciami do gęstej mozaiki"
+        elif name == "versus_split":
+            if len(stories) >= 4 and stories[0].images and stories[1].images:
+                out[name] = "dwa tematy ze zdjęciami do układu zderzenia (versus)"
     return out
 
 
@@ -290,7 +294,7 @@ class _Cover:
 
     # -- display headline
     def display(self, story, x, y, w, h, *, color, bg=None, angle=0.0, max_lines=3, min_lines=1,
-                preferred=None, minimum=26.0, align=None, flow=None, over_photo=False):
+                preferred=None, minimum=26.0, align=None, flow=None, over_photo=False, dominant=True):
         ctx, form = self.ctx, self.form
         candidates = list(self.g.get("display_font_candidates") or [])
         families = (candidates + [ctx.family("headline")] if form.display_width == "condensed"
@@ -306,13 +310,13 @@ class _Cover:
         if plan:
             used_h = len(plan.lines) * plan.font_size_pt * 1.06 * 0.352778 + 2.0
             element = ctx.text("headline", story, "headline", x, y, w, h if bg else min(h, used_h), plan.font_size_pt,
-                               value=plan.text, color=color, bg_color=bg, dominant=True, align=align)
+                               value=plan.text, color=color, bg_color=bg, dominant=dominant, align=align)
             element.style.font_family, element.style.case = plan.font_family, plan.case
             ctx.fit.append({"action": "display_headline_composition", "story_ref": story.id, "lines": list(plan.lines),
                             "font": plan.font_family, "font_size_pt": plan.font_size_pt, "case": plan.case,
                             "morphology": self.name})
         else:
-            element = self.fit(story, "headline", x, y, w, h, preferred, color=color, bg=bg, minimum=minimum, dominant=True)
+            element = self.fit(story, "headline", x, y, w, h, preferred, color=color, bg=bg, minimum=minimum, dominant=dominant)
             if element is None:
                 return None
             if align:
@@ -1109,6 +1113,78 @@ def _dense_mosaic(cover: _Cover) -> SceneGraph:
     return cover.finish({})
 
 
+def _versus_split(cover: _Cover) -> SceneGraph:
+    """Clash / confrontation topology: two facing subjects split by a central tension axis."""
+    s, p, pal = cover.stories, cover.p, cover.pal
+    lead, second = s[0], s[1]
+    lead_img = lead.images[0] if lead.images else None
+    second_img = second.images[0] if second.images else None
+
+    y = cover.masthead(ear_story=s[4] if len(s) > 4 else None)
+    strip_h = float(p.get("strip_mm", 55.0))
+    hero_h = cover.bottom - y - strip_h - cover.gap
+    half_w = (cover.width - cover.gap) / 2.0
+
+    left_x = cover.left
+    right_x = cover.left + half_w + cover.gap
+
+    cover.used.append(lead.id)
+    cover.used.append(second.id)
+
+    photo_h = hero_h * float(p.get("photo_share", 0.50))
+    text_h = hero_h - photo_h - cover.gap
+
+    if lead_img:
+        hero_photo = cover.photo(lead, lead_img, left_x, y, half_w, photo_h)
+        hero_photo.importance = 0.96
+    if second_img:
+        sec_photo = cover.photo(second, second_img, right_x, y, half_w, photo_h)
+        sec_photo.importance = 0.75
+
+    # Center clash badge
+    vs_w = min(28.0, half_w * 0.40)
+    vs_h = 13.0
+    vs_x = cover.left + (cover.width - vs_w) / 2.0
+    vs_y = y + photo_h - vs_h / 2.0
+    vs_frame = Frame(x=vs_x, y=vs_y, w=vs_w, h=vs_h)
+    from .infographics import create_editorial_badge_box
+    badge = create_editorial_badge_box(text="KONTRA", category="VS", frame=vs_frame,
+                                       bg_color=pal["strong"], text_color=pal["ink_on_strong"])
+    badge.z = 7
+    badge.constraints.extend(["allow_stack", "intentional_photo_badge", "label", "fixed_width"])
+    cover.ctx.elements.append(badge)
+
+    # Lead text (dominant)
+    ty = y + photo_h + cover.gap
+    cover.plane(lead, "versus_left", left_x, ty, half_w, text_h, pal["light"])
+    head_lead = cover.display(lead, left_x + 2, ty + 2, half_w - 4, text_h * 0.55,
+                              color=pal["deep"], max_lines=3, min_lines=1, minimum=18.0, dominant=True)
+    used_head_h = head_lead.frame.h if head_lead else text_h * 0.55
+    if lead.lead or lead.body:
+        cover.fit(lead, "lead" if lead.lead else "body", left_x + 2, ty + used_head_h + 2,
+                  half_w - 4, text_h - used_head_h - 4, 10.0, color=pal.get("ink_on_light", pal["ink_on_paper"]), minimum=8.5)
+
+    # Second text (subordinate)
+    cover.plane(second, "versus_right", right_x, ty, half_w, text_h, pal["paper"])
+    head_sec = cover.display(second, right_x + 2, ty + 2, half_w - 4, text_h * 0.55,
+                             color=pal["strong"], max_lines=3, min_lines=1, minimum=16.0, dominant=False)
+    used_sec_h = head_sec.frame.h if head_sec else text_h * 0.55
+    if second.lead or second.body:
+        cover.fit(second, "lead" if second.lead else "body", right_x + 2, ty + used_sec_h + 2,
+                  half_w - 4, text_h - used_sec_h - 4, 10.0, color=pal["ink_on_paper"], minimum=8.5)
+
+    # Bottom strip for remaining stories
+    after = y + hero_h + cover.gap
+    rem = s[2:]
+    if rem:
+        count = min(3, len(rem))
+        shares = [.5, .5] if count == 2 else ([.33, .33, .34] if count == 3 else [1.0])
+        planes = ["light", "paper", "deep"][:count]
+        cover.strip(rem[:count], after, strip_h, shares, planes)
+
+    return cover.finish({"versus_split": True})
+
+
 BUILDERS = {
     "diagonal_hero_entry": _diagonal_hero_entry,
     "dual_scale_collage": _dual_scale_collage,
@@ -1117,6 +1193,7 @@ BUILDERS = {
     "type_behind_subject": _type_behind_subject,
     "stacked_rail_cover": _stacked_rail_cover,
     "dense_mosaic": _dense_mosaic,
+    "versus_split": _versus_split,
 }
 
 

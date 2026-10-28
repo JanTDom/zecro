@@ -249,6 +249,31 @@ def _architecture_key(sg: SceneGraph) -> str:
     return f"{mode}:{morph}" if morph else mode
 
 
+def compute_map_elites_niche(sg: SceneGraph) -> Tuple[int, int, int]:
+    """Map a scene graph to a 3D phenotypic niche (tension, density, photo_integration)."""
+    meta = sg.metadata or {}
+    morph = str(meta.get("cover_morphology", ""))
+    mode = str(meta.get("layout_mode", ""))
+
+    # Dimension 1: Geometric Tension (0 = low, 1 = moderate, 2 = high)
+    tension_level = 0
+    if morph in {"diagonal_hero_entry", "versus_split"} or any(getattr(getattr(e, "frame", None), "rotation_deg", 0.0) != 0 for e in sg.elements):
+        tension_level = 2
+    elif morph in {"directional_tension", "dual_scale_collage"} or mode in {"dominant-right", "asymmetric_hero_rail"}:
+        tension_level = 1
+
+    # Dimension 2: Density (0 = airy, 1 = balanced, 2 = packed)
+    elem_count = len(sg.elements)
+    density_level = 0 if elem_count <= 8 else (2 if elem_count >= 16 or morph == "dense_mosaic" else 1)
+
+    # Dimension 3: Photo Integration (0 = box crop, 1 = overlap/scrim, 2 = cutout/wrap/versus)
+    has_cutout = any(getattr(e, "treatment", None) == "cutout" or (getattr(e, "text_wrap", None) and getattr(e.text_wrap, "mode", None) == "contour") for e in sg.elements)
+    has_overlap = any("overlap-scrim" in (getattr(e, "transgressions", []) or []) or "allow_stack" in (getattr(e, "constraints", []) or []) for e in sg.elements)
+    integration_level = 2 if has_cutout or morph in {"type_behind_subject", "versus_split"} else (1 if has_overlap else 0)
+
+    return (tension_level, density_level, integration_level)
+
+
 class EvolutionaryLayoutGenerator:
     def __init__(self, dna: TitleDNA, corpus_features: Optional[List[Dict[str, Any]]] = None, preference_weights: Optional[Dict[str, float]] = None, corpus_guidance: Optional[Dict[str, Any]] = None, novelty_priority: float = 1.0, preferred_transgressions: Optional[List[str]] = None):
         self.dna = dna
@@ -769,6 +794,7 @@ class EvolutionaryLayoutGenerator:
         evaluated_population = []
         evaluation_cache: Dict[Tuple[Any, ...], Tuple[SceneGraph, Any]] = {}
         archive: List[Tuple[LayoutGenome, SceneGraph, Any, int]] = []
+        map_elites: Dict[Tuple[int, int, int], Tuple[LayoutGenome, SceneGraph, Any, int]] = {}
         best_score = -1.0
         stagnant_generations = 0
 
@@ -786,16 +812,13 @@ class EvolutionaryLayoutGenerator:
                 else:
                     sg, crit_result = cached
 
-                # Keep the genome/scene pair intact when a hard gate fails.
-                # Replacing every invalid individual with GridSolver's same
-                # deterministic page was collapsing the population into one
-                # text-only layout and made the requested style/photo inputs
-                # disappear.  Invalid individuals remain fitness-zero and
-                # are naturally selected out; a baseline solver page is used
-                # only as an emergency if no valid genome can be found.
                 evaluated_population.append((genome, sg, crit_result))
                 if crit_result.hard_gate.passed:
                     archive.append((copy.deepcopy(genome), sg, crit_result, gen))
+                    niche = compute_map_elites_niche(sg)
+                    sg.metadata["map_elites_niche"] = list(niche)
+                    if niche not in map_elites or crit_result.total_fitness > map_elites[niche][2].total_fitness:
+                        map_elites[niche] = (copy.deepcopy(genome), sg, crit_result, gen)
 
             # Sort by total fitness score descending
             evaluated_population.sort(
@@ -803,8 +826,10 @@ class EvolutionaryLayoutGenerator:
                 reverse=True,
             )
 
-            # Selection: top 50% elites
+            # Selection: top 50% elites + MAP-Elites niche champions
             elites = evaluated_population[:population_size // 2]
+            niche_elites = [(g, s, c) for g, s, c, _ in map_elites.values()]
+            breeding_pool = elites + [item for item in niche_elites if item not in elites]
 
             generation_best = max((item[2].total_fitness for item in evaluated_population), default=0.0)
             if generation_best > best_score + 0.001:
@@ -817,8 +842,8 @@ class EvolutionaryLayoutGenerator:
             next_gen: List[LayoutGenome] = [copy.deepcopy(e[0]) for e in elites]
 
             while len(next_gen) < population_size:
-                p1 = random.choice(elites)[0]
-                p2 = random.choice(elites)[0]
+                p1 = random.choice(breeding_pool)[0]
+                p2 = random.choice(breeding_pool)[0]
                 child = p1.crossover(p2, self.dna)
                 child.mutate(self.dna, mutation_rate=0.35)
                 next_gen.append(child)
@@ -892,15 +917,17 @@ class EvolutionaryLayoutGenerator:
                     present_modes.add(mode)
                     break
 
-        # Best member of every architecture comes first; the rest remain
+        # Best member of every architecture and MAP-Elites niche comes first; the rest remain
         # ordered by the critic score and are used only after coverage exists.
-        mode_winners = {}
+        niche_winners = {}
         for item in valid_population:
-            mode = _architecture_key(item[1])
-            if mode not in mode_winners or item[2].total_fitness > mode_winners[mode][2].total_fitness:
-                mode_winners[mode] = item
-        # Niches (architecture / cover morphology) are offered best-first.
-        ordered_population = sorted(mode_winners.values(), key=lambda item: item[2].total_fitness, reverse=True)
+            niche = compute_map_elites_niche(item[1])
+            arch = _architecture_key(item[1])
+            key = f"{arch}_{niche}"
+            if key not in niche_winners or item[2].total_fitness > niche_winners[key][2].total_fitness:
+                niche_winners[key] = item
+        # Niches (architecture / cover morphology / MAP-Elites cell) are offered best-first.
+        ordered_population = sorted(niche_winners.values(), key=lambda item: item[2].total_fitness, reverse=True)
         ordered_population.extend(item for item in valid_population if item not in ordered_population)
 
         for genome, sg, crit in ordered_population:

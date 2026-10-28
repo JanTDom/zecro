@@ -306,3 +306,16 @@ def test_photo_check_endpoint_reports_before_geometry(monkeypatch, tmp_path):
     body = res.json()
     assert body["ready"] is False and body["message"].startswith("Potrzebne inne zdjęcie")
     assert not client.get(f"/projects/{project['id']}/runs").json(), "no layout was generated"
+
+
+def test_versus_split_morphology_passes_hard_gate(dna):
+    material = _material()
+    scene = _compose(dna, material, "versus_split")
+    assert scene.metadata["cover_morphology"] == "versus_split"
+    gate = LayoutCritic(dna).evaluate_hard_gate(scene)
+    assert gate.passed, gate.violations
+    dominant = {e.story_ref for e in scene.elements if e.importance >= .95 and e.role in {"headline", "photo"}}
+    assert dominant == {"a"}, "versus split must preserve single visual dominant"
+    badges = [e for e in scene.elements if e.role == "infobox" and "KONTRA" in (e.text_content or "")]
+    assert len(badges) >= 1, "central clash badge must be present"
+

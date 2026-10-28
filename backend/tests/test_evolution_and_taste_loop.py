@@ -62,6 +62,29 @@ def test_taste_loop_pairwise_training():
     assert len(model.feature_weights) == 10
 
 
+def test_map_elites_niche_computation_and_diversity():
+    from backend.app.engine.evolution import compute_map_elites_niche
+    dna = create_default_tabloid_dna()
+    generator = EvolutionaryLayoutGenerator(dna)
+
+    material = PageInputMaterial(
+        masthead_title="TABLOID EXPRESS",
+        stories=[
+            StoryInput(id="s1", headline="WIELKI TEST ZDERZENIA I DYNAMIKI", body="Artykuł testowy.", importance=1.0,
+                       images=[StoryImageInput(id="img-1", url="https://example.com/test1.png")]),
+            StoryInput(id="s2", headline="DRUGI TEMAT DO ZDERZENIA", body="Drugi artykuł.", importance=0.8,
+                       images=[StoryImageInput(id="img-2", url="https://example.com/test2.png")]),
+            StoryInput(id="s3", headline="TRZECI TEMAT", body="Trzeci artykuł.", importance=0.5),
+            StoryInput(id="s4", headline="CZWARTY TEMAT", body="Czwarty artykuł.", importance=0.4),
+        ]
+    )
+
+    candidates = generator.generate(material, num_candidates=6, population_size=12, generations=3)
+    assert len(candidates) >= 3
+    niches = {compute_map_elites_niche(sg) for sg, _ in candidates}
+    assert len(niches) >= 2
+
+
 def test_taste_loop_reports_measured_duration_and_held_out_accuracy():
     dna = create_default_tabloid_dna()
     generator = EvolutionaryLayoutGenerator(dna)

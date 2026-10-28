@@ -853,7 +853,7 @@ def _make_dna(archetype: str, stats: Optional[Mapping[str, Any]] = None) -> Titl
                         "celebratory": {"strong": "#e1262f", "deep": "#172b4d", "light": "#f2b705"},
                     },
                     "morphology_catalog": ["diagonal_hero_entry", "dual_scale_collage", "photo_dominant_strip",
-                                           "directional_tension", "type_behind_subject", "stacked_rail_cover", "dense_mosaic"],
+                                           "directional_tension", "type_behind_subject", "stacked_rail_cover", "dense_mosaic", "versus_split"],
                     "display_wide_font_candidates": ["Arial Black", "Helvetica Neue LT Pro", "Nimbus Sans D",
                                                      "Myriad Pro"],
                     "morphologies": {
